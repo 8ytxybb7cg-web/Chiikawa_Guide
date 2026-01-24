@@ -12,8 +12,7 @@
   <style>
 /* ================= 基礎樣式 ================= */
 :root {
-  /* 設定預設顏色，避免 JS 載入前頂部隱形 */
-  --tab-color: #d77485; 
+  --tab-color: #d77485; /* 預設主題色 */
 }
 
 body {
@@ -26,11 +25,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ================= 頂部通知條 (改為管理員登入) ================= */
+/* ================= 頂部通知條 (管理員登入) ================= */
 .top-bar {
   background: var(--tab-color);
   color: #fff;
-  height: 44px; /* iOS standard height */
+  height: 44px; 
   position: fixed;
   top: 0;
   left: 0;
@@ -38,14 +37,13 @@ body {
   z-index: 999;
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* 圖示靠右 */
+  justify-content: flex-end; 
   padding: 0 16px;
   box-sizing: border-box;
   transition: background 0.3s;
   box-shadow: 0 1px 0 rgba(255,255,255,0.1);
 }
 
-/* 管理員圖示 (iOS 風格) */
 .admin-icon {
   width: 24px;
   height: 24px;
@@ -59,7 +57,7 @@ body {
 /* ================= 導航列 ================= */
 .nav-bar-wrapper {
   position: fixed;
-  top: 44px; /* 配合 top-bar 高度 */
+  top: 44px; 
   width: 100%;
   background: rgba(249, 249, 249, 0.95);
   backdrop-filter: blur(10px);
@@ -121,10 +119,9 @@ body {
   gap: 12px;
   max-width: 1200px;
   margin: 0 auto;
-  min-height: 60vh; /* 確保有高度顯示 loading */
+  min-height: 60vh; 
 }
 
-/* 分類標題 */
 .type-divider {
   display: flex;
   align-items: center;
@@ -182,7 +179,7 @@ body {
   font-weight: 600;
   line-height: 1.4;
   color: #333;
-  min-height: 32px; /* 保持高度一致 */
+  min-height: 32px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,6 +189,7 @@ body {
   color: #666;
   font-family: "SF Pro Text", sans-serif;
   margin-bottom: 6px;
+  min-height: 19px;
 }
 
 /* 狀態標籤 */
@@ -204,27 +202,6 @@ body {
   margin: 0 auto 6px auto;
   letter-spacing: 0.5px;
 }
-
-/* 管理員模式下的 Select */
-.admin-select {
-  appearance: none;
-  -webkit-appearance: none;
-  border: none;
-  border-radius: 20px;
-  padding: 3px 20px 3px 10px; /* 預留箭頭空間 */
-  font-size: 11px;
-  font-weight: bold;
-  margin: 0 auto 6px auto;
-  text-align: center;
-  text-align-last: center;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 4px center;
-  background-size: 10px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
-}
-.admin-select:focus { outline: none; box-shadow: 0 0 0 2px var(--tab-color); }
 
 /* 角色圓標 */
 .role-badge {
@@ -243,7 +220,45 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* ================= Modal (登入 & 組合) ================= */
+/* ================= 管理員介面樣式 ================= */
+.admin-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-radius: 20px;
+  padding: 3px 20px 3px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  margin: 0 auto 6px auto;
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 10px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+.admin-select:focus { outline: none; box-shadow: 0 0 0 2px var(--tab-color); }
+
+.admin-price-input {
+  width: 80%;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+  color: #333;
+  padding: 2px 0;
+  margin-bottom: 4px;
+  background: #fdfdfd;
+}
+.admin-price-input:focus {
+  outline: none;
+  border-color: var(--tab-color);
+  background: #fff;
+}
+
+/* ================= Modal ================= */
 .modal {
   display: none; 
   position: fixed; 
@@ -299,7 +314,7 @@ body {
   font-size: 24px; color: #aaa; cursor: pointer;
 }
 
-/* ================= 放大檢視 (Overlay) ================= */
+/* ================= Overlay ================= */
 #cardOverlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -325,7 +340,6 @@ body {
 #cardOverlay .status-badge { font-size: 1.2em !important; padding: 6px 16px !important; }
 #cardOverlay .role-badge { display: none !important; }
 
-/* Loading 文字 */
 #loading-msg {
   padding-top: 100px;
   color: #999;
@@ -392,7 +406,7 @@ body {
 // ================= Supabase 設定 =================
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
-// 初始化 Supabase Client
+
 let sbClient = null;
 if (window.supabase) {
   sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -429,9 +443,9 @@ const extraStyleCategoryMap = {
 };
 
 let isAdmin = false;
-let globalItems = []; // 儲存處理後的資料
+let globalItems = []; 
 let currentRole = "吉伊";
-let supabaseOverrides = {}; // 儲存來自 Supabase 的狀態覆蓋 { "商品名": "現貨" }
+let supabaseOverrides = {}; // 儲存 { "商品名": { status: "現貨", price: "200" } }
 
 // ================= 登入邏輯 =================
 function openLoginModal() {
@@ -444,14 +458,14 @@ function handleLogin() {
   if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
-    alert("登入成功！您可以更改卡片狀態了 (｡•̀ᴗ-)✧");
-    renderCards(globalItems, currentRole); // 重新渲染以顯示管理介面
+    alert("管理員登入成功！\n您可以修改「狀態」與「價錢」了 (｡•̀ᴗ-)✧");
+    renderCards(globalItems, currentRole); 
   } else {
     alert("帳號或密碼錯誤 🙅‍♂️");
   }
 }
 
-// ================= 載入資料 (Sheet + Supabase) =================
+// ================= 載入資料 =================
 function getRoleFromURL(){
   const p = new URLSearchParams(location.search).get("role");
   return roleMap[p] ? p : "吉伊";
@@ -459,32 +473,31 @@ function getRoleFromURL(){
 
 async function loadSheetData(){
   currentRole = getRoleFromURL();
-  // 設定主題色
   document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
   
   try {
-    // 1. 抓取 Google Sheet (核心資料)
+    // 1. 抓取 Sheet
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`)
       .then(r => r.text());
 
-    // 2. 嘗試抓取 Supabase (非同步，容許失敗)
-    // 如果資料表還沒建好，這裡會報錯，但我們 catch 住它，不影響主畫面顯示
+    // 2. 抓取 Supabase (含 price)
     if (sbClient) {
       try {
-        const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status');
+        const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
         if (!error && data) {
           data.forEach(row => {
-            supabaseOverrides[row.item_name] = row.status;
+            supabaseOverrides[row.item_name] = { 
+              status: row.status, 
+              price: row.price 
+            };
           });
-        } else {
-          console.warn("Supabase 讀取略過:", error?.message);
         }
       } catch (sbError) {
-        console.warn("Supabase 連線失敗 (可能是 Table 未建立)，使用預設狀態。", sbError);
+        console.warn("Supabase 載入失敗 (可能 table 無 price 欄位)", sbError);
       }
     }
 
-    // 3. 處理 Google Sheet 資料
+    // 3. 處理 Sheet 資料
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
@@ -493,17 +506,29 @@ async function loadSheetData(){
     globalItems = rows.map((row, i) => {
       const rawPrice = row.c[5]?.v;
       let finalPrice = rawPrice;
-      
-      // === 價格計算邏輯 ===
-      // 除以 3.8，若非 0 或 5 結尾則向上調整
-      if (typeof rawPrice === 'number') {
-        const divided = rawPrice / 3.8;
-        // 公式：Math.ceil(值 / 5) * 5
-        finalPrice = Math.ceil(divided / 5) * 5;
-      } else if (rawPrice === "-") {
-        finalPrice = "-"; // 組合商品
+      const itemName = row.c[3]?.v || "";
+
+      // === 檢查 Supabase 是否有手動覆寫的價錢 ===
+      let isManualPrice = false;
+      if (supabaseOverrides[itemName]?.price) {
+        finalPrice = supabaseOverrides[itemName].price;
+        isManualPrice = true;
       } else {
-        finalPrice = rawPrice;
+        // === 自動計算邏輯 ===
+        // 修正：強制轉字串再清除非數字字元 (例如 1,200 -> 1200)
+        let cleanPriceStr = String(rawPrice).replace(/[^\d.-]/g, '');
+        let numericPrice = parseFloat(cleanPriceStr);
+
+        if (!isNaN(numericPrice) && rawPrice !== "-") {
+          // 公式：(價錢 / 3.8) -> 無條件進位至個位 -> 再無條件進位至最近的 0 或 5
+          // 簡化公式：Math.ceil( (價錢/3.8) / 5 ) * 5
+          const divided = numericPrice / 3.8;
+          finalPrice = Math.ceil(divided / 5) * 5;
+        } else if (rawPrice === "-") {
+          finalPrice = "-"; // 組合商品
+        } else {
+          finalPrice = rawPrice; // 可能是 "私訊花花" 或空值
+        }
       }
 
       const item = {
@@ -511,27 +536,24 @@ async function loadSheetData(){
         role: row.c[0]?.v || "",
         rawType: row.c[1]?.v || "",
         style: row.c[2]?.v || "",
-        name: row.c[3]?.v || "",
+        name: itemName,
         price: finalPrice, 
-        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
+        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
+        isManualPrice: isManualPrice // 標記是否為手動價
       };
 
-      // 分類判定
+      // 分類
       item.category = (item.style === "證件套") ? "證件套" : 
                       (categoryMap[item.rawType] || categoryMap[item.style] || item.rawType || "未分類");
 
-      // === 狀態判定邏輯 ===
-      // 預設邏輯
+      // === 狀態邏輯 ===
       let computedStatus = "需預訂"; 
       if (item.category === "吊娃、娃" || item.rawType === "吊娃" || item.rawType === "娃") {
         computedStatus = "現貨";
       }
-
-      // 如果有 Supabase 紀錄，覆蓋狀態
-      if (supabaseOverrides[item.name]) {
-        computedStatus = supabaseOverrides[item.name];
+      if (supabaseOverrides[item.name]?.status) {
+        computedStatus = supabaseOverrides[item.name].status;
       }
-      
       item.status = computedStatus;
 
       return item;
@@ -543,33 +565,62 @@ async function loadSheetData(){
   } catch (error) {
     console.error(error);
     document.getElementById("card-container").innerHTML = 
-      `<div style="margin-top:50px;">載入資料失敗，請檢查網路或稍後再試。<br><small>${error.message}</small></div>`;
+      `<div style="margin-top:50px;">載入資料失敗。<br><small>${error.message}</small></div>`;
   }
 }
 
-// ================= 管理員更新狀態 =================
+// ================= 更新邏輯 =================
+
+// 更新狀態
 async function updateStatus(itemName, newStatus) {
   if (!itemName) return;
   
-  // 1. 更新本地資料 (讓 UI 立即反應)
-  supabaseOverrides[itemName] = newStatus;
+  // 更新本地
+  if(!supabaseOverrides[itemName]) supabaseOverrides[itemName] = {};
+  supabaseOverrides[itemName].status = newStatus;
+  
   const item = globalItems.find(i => i.name === itemName);
   if (item) item.status = newStatus;
+  
+  renderCards(globalItems, currentRole); // 重繪
 
-  // 2. 更新 UI 顏色
-  renderCards(globalItems, currentRole); 
-
-  // 3. 寫入 Supabase (若 Table 不存在會 Alert 錯誤)
   if (sbClient) {
-    const { error } = await sbClient
-      .from('chiikawa_data')
-      .upsert({ item_name: itemName, status: newStatus }, { onConflict: 'item_name' });
-    
+    const payload = { item_name: itemName, status: newStatus };
+    // 若已有 price 也要帶上，避免覆蓋成 null (Supabase upsert default behavior depends on implementation, safer to query or merge)
+    // 這裡我們假設 upsert merge，但為了保險，我們從 supabaseOverrides 拿 price
+    if(supabaseOverrides[itemName].price) payload.price = supabaseOverrides[itemName].price;
+
+    const { error } = await sbClient.from('chiikawa_data').upsert(payload, { onConflict: 'item_name' });
+    if (error) console.error("Status update failed:", error);
+  }
+}
+
+// 更新價錢
+async function updatePrice(itemName, newPrice) {
+  if (!itemName) return;
+
+  // 更新本地
+  if(!supabaseOverrides[itemName]) supabaseOverrides[itemName] = {};
+  supabaseOverrides[itemName].price = newPrice;
+
+  const item = globalItems.find(i => i.name === itemName);
+  if (item) {
+    item.price = newPrice;
+    item.isManualPrice = true;
+  }
+  
+  // 不重繪整個列表，避免輸入焦點跑掉 (Optional, 但這裡簡單處理先不重繪或只重繪該卡片)
+  // 但為了同步 Override 標記，還是重繪比較保險，或者不做任何事只存檔。
+  // 這裡選擇不重繪，只讓使用者看到輸入框的值變了。
+  
+  if (sbClient) {
+    const payload = { item_name: itemName, price: newPrice };
+    if(supabaseOverrides[itemName].status) payload.status = supabaseOverrides[itemName].status;
+
+    const { error } = await sbClient.from('chiikawa_data').upsert(payload, { onConflict: 'item_name' });
     if (error) {
-      alert("儲存至資料庫失敗 (可能是尚未建立 Table): " + error.message);
+      alert("價錢儲存失敗: " + error.message);
     }
-  } else {
-    alert("Supabase 未初始化");
   }
 }
 
@@ -583,11 +634,10 @@ function renderCards(items, roleName){
     return;
   }
 
-  // 分組邏輯
+  // 分組
   const grouped = {};
   items.forEach(it => {
     (grouped[it.category] = grouped[it.category] || []).push(it);
-    // 處理額外分類映射
     if(it.category === "吊娃、娃"){
       const tgt = extraStyleCategoryMap[it.style];
       if(tgt) (grouped[tgt] = grouped[tgt] || []).push({...it});
@@ -601,7 +651,6 @@ function renderCards(items, roleName){
     const list = grouped[cat];
     if(!list || !list.length) return;
 
-    // 渲染分類標題
     const div = document.createElement("div");
     div.className = "type-divider";
     div.id = cat;
@@ -609,11 +658,9 @@ function renderCards(items, roleName){
     div.textContent = cat;
     container.appendChild(div);
 
-    // Grid 容器
     const gdiv = document.createElement("div");
     gdiv.className = "group-grid";
     
-    // 依款式排序
     const byStyle = {};
     list.forEach(it => (byStyle[it.style] = byStyle[it.style] || []).push(it));
 
@@ -622,34 +669,34 @@ function renderCards(items, roleName){
       if(!arr) return;
       arr.sort((a,b) => a.index - b.index).forEach(item => {
         
-        // 狀態顏色設定
         const statusConfig = getStatusConfig(item.status);
-
         const single = "吉八兔桃獺栗獅古其";
         const ch = item.role.match(/[\u4e00-\u9fff]/g) || [];
         const rtxt = (ch.length === 1 && single.includes(ch[0])) ? ch[0] : "綜";
-
         const isCombo = item.price === "-";
-        const needLineLink = !item.price || item.price === "私訊花花";
-
-        const cardTag = "div";
-        const card = document.createElement(cardTag);
+        
+        const card = document.createElement("div");
         card.className = "card";
         card.style.borderColor = "#eee";
 
+        // 點擊事件
         if (isCombo) {
           card.onclick = () => loadComboDetails(item.name);
         } else {
-           card.onclick = () => openCardOverlay(card.cloneNode(true), item);
+           // 若非點擊 Admin Input 範圍
+           card.onclick = (e) => {
+             // 避免點擊輸入框時觸發彈窗
+             if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+             openCardOverlay(card.cloneNode(true), item);
+           };
         }
 
-        // 狀態 HTML
+        // --- 狀態顯示邏輯 ---
         let statusHtml = "";
         if (isAdmin) {
           statusHtml = `
             <select class="admin-select" 
               style="background-color:${statusConfig.bg}; color:${statusConfig.color}"
-              onclick="event.stopPropagation()"
               onchange="updateStatus('${item.name}', this.value)">
               <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
               <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -657,14 +704,21 @@ function renderCards(items, roleName){
             </select>
           `;
         } else {
-          statusHtml = `
-            <div class="status-badge" style="background:${statusConfig.bg}; color:${statusConfig.color}">
-              ${item.status}
-            </div>
-          `;
+          statusHtml = `<div class="status-badge" style="background:${statusConfig.bg}; color:${statusConfig.color}">${item.status}</div>`;
         }
 
-        // 角色標籤
+        // --- 價錢顯示邏輯 ---
+        let priceHtml = "";
+        if (isAdmin && !isCombo) {
+          // 管理員顯示輸入框
+          // 注意：如果 item.price 是數字，轉換為字串顯示
+          const val = (item.price === undefined || item.price === null) ? "" : item.price;
+          priceHtml = `<input class="admin-price-input" type="text" value="${val}" 
+                        onchange="updatePrice('${item.name}', this.value)" placeholder="輸入價錢" />`;
+        } else {
+          priceHtml = `<div class="price">${formatPrice(item.price)}</div>`;
+        }
+
         const roleBadge = (cat !== "吊娃、娃") 
           ? `<div class="role-badge" style="background-color:${rtxt==="綜"?"#dac7b7":colors[roleName]||"#ccc"}">${rtxt}</div>` 
           : "";
@@ -674,7 +728,7 @@ function renderCards(items, roleName){
           <img src="${item.img}" alt="${item.name}" loading="lazy">
           ${statusHtml}
           <div class="name">${formatName(item.name)}</div>
-          <div class="price">${formatPrice(item.price)}</div>
+          ${priceHtml}
         `;
         gdiv.appendChild(card);
       });
@@ -692,7 +746,6 @@ function getStatusConfig(statusText) {
   }
 }
 
-// ================= 輔助函式 =================
 function formatName(name){
   if(!name) return "";
   const cleanName = name.trim();
@@ -705,10 +758,12 @@ function formatName(name){
 function formatPrice(price){
   if(price === "-" || price === "組合出售") return "組合出售";
   if(!price || price === "私訊花花") return "私訊花花";
-  return `${price}`;
+  // 檢查是否為純數字，是的話加 $
+  if(!isNaN(parseFloat(price)) && isFinite(price)) return `$${price}`;
+  return price;
 }
 
-// ================= Modal 組合內容邏輯 =================
+// ================= Modal 組合內容 =================
 function loadComboDetails(clickedItemName) {
   const modal = document.getElementById("comboModal");
   const body = document.getElementById("comboBody");
@@ -750,9 +805,13 @@ function loadComboDetails(clickedItemName) {
         const items = grouped[gName];
         const price = items[0].c[4]?.v;
         const remark = items[0].c[9]?.v;
+        
         let calcPrice = price;
-        if(typeof price === 'number') {
-            calcPrice = Math.ceil((price/3.8)/5)*5;
+        // 組合內容同樣套用計算邏輯
+        let cleanP = String(price).replace(/[^\d.-]/g, '');
+        let numP = parseFloat(cleanP);
+        if(!isNaN(numP)) {
+            calcPrice = Math.ceil((numP/3.8)/5)*5;
         }
 
         const imgs = items.map(r => `<img src="${r.c[8]?.v||''}" style="width:60px; height:60px; object-fit:contain; border:1px solid #eee; border-radius:4px;">`).join("");
@@ -776,7 +835,7 @@ function loadComboDetails(clickedItemName) {
     });
 }
 
-// ================= Overlay 放大卡片 =================
+// ================= Overlay =================
 function openCardOverlay(clonedCard, itemData) {
   const overlay = document.getElementById("cardOverlay");
   overlay.innerHTML = "";
@@ -786,6 +845,7 @@ function openCardOverlay(clonedCard, itemData) {
   
   const statusConfig = getStatusConfig(itemData?.status || "需預訂");
   
+  // Overlay 內不顯示輸入框，僅顯示最終數值
   cardDiv.innerHTML = `
     <img src="${itemData.img}" style="max-height:50vh; width:auto; display:block; margin:0 auto;">
     <div style="margin-top:16px; text-align:center;">
@@ -809,7 +869,7 @@ function openCardOverlay(clonedCard, itemData) {
   };
 }
 
-// ================= 初始化與事件 =================
+// ================= 初始化 =================
 loadSheetData();
 
 const navBarScroll = document.querySelector(".nav-bar-scroll");
@@ -819,6 +879,7 @@ document.querySelector(".nav-arrow.nav-right").onclick = () => navBarScroll.scro
 window.onclick = e => {
   if (e.target.className === "modal") e.target.style.display = "none";
 };
+
 </script>
 </body>
 </html>
