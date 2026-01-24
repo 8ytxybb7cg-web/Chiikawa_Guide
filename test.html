@@ -11,6 +11,11 @@
 
   <style>
 /* ================= 基礎樣式 ================= */
+:root {
+  /* 設定預設顏色，避免 JS 載入前頂部隱形 */
+  --tab-color: #d77485; 
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #f9f9f9;
@@ -37,6 +42,7 @@ body {
   padding: 0 16px;
   box-sizing: border-box;
   transition: background 0.3s;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.1);
 }
 
 /* 管理員圖示 (iOS 風格) */
@@ -115,6 +121,7 @@ body {
   gap: 12px;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 60vh; /* 確保有高度顯示 loading */
 }
 
 /* 分類標題 */
@@ -317,8 +324,13 @@ body {
 #cardOverlay .price { font-size: 1.4em !important; color: #333; font-weight: bold; }
 #cardOverlay .status-badge { font-size: 1.2em !important; padding: 6px 16px !important; }
 #cardOverlay .role-badge { display: none !important; }
-.admin-only { display: none; } /* 預設隱藏管理介面 */
 
+/* Loading 文字 */
+#loading-msg {
+  padding-top: 100px;
+  color: #999;
+  font-size: 14px;
+}
   </style>
 </head>
 <body>
@@ -330,7 +342,9 @@ body {
     </svg>
   </div>
 
-  <div id="card-container"></div>
+  <div id="card-container">
+    <div id="loading-msg">正在載入可愛的 Chiikawa 們...<br>請稍候 ( ˘ω˘ )</div>
+  </div>
   
   <div class="nav-bar-wrapper">
     <div class="nav-arrow nav-left">❮</div>
@@ -377,8 +391,14 @@ body {
 <script>
 // ================= Supabase 設定 =================
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi'; // 注意：此 Key 暴露在前端
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
+// 初始化 Supabase Client
+let sbClient = null;
+if (window.supabase) {
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} else {
+  console.error("Supabase Library failed to load");
+}
 
 // ================= 全域變數 =================
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
@@ -439,21 +459,29 @@ function getRoleFromURL(){
 
 async function loadSheetData(){
   currentRole = getRoleFromURL();
+  // 設定主題色
   document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
   
   try {
-    // 1. 平行載入 Google Sheet 和 Supabase 資料
-    const [sheetRes, supabaseRes] = await Promise.all([
-      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`)
-        .then(r => r.text()),
-      supabase.from('chiikawa_data').select('item_name, status')
-    ]);
+    // 1. 抓取 Google Sheet (核心資料)
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`)
+      .then(r => r.text());
 
-    // 2. 處理 Supabase 資料
-    if(supabaseRes.data) {
-      supabaseRes.data.forEach(row => {
-        supabaseOverrides[row.item_name] = row.status;
-      });
+    // 2. 嘗試抓取 Supabase (非同步，容許失敗)
+    // 如果資料表還沒建好，這裡會報錯，但我們 catch 住它，不影響主畫面顯示
+    if (sbClient) {
+      try {
+        const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status');
+        if (!error && data) {
+          data.forEach(row => {
+            supabaseOverrides[row.item_name] = row.status;
+          });
+        } else {
+          console.warn("Supabase 讀取略過:", error?.message);
+        }
+      } catch (sbError) {
+        console.warn("Supabase 連線失敗 (可能是 Table 未建立)，使用預設狀態。", sbError);
+      }
     }
 
     // 3. 處理 Google Sheet 資料
@@ -475,7 +503,6 @@ async function loadSheetData(){
       } else if (rawPrice === "-") {
         finalPrice = "-"; // 組合商品
       } else {
-        // 如果是文字或空值，保持原樣 (通常是私訊花花)
         finalPrice = rawPrice;
       }
 
@@ -485,7 +512,7 @@ async function loadSheetData(){
         rawType: row.c[1]?.v || "",
         style: row.c[2]?.v || "",
         name: row.c[3]?.v || "",
-        price: finalPrice, // 使用計算後的價格
+        price: finalPrice, 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
 
@@ -494,11 +521,9 @@ async function loadSheetData(){
                       (categoryMap[item.rawType] || categoryMap[item.style] || item.rawType || "未分類");
 
       // === 狀態判定邏輯 ===
-      // 優先順序：Supabase覆蓋 > 分類規則 (吊娃/娃=現貨, 其他=需預訂)
-      // 舊有的 Sheet Stock 欄位在此邏輯下被忽略，除非需要 fallback (目前依需求直接全覆蓋)
-      
-      let computedStatus = "需預訂"; // 預設
-      if (item.category === "吊娃、娃") {
+      // 預設邏輯
+      let computedStatus = "需預訂"; 
+      if (item.category === "吊娃、娃" || item.rawType === "吊娃" || item.rawType === "娃") {
         computedStatus = "現貨";
       }
 
@@ -517,7 +542,8 @@ async function loadSheetData(){
 
   } catch (error) {
     console.error(error);
-    document.getElementById("card-container").textContent = "載入資料失敗，請稍後再試";
+    document.getElementById("card-container").innerHTML = 
+      `<div style="margin-top:50px;">載入資料失敗，請檢查網路或稍後再試。<br><small>${error.message}</small></div>`;
   }
 }
 
@@ -531,15 +557,19 @@ async function updateStatus(itemName, newStatus) {
   if (item) item.status = newStatus;
 
   // 2. 更新 UI 顏色
-  renderCards(globalItems, currentRole); // 簡單暴力重繪，確保一致性
+  renderCards(globalItems, currentRole); 
 
-  // 3. 寫入 Supabase
-  const { error } = await supabase
-    .from('chiikawa_data')
-    .upsert({ item_name: itemName, status: newStatus }, { onConflict: 'item_name' });
-  
-  if (error) {
-    alert("儲存失敗: " + error.message);
+  // 3. 寫入 Supabase (若 Table 不存在會 Alert 錯誤)
+  if (sbClient) {
+    const { error } = await sbClient
+      .from('chiikawa_data')
+      .upsert({ item_name: itemName, status: newStatus }, { onConflict: 'item_name' });
+    
+    if (error) {
+      alert("儲存至資料庫失敗 (可能是尚未建立 Table): " + error.message);
+    }
+  } else {
+    alert("Supabase 未初始化");
   }
 }
 
@@ -548,11 +578,16 @@ function renderCards(items, roleName){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   
+  if (items.length === 0) {
+    container.innerHTML = "<div style='margin-top:50px;'>目前沒有這個角色的商品 (´・ω・`)</div>";
+    return;
+  }
+
   // 分組邏輯
   const grouped = {};
   items.forEach(it => {
     (grouped[it.category] = grouped[it.category] || []).push(it);
-    // 處理額外分類映射 (如將鑰匙包也顯示在包袋區)
+    // 處理額外分類映射
     if(it.category === "吊娃、娃"){
       const tgt = extraStyleCategoryMap[it.style];
       if(tgt) (grouped[tgt] = grouped[tgt] || []).push({...it});
@@ -600,22 +635,17 @@ function renderCards(items, roleName){
         const cardTag = "div";
         const card = document.createElement(cardTag);
         card.className = "card";
-        card.style.borderColor = "#eee"; // 統一淡邊框
+        card.style.borderColor = "#eee";
 
-        // 點擊事件
         if (isCombo) {
           card.onclick = () => loadComboDetails(item.name);
-        } else if (needLineLink) {
-           // 私訊商品不彈窗，直接去 Line (或保留彈窗由使用者決定，這裡照舊邏輯去彈窗較美觀)
-           card.onclick = () => openCardOverlay(card.cloneNode(true), item);
         } else {
            card.onclick = () => openCardOverlay(card.cloneNode(true), item);
         }
 
-        // 狀態 HTML (普通模式 vs 管理員模式)
+        // 狀態 HTML
         let statusHtml = "";
         if (isAdmin) {
-          // 管理員下拉選單
           statusHtml = `
             <select class="admin-select" 
               style="background-color:${statusConfig.bg}; color:${statusConfig.color}"
@@ -627,7 +657,6 @@ function renderCards(items, roleName){
             </select>
           `;
         } else {
-          // 一般顯示
           statusHtml = `
             <div class="status-badge" style="background:${statusConfig.bg}; color:${statusConfig.color}">
               ${item.status}
@@ -635,7 +664,7 @@ function renderCards(items, roleName){
           `;
         }
 
-        // 角色標籤 (非吊娃區顯示)
+        // 角色標籤
         const roleBadge = (cat !== "吊娃、娃") 
           ? `<div class="role-badge" style="background-color:${rtxt==="綜"?"#dac7b7":colors[roleName]||"#ccc"}">${rtxt}</div>` 
           : "";
@@ -659,8 +688,6 @@ function getStatusConfig(statusText) {
     case "現貨": return { bg: "#FFF4BD", color: "#333" };
     case "需預訂": return { bg: "#D4BBDD", color: "#333" };
     case "點貨中": return { bg: "#E7F2F8", color: "#333" };
-    case "受注品": return { bg: "#74BDCB", color: "#fff" };
-    case "搭飛機中": return { bg: "#5885AF", color: "#fff" };
     default: return { bg: "#eee", color: "#999" };
   }
 }
@@ -681,7 +708,7 @@ function formatPrice(price){
   return `$${price}`;
 }
 
-// ================= Modal 組合內容邏輯 (保留原功能) =================
+// ================= Modal 組合內容邏輯 =================
 function loadComboDetails(clickedItemName) {
   const modal = document.getElementById("comboModal");
   const body = document.getElementById("comboBody");
@@ -694,7 +721,7 @@ function loadComboDetails(clickedItemName) {
     .then(t => JSON.parse(t.substr(47).slice(0, -2)))
     .then(data => {
       const rows = data.table.rows || [];
-      const currentRoleFull = getRoleFromURL(); // e.g., "吉伊"
+      const currentRoleFull = getRoleFromURL();
       const currentRoleKey = roleMap[currentRoleFull] || ""; 
       const targetItem = clickedItemName.trim();
       
@@ -712,7 +739,6 @@ function loadComboDetails(clickedItemName) {
         return;
       }
 
-      // 組合渲染邏輯 (簡化版，保留核心結構)
       const grouped = {};
       filteredRows.forEach(row => {
         const gName = (row.c[3]?.v || "").trim();
@@ -720,11 +746,10 @@ function loadComboDetails(clickedItemName) {
       });
       
       let html = "";
-      Object.keys(grouped).forEach((gName, idx) => {
+      Object.keys(grouped).forEach((gName) => {
         const items = grouped[gName];
         const price = items[0].c[4]?.v;
         const remark = items[0].c[9]?.v;
-        // 計算價格 (除3.8邏輯)
         let calcPrice = price;
         if(typeof price === 'number') {
             calcPrice = Math.ceil((price/3.8)/5)*5;
@@ -756,10 +781,8 @@ function openCardOverlay(clonedCard, itemData) {
   const overlay = document.getElementById("cardOverlay");
   overlay.innerHTML = "";
   
-  // 重建放大版卡片內容，確保樣式正確
   const cardDiv = document.createElement("div");
   cardDiv.className = "card";
-  // 移除點擊事件防止迴圈
   
   const statusConfig = getStatusConfig(itemData?.status || "需預訂");
   
@@ -776,13 +799,11 @@ function openCardOverlay(clonedCard, itemData) {
     </div>
   `;
   
-  // 點擊卡片內部不關閉
   cardDiv.onclick = (e) => e.stopPropagation();
 
   overlay.appendChild(cardDiv);
   overlay.style.display = "flex";
   
-  // 點擊背景關閉
   overlay.onclick = (e) => {
     if (e.target === overlay) overlay.style.display = "none";
   };
@@ -795,11 +816,9 @@ const navBarScroll = document.querySelector(".nav-bar-scroll");
 document.querySelector(".nav-arrow.nav-left").onclick = () => navBarScroll.scrollBy({ left: -100, behavior: "smooth" });
 document.querySelector(".nav-arrow.nav-right").onclick = () => navBarScroll.scrollBy({ left: 100, behavior: "smooth" });
 
-// 監聽 Modal 外部點擊關閉
 window.onclick = e => {
   if (e.target.className === "modal") e.target.style.display = "none";
 };
-
 </script>
 </body>
 </html>
