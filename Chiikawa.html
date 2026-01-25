@@ -200,8 +200,8 @@ function renderCards(items){
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
-          <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨</option>
-          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中</option>
+          <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
+          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
