@@ -1,213 +1,98 @@
 <!DOCTYPE html>
-<html lang="zh-Hk">
+<html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Chiikawa販售 - 吊娃專區</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chiikawa 寶寶收藏圖鑑</title>
+
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
-  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-/* ================= 基礎樣式 ================= */
-:root {
-  --tab-color: #d77485; 
-}
+    :root { --tab-color: #dac7b7; }
+    html, body {
+      margin: 0; padding: 0; width: 100%;
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9; color: #333333;
+      text-align: center;
+    }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f9f9f9;
-  margin: 0;
-  padding: 0;
-  color: #333333;
-  text-align: center;
-  -webkit-font-smoothing: antialiased;
-}
+    /* 頂部管理員區域 */
+    .top-bar {
+      background: #dac7b7;
+      height: 44px;
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 16px;
+      box-sizing: border-box;
+    }
+    .admin-icon {
+      width: 24px; height: 24px;
+      cursor: pointer; fill: #fff;
+      opacity: 0.9;
+    }
 
-/* ================= 頂部通知條 ================= */
-.top-bar {
-  background: var(--tab-color);
-  color: #fff;
-  height: 44px; 
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 999;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end; 
-  padding: 0 16px;
-  box-sizing: border-box;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.1);
-}
+    .logo-container { text-align: center; margin-top: 70px; }
+    .logo-container img { width: 140px; height: auto; }
+    h1 { margin: 10px 0; font-size: 18px; color: #A49393; }
 
-.admin-icon {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  fill: #fff;
-  opacity: 0.9;
-}
+    /* 角色圖示分頁 */
+    .tabs {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 10px; padding: 10px; max-width: 600px; margin: 0 auto;
+    }
+    .tab {
+      cursor: pointer; transition: transform 0.2s;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .tab:active { transform: scale(0.9); }
+    .tab-circle {
+      width: 60px; height: 60px;
+      border-radius: 50%; overflow: hidden;
+      border: 3px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .tab.active .tab-circle { border-color: var(--tab-color); }
+    .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .tab-name { font-size: 12px; font-weight: bold; margin-top: 5px; }
 
-/* ================= 商品展示區 ================= */
-#card-container {
-  padding: 60px 10px 20px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 60vh; 
-}
+    /* 載入內容區域 */
+    #content-frame {
+      width: 100%; min-height: 800px;
+      border: none; margin-top: 20px;
+    }
+    #empty-msg {
+      padding: 100px 20px; color: #999; font-size: 14px; display: none;
+    }
 
-.type-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 16px 0 8px 0;
-  color: #333;
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.5px;
-}
-.type-divider::before,
-.type-divider::after {
-  content: "";
-  flex: 1;
-  border-top: 1px solid #e0e0e0;
-  margin: 0 12px;
-}
+    /* 管理員登入 Modal (從原 Chiikawa.html 移植) */
+    .modal {
+      display: none; position: fixed; z-index: 10001; 
+      left: 0; top: 0; width: 100%; height: 100%; 
+      background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background-color: #fff; margin: 20% auto; padding: 24px;
+      width: 80%; max-width: 320px; border-radius: 20px; text-align: center;
+    }
+    .login-input {
+      width: 100%; padding: 12px; margin: 8px 0;
+      border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box;
+    }
+    .login-btn {
+      width: 100%; padding: 12px; background: #d77485;
+      color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
+    }
 
-.group-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px;
-  justify-items: center;
-}
-
-/* ================= 商品卡片 ================= */
-.card {
-  width: 100%;
-  max-width: 130px;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  background-color: #fff;
-  position: relative;
-  text-align: center;
-  padding-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: transform 0.2s;
-  overflow: hidden;
-  cursor: pointer;
-}
-.card:active { transform: scale(0.98); }
-
-.card img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-.card .name {
-  margin: 4px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #333;
-  min-height: 32px; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card .price {
-  font-size: 13px;
-  color: #d77485;
-  font-weight: bold;
-  margin-bottom: 6px;
-  min-height: 19px;
-}
-
-.status-badge {
-  display: inline-block;
-  border-radius: 20px;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  margin: 0 auto 6px auto;
-}
-
-/* ================= 管理員介面 ================= */
-.admin-select {
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 3px 5px;
-  font-size: 11px;
-  margin-bottom: 6px;
-}
-
-.admin-price-input {
-  width: 80%;
-  border: 1px dashed #ccc;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 13px;
-  padding: 2px 0;
-  margin-bottom: 4px;
-}
-
-/* ================= Modal & Overlay ================= */
-.modal {
-  display: none; 
-  position: fixed; 
-  z-index: 10000; 
-  left: 0; top: 0; width: 100%; height: 100%; 
-  background-color: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
-}
-.modal-content {
-  background-color: #fff;
-  margin: 20% auto;
-  padding: 24px;
-  width: 80%;
-  max-width: 320px;
-  border-radius: 20px;
-  position: relative;
-}
-
-.login-input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  box-sizing: border-box;
-}
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background: var(--tab-color);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#cardOverlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 11000;
-}
-
-#loading-msg { padding-top: 100px; color: #999; }
+    .bottom-bar {
+      padding: 20px 0; background-color: #dac7b7; color: #fff;
+      font-weight: bold; margin-top: 30px;
+    }
+    .bottom-bar a { color: #fff; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -219,10 +104,20 @@ body {
     </svg>
   </div>
 
-  <div id="card-container">
-    <div id="loading-msg">正在載入吊娃們... ( ˘ω˘ )</div>
+  <div class="logo-container">
+    <img src="./IMG_7282.png" alt="Chiikawa" />
   </div>
   
+  <h1>Chiikawa 寶寶收藏圖鑑</h1>
+
+  <div class="tabs" id="tabs">
+    </div>
+
+  <div id="main-content">
+    <iframe id="content-frame" src=""></iframe>
+    <div id="empty-msg">此頁面內容規劃中 ( ˘ω˘ )</div>
+  </div>
+
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <h3 style="margin-top:0;">管理員登入</h3>
@@ -232,164 +127,88 @@ body {
     </div>
   </div>
 
-  <div id="cardOverlay"></div>
+  <div class="bottom-bar">
+    <a href="https://jiwusales.github.io/jiwusales_nagano" target="_blank">自嘲熊圖鑑點這邊 d(`･∀･)b</a>
+  </div>
 
 <script>
-const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
+  const roles = [
+    { name: "吉伊", color: "#d77485", img: "https://i.postimg.cc/vZDs4YNZ/icon.png", url: "Chiikawa.html?role=吉伊" },
+    { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "" },
+    { name: "兔兔", color: "#f9be3c", img: "https://i.postimg.cc/xdzVPsYr/icon.png", url: "" },
+    { name: "小桃", color: "#838BC2", img: "https://i.postimg.cc/9MP36rrJ/icon.png", url: "" },
+    { name: "師傅", color: "#CCAFA5", img: "https://i.postimg.cc/fTq4Q4Rn/icon.png", url: "" },
+    { name: "栗子", color: "#94C973", img: "https://i.postimg.cc/FzGMK8bS/icon.png", url: "" },
+    { name: "獅薩", color: "#FBAA60", img: "https://i.postimg.cc/660Jz4sQ/icon.png", url: "" },
+    { name: "古本", color: "#eb9e97", img: "https://i.postimg.cc/nh5t7yyY/icon.png", url: "" },
+    { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "" }
+  ];
 
-let sbClient = null;
-if (window.supabase) {
-  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
+  const tabsContainer = document.getElementById("tabs");
+  const frame = document.getElementById("content-frame");
+  const emptyMsg = document.getElementById("empty-msg");
 
-const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
-const sheetName = "ちいかわ";
+  function initTabs() {
+    roles.forEach((role, index) => {
+      const tab = document.createElement("div");
+      tab.className = "tab";
+      if (index === 0) tab.classList.add("active"); // 預設選中吉伊
 
-const roleMap = { "吉伊":"吉","小八":"八","兔兔":"兔","小桃":"桃","師傅":"獺","栗子":"栗","獅薩":"獅","古本":"古","其他角色":"其" };
-const colors  = { "吉伊":"#d77485","小八":"#6293b8","兔兔":"#f9be3c","小桃":"#838BC2","師傅":"#CCAFA5","栗子":"#94C973","獅薩":"#FBAA60","古本":"#eb9e97","其他角色":"#45818e" };
+      tab.innerHTML = `
+        <div class="tab-circle" style="--tab-color: ${role.color}">
+          <img src="${role.img}" alt="${role.name}">
+        </div>
+        <div class="tab-name">${role.name}</div>
+      `;
 
-let isAdmin = false;
-let globalItems = []; 
-let currentRole = "吉伊";
-let supabaseOverrides = {}; 
-
-function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
-
-function handleLogin() {
-  const id = document.getElementById("adminId").value;
-  const pwd = document.getElementById("adminPwd").value;
-  if (id === "1050267" && pwd === "Penny01!") {
-    isAdmin = true;
-    document.getElementById("loginModal").style.display = "none";
-    renderCards(globalItems, currentRole); 
-  } else {
-    alert("帳號或密碼錯誤");
-  }
-}
-
-async function loadSheetData(){
-  const p = new URLSearchParams(location.search).get("role");
-  currentRole = roleMap[p] ? p : "吉伊";
-  document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
-  
-  try {
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
-    if (sbClient) {
-      const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      if (data) data.forEach(row => { supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; });
-    }
-
-    const jsonText = sheetRes.substr(47).slice(0, -2);
-    const data = JSON.parse(jsonText);
-    const rows = data.table.rows || [];
-    const keyword = roleMap[currentRole];
-
-    globalItems = rows.map((row, i) => {
-      const rawPrice = row.c[5]?.v;
-      const itemName = row.c[3]?.v || "";
-      const rawType = row.c[1]?.v || "";
-      const style = row.c[2]?.v || "";
-
-      // 篩選：只保留 吊娃 或 娃
-      if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
-
-      let finalPrice = ""; 
-      if (supabaseOverrides[itemName]?.price) {
-        finalPrice = supabaseOverrides[itemName].price;
-      } else {
-        let cleanPriceStr = String(rawPrice).replace(/[^\d.-]/g, '');
-        let numericPrice = parseFloat(cleanPriceStr);
-        // 如果是組合或私訊，留空給管理員填寫
-        if (!isNaN(numericPrice) && rawPrice !== "-" && rawPrice !== "組合出售" && rawPrice !== "私訊花花") {
-          finalPrice = Math.ceil((numericPrice / 3.8) / 5) * 5;
-        }
-      }
-
-      return {
-        index: i,
-        name: itemName,
-        price: finalPrice, 
-        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
-        status: supabaseOverrides[itemName]?.status || "現貨",
-        role: row.c[0]?.v || ""
+      tab.onclick = () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        document.documentElement.style.setProperty('--tab-color', role.color);
+        loadContent(role.url);
       };
-    }).filter(it => it && it.role.includes(keyword));
 
-    renderCards(globalItems, currentRole);
-  } catch (error) {
-    document.getElementById("card-container").innerHTML = "載入失敗";
-  }
-}
-
-async function updateStatus(itemName, newStatus) {
-  if(!supabaseOverrides[itemName]) supabaseOverrides[itemName] = {};
-  supabaseOverrides[itemName].status = newStatus;
-  if (sbClient) await sbClient.from('chiikawa_data').upsert({ item_name: itemName, status: newStatus, price: supabaseOverrides[itemName].price }, { onConflict: 'item_name' });
-}
-
-async function updatePrice(itemName, newPrice) {
-  if(!supabaseOverrides[itemName]) supabaseOverrides[itemName] = {};
-  supabaseOverrides[itemName].price = newPrice;
-  if (sbClient) await sbClient.from('chiikawa_data').upsert({ item_name: itemName, price: newPrice, status: supabaseOverrides[itemName].status }, { onConflict: 'item_name' });
-}
-
-function renderCards(items, roleName){
-  const container = document.getElementById("card-container");
-  container.innerHTML = "";
-  if (!items.length) { container.innerHTML = "目前沒有商品"; return; }
-
-  const gdiv = document.createElement("div");
-  gdiv.className = "group-grid";
-  
-  items.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "card";
+      tabsContainer.appendChild(tab);
+    });
     
-    const statusConfig = getStatusConfig(item.status);
-    let statusHtml = isAdmin 
-      ? `<select class="admin-select" onchange="updateStatus('${item.name}', this.value)">
-          <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
-          <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
-          <option value="點貨中" ${item.status==="點貨中"?"selected":""}>點貨中</option>
-         </select>`
-      : `<div class="status-badge" style="background:${statusConfig.bg}">${item.status}</div>`;
+    // 初始載入吉伊
+    loadContent(roles[0].url);
+  }
 
-    let priceHtml = isAdmin 
-      ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="updatePrice('${item.name}', this.value)" placeholder="輸入價錢" />`
-      : `<div class="price">${item.price ? '$'+item.price : '私訊詢問'}</div>`;
+  function loadContent(url) {
+    if (url) {
+      frame.src = url;
+      frame.style.display = "block";
+      emptyMsg.style.display = "none";
+    } else {
+      frame.style.display = "none";
+      emptyMsg.style.display = "block";
+    }
+  }
 
-    card.innerHTML = `
-      <img src="${item.img}" loading="lazy">
-      ${statusHtml}
-      <div class="name">${item.name}</div>
-      ${priceHtml}
-    `;
-    card.onclick = (e) => { if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') openCardOverlay(item); };
-    gdiv.appendChild(card);
-  });
-  container.appendChild(gdiv);
-}
+  // 管理員登入邏輯
+  function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
+  
+  function handleLogin() {
+    const id = document.getElementById("adminId").value;
+    const pwd = document.getElementById("adminPwd").value;
+    // 這裡維持你原本的帳密
+    if (id === "1050267" && pwd === "Penny01!") {
+      // 登入後透過 iframe 傳遞管理員狀態到子頁面
+      // 或者直接在子頁面重新登入也可以。
+      // 為求簡單，我們讓子頁面也開啟管理員功能：
+      frame.contentWindow.postMessage({ type: 'adminLogin', status: true }, '*');
+      document.getElementById("loginModal").style.display = "none";
+      alert("管理員登入成功！下方販售區已開啟編輯權限。");
+    } else {
+      alert("帳號或密碼錯誤");
+    }
+  }
 
-function getStatusConfig(s) {
-  if(s==="現貨") return {bg:"#FFF4BD"};
-  if(s==="需預訂") return {bg:"#D4BBDD"};
-  return {bg:"#E7F2F8"};
-}
+  // 關閉視窗
+  window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
 
-function openCardOverlay(item) {
-  const overlay = document.getElementById("cardOverlay");
-  overlay.innerHTML = `<div class="card" style="max-width:80%; padding:20px; background:#fff;">
-    <img src="${item.img}" style="max-height:60vh;">
-    <h3>${item.name}</h3>
-    <p style="color:#d77485; font-size:20px; font-weight:bold;">${item.price ? '$'+item.price : '私訊詢問'}</p>
-    <button onclick="document.getElementById('cardOverlay').style.display='none'" style="padding:10px 20px; border-radius:10px; border:none; background:#eee;">關閉</button>
-  </div>`;
-  overlay.style.display = "flex";
-}
-
-loadSheetData();
-window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
+  initTabs();
 </script>
 </body>
 </html>
