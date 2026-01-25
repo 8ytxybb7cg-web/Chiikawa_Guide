@@ -6,106 +6,134 @@
   <title>Chiikawa 寶寶收藏圖鑑</title>
 
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  
   <style>
-    :root { --tab-color: #dac7b7; }
+    :root { 
+      --tab-color: #dac7b7; 
+    }
+    
     html, body {
       margin: 0; padding: 0; width: 100%;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background-color: #f9f9f9; color: #333333;
       text-align: center;
+      overflow-x: hidden;
     }
 
-    /* 頂部管理員區域 */
+    /* 頂部色條 - 僅裝飾 */
     .top-bar {
-      background: #dac7b7;
-      height: 44px;
+      background: var(--tab-color);
+      height: 10px;
+      width: 100%;
       position: fixed;
-      top: 0; left: 0; width: 100%;
+      top: 0; left: 0;
       z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0 16px;
-      box-sizing: border-box;
-    }
-    .admin-icon {
-      width: 24px; height: 24px;
-      cursor: pointer; fill: #fff;
-      opacity: 0.9;
     }
 
-    .logo-container { text-align: center; margin-top: 70px; }
-    .logo-container img { width: 140px; height: auto; }
-    h1 { margin: 10px 0; font-size: 18px; color: #A49393; }
+    .logo-container { 
+      text-align: center; 
+      margin-top: 40px; 
+    }
+    .logo-container img { 
+      width: 140px; height: auto; 
+    }
+    
+    h1 { 
+      margin: 10px 0 20px 0; 
+      font-size: 18px; 
+      color: #A49393; 
+      letter-spacing: 1px;
+    }
 
-    /* 角色圖示分頁 */
+    /* 角色圖示導航 */
     .tabs {
-      display: flex; justify-content: center; flex-wrap: wrap;
-      gap: 10px; padding: 10px; max-width: 600px; margin: 0 auto;
+      display: flex; 
+      justify-content: center; 
+      flex-wrap: wrap;
+      gap: 12px; 
+      padding: 0 15px; 
+      max-width: 800px; 
+      margin: 0 auto 20px auto;
     }
+    
     .tab {
-      cursor: pointer; transition: transform 0.2s;
-      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; 
+      transition: transform 0.2s, opacity 0.2s;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+      width: 70px;
     }
     .tab:active { transform: scale(0.9); }
     .tab-circle {
       width: 60px; height: 60px;
-      border-radius: 50%; overflow: hidden;
+      border-radius: 50%; 
+      overflow: hidden;
       border: 3px solid transparent;
-      transition: border-color 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: border-color 0.3s, box-shadow 0.3s;
+      background: #fff;
     }
-    .tab.active .tab-circle { border-color: var(--tab-color); }
+    .tab.active .tab-circle { 
+      border-color: var(--tab-color); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
-    .tab-name { font-size: 12px; font-weight: bold; margin-top: 5px; }
+    .tab-name { 
+      font-size: 12px; 
+      font-weight: bold; 
+      margin-top: 6px; 
+      color: #666;
+    }
+    .tab.active .tab-name { color: #333; }
 
-    /* 載入內容區域 */
+    /* 內容區域 - Iframe 容器 */
+    #main-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f9f9f9;
+    }
+
+    /* 關鍵：設定 Iframe 為 100% 寬度且不出現內部滾動條 */
     #content-frame {
-      width: 100%; min-height: 800px;
-      border: none; margin-top: 20px;
+      width: 100%;
+      border: none;
+      display: block;
+      overflow: hidden; /* 內部不滾動 */
     }
+
     #empty-msg {
-      padding: 100px 20px; color: #999; font-size: 14px; display: none;
+      padding: 100px 20px; 
+      color: #999; 
+      font-size: 14px; 
+      display: none;
+      min-height: 400px;
     }
 
-    /* 管理員登入 Modal (從原 Chiikawa.html 移植) */
-    .modal {
-      display: none; position: fixed; z-index: 10001; 
-      left: 0; top: 0; width: 100%; height: 100%; 
-      background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background-color: #fff; margin: 20% auto; padding: 24px;
-      width: 80%; max-width: 320px; border-radius: 20px; text-align: center;
-    }
-    .login-input {
-      width: 100%; padding: 12px; margin: 8px 0;
-      border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box;
-    }
-    .login-btn {
-      width: 100%; padding: 12px; background: #d77485;
-      color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
-    }
-
+    /* 底部欄 */
     .bottom-bar {
-      padding: 20px 0; background-color: #dac7b7; color: #fff;
-      font-weight: bold; margin-top: 30px;
+      padding: 30px 0; 
+      background-color: #dac7b7; 
+      color: #fff;
+      font-weight: bold; 
+      font-size: 14px;
+      margin-top: 50px;
     }
-    .bottom-bar a { color: #fff; text-decoration: none; }
+    .bottom-bar a { 
+      color: #fff; 
+      text-decoration: none; 
+      border-bottom: 1px solid #fff;
+      padding-bottom: 2px;
+    }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  </div>
+  <div class="top-bar"></div>
 
   <div class="logo-container">
-    <img src="./IMG_7282.png" alt="Chiikawa" />
+    <img src="./IMG_7282.png" alt="Chiikawa Logo" />
   </div>
   
   <h1>Chiikawa 寶寶收藏圖鑑</h1>
@@ -114,17 +142,8 @@
     </div>
 
   <div id="main-content">
-    <iframe id="content-frame" src=""></iframe>
-    <div id="empty-msg">此頁面內容規劃中 ( ˘ω˘ )</div>
-  </div>
-
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <h3 style="margin-top:0;">管理員登入</h3>
-      <input type="text" id="adminId" class="login-input" placeholder="ID">
-      <input type="password" id="adminPwd" class="login-input" placeholder="Password">
-      <button class="login-btn" onclick="handleLogin()">登入</button>
-    </div>
+    <iframe id="content-frame" src="" scrolling="no"></iframe>
+    <div id="empty-msg">此角色專區內容規劃中 ( ˘ω˘ )</div>
   </div>
 
   <div class="bottom-bar">
@@ -152,10 +171,10 @@
     roles.forEach((role, index) => {
       const tab = document.createElement("div");
       tab.className = "tab";
-      if (index === 0) tab.classList.add("active"); // 預設選中吉伊
+      if (index === 0) tab.classList.add("active");
 
       tab.innerHTML = `
-        <div class="tab-circle" style="--tab-color: ${role.color}">
+        <div class="tab-circle">
           <img src="${role.img}" alt="${role.name}">
         </div>
         <div class="tab-name">${role.name}</div>
@@ -171,7 +190,6 @@
       tabsContainer.appendChild(tab);
     });
     
-    // 初始載入吉伊
     loadContent(roles[0].url);
   }
 
@@ -180,33 +198,21 @@
       frame.src = url;
       frame.style.display = "block";
       emptyMsg.style.display = "none";
+      
+      // 初始化高度，避免切換時卡在太長的高度
+      frame.style.height = "800px"; 
     } else {
       frame.style.display = "none";
       emptyMsg.style.display = "block";
     }
   }
 
-  // 管理員登入邏輯
-  function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
-  
-  function handleLogin() {
-    const id = document.getElementById("adminId").value;
-    const pwd = document.getElementById("adminPwd").value;
-    // 這裡維持你原本的帳密
-    if (id === "1050267" && pwd === "Penny01!") {
-      // 登入後透過 iframe 傳遞管理員狀態到子頁面
-      // 或者直接在子頁面重新登入也可以。
-      // 為求簡單，我們讓子頁面也開啟管理員功能：
-      frame.contentWindow.postMessage({ type: 'adminLogin', status: true }, '*');
-      document.getElementById("loginModal").style.display = "none";
-      alert("管理員登入成功！下方販售區已開啟編輯權限。");
-    } else {
-      alert("帳號或密碼錯誤");
+  // 監聽來自 Iframe 的高度訊息，實現自動調整長度
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.height) {
+      frame.style.height = e.data.height + 'px';
     }
-  }
-
-  // 關閉視窗
-  window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
+  }, false);
 
   initTabs();
 </script>
