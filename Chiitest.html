@@ -269,6 +269,13 @@ function handleCancel() { if(confirm("確定要取消修改嗎？")) location.re
 
 // --- 其他功能 ---
 function openCardOverlay(item) {
+  // 不在 iframe 內顯示，改為傳送資料給父頁面
+  window.parent.postMessage({
+    type: 'openModal',
+    item: item
+  }, '*');
+}
+
   const overlay = document.getElementById("cardOverlay");
   const p = (isAdmin || (item.status !== "需預訂" && item.price)) ? '$'+item.price : 'WhatsApp 查詢';
   overlay.innerHTML = `<div class="card" style="max-width:300px; padding:20px; cursor:default;" onclick="event.stopPropagation()">
