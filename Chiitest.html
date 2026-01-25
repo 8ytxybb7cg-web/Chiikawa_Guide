@@ -236,7 +236,7 @@ body {
   </div>
   
   <div id="loginModal" class="modal">
-        <div class="modal-content">
+    <div class="modal-content">
       <span class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
       <h3 style="margin-top:0;">管理員登入</h3>
       <input type="text" id="adminId" class="login-input" placeholder="ID">
@@ -287,19 +287,20 @@ async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
   
   try {
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
+    // 1. 同步獲取 Supabase 資料庫中的最新價錢與狀態
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) data.forEach(row => { supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; });
     }
 
+    // 2. 獲取 Google Sheets 基礎資料（圖片、名稱、角色）
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
     const keyword = roleMap[currentRole];
 
     globalItems = rows.map((row, i) => {
-      const rawPrice = row.c[5]?.v;
       const itemName = row.c[3]?.v || "";
       const rawType = row.c[1]?.v || "";
       const style = row.c[2]?.v || "";
@@ -307,30 +308,23 @@ async function loadSheetData(){
       // 篩選：只保留 吊娃 或 娃
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
 
-      let finalPrice = ""; 
-      if (supabaseOverrides[itemName]?.price) {
-        finalPrice = supabaseOverrides[itemName].price;
-      } else {
-        let cleanPriceStr = String(rawPrice).replace(/[^\d.-]/g, '');
-        let numericPrice = parseFloat(cleanPriceStr);
-        // 如果是組合或私訊，留空給管理員填寫
-        if (!isNaN(numericPrice) && rawPrice !== "-" && rawPrice !== "組合出售" && rawPrice !== "私訊花花") {
-          finalPrice = Math.ceil((numericPrice / 3.8) / 5) * 5;
-        }
-      }
-
+      // 重要改動：價格與狀態現在完全依賴 SupabaseOverrides
+      const sbData = supabaseOverrides[itemName];
+      
       return {
         index: i,
         name: itemName,
-        price: finalPrice, 
+        // 如果 Supabase 有資料就用 Supabase 的，否則預設為空 (會顯示私訊)
+        price: sbData?.price || "", 
+        status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
-        status: supabaseOverrides[itemName]?.status || "現貨",
         role: row.c[0]?.v || ""
       };
     }).filter(it => it && it.role.includes(keyword));
 
     renderCards(globalItems, currentRole);
   } catch (error) {
+    console.error(error);
     document.getElementById("card-container").innerHTML = "載入失敗";
   }
 }
@@ -338,13 +332,26 @@ async function loadSheetData(){
 async function updateStatus(itemName, newStatus) {
   if(!supabaseOverrides[itemName]) supabaseOverrides[itemName] = {};
   supabaseOverrides[itemName].status = newStatus;
-  if (sbClient) await sbClient.from('chiikawa_data').upsert({ item_name: itemName, status: newStatus, price: supabaseOverrides[itemName].price }, { onConflict: 'item_name' });
+  if (sbClient) {
+    await sbClient.from('chiikawa_data').upsert({ 
+      item_name: itemName, 
+      status: newStatus, 
+      price: supabaseOverrides[itemName].price 
+    }, { onConflict: 'item_name' });
+    renderCards(globalItems, currentRole); // 更新狀態後重新渲染以更新顯示邏輯
+  }
 }
 
 async function updatePrice(itemName, newPrice) {
   if(!supabaseOverrides[itemName]) supabaseOverrides[itemName] = {};
   supabaseOverrides[itemName].price = newPrice;
-  if (sbClient) await sbClient.from('chiikawa_data').upsert({ item_name: itemName, price: newPrice, status: supabaseOverrides[itemName].status }, { onConflict: 'item_name' });
+  if (sbClient) {
+    await sbClient.from('chiikawa_data').upsert({ 
+      item_name: itemName, 
+      price: newPrice, 
+      status: supabaseOverrides[itemName].status 
+    }, { onConflict: 'item_name' });
+  }
 }
 
 function renderCards(items, roleName){
@@ -360,6 +367,8 @@ function renderCards(items, roleName){
     card.className = "card";
     
     const statusConfig = getStatusConfig(item.status);
+
+    // 管理員看到的狀態選擇器
     let statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="updateStatus('${item.name}', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -368,9 +377,20 @@ function renderCards(items, roleName){
          </select>`
       : `<div class="status-badge" style="background:${statusConfig.bg}">${item.status}</div>`;
 
-    let priceHtml = isAdmin 
-      ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="updatePrice('${item.name}', this.value)" placeholder="輸入價錢" />`
-      : `<div class="price">${item.price ? '$'+item.price : '私訊詢問'}</div>`;
+    // 價格顯示邏輯：
+    // 1. 如果是管理員，顯示輸入框方便改價
+    // 2. 如果狀態是「需預訂」，非管理員一律看見「Whatsapp查詢」
+    // 3. 其他狀態顯示實際價格
+    let priceHtml = "";
+    if (isAdmin) {
+      priceHtml = `<input class="admin-price-input" type="text" value="${item.price}" onchange="updatePrice('${item.name}', this.value)" placeholder="輸入價錢" />`;
+    } else {
+      if (item.status === "需預訂") {
+        priceHtml = `<div class="price">Whatsapp查詢</div>`;
+      } else {
+        priceHtml = `<div class="price">${item.price ? '$'+item.price : 'Whatsapp查詢'}</div>`;
+      }
+    }
 
     card.innerHTML = `
       <img src="${item.img}" loading="lazy">
@@ -382,6 +402,7 @@ function renderCards(items, roleName){
     gdiv.appendChild(card);
   });
   container.appendChild(gdiv);
+  setTimeout(sendHeight, 500); 
 }
 
 function getStatusConfig(s) {
@@ -392,34 +413,29 @@ function getStatusConfig(s) {
 
 function openCardOverlay(item) {
   const overlay = document.getElementById("cardOverlay");
+  // Overlay 也同步「需預訂」隱藏價格邏輯
+  const displayPrice = (!isAdmin && item.status === "需預訂") ? "Whatsapp查詢" : (item.price ? '$'+item.price : 'Whatsapp查詢');
+  
   overlay.innerHTML = `<div class="card" style="max-width:80%; padding:20px; background:#fff;">
     <img src="${item.img}" style="max-height:60vh;">
     <h3>${item.name}</h3>
-    <p style="color:#d77485; font-size:20px; font-weight:bold;">${item.price ? '$'+item.price : '私訊詢問'}</p>
+    <p style="color:#d77485; font-size:20px; font-weight:bold;">${displayPrice}</p>
     <button onclick="document.getElementById('cardOverlay').style.display='none'" style="padding:10px 20px; border-radius:10px; border:none; background:#eee;">關閉</button>
   </div>`;
   overlay.style.display = "flex";
 }
 
 loadSheetData();
+
 window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
 
-// 在 Chiikawa.html 的 script 底部加入這段，用於通知父頁面高度
 function sendHeight() {
   const height = document.body.scrollHeight;
   window.parent.postMessage({ height: height }, '*');
 }
 
-// 監聽內容載入後與視窗縮放後傳送高度
 window.addEventListener('load', sendHeight);
 window.addEventListener('resize', sendHeight);
-
-// 由於您的資料是異步載入的，請在 renderCards() 函數的最後面也執行一次
-// 範例：
-// function renderCards(items, roleName) {
-//   ... 原有的代碼 ...
-//   setTimeout(sendHeight, 500); // 確保圖片與卡片都渲染完畢後傳送高度
-// }
 </script>
 </body>
 </html>
