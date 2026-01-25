@@ -271,8 +271,41 @@ body {
   </div>
 
   <div id="card-container">
-    <div id="loading-msg">正在載入寶寶們... <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Chiikawa" /></div>
+  <div id="loading-msg">
+    正在載入寶寶們... 
+    <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Chiikawa" class="loading-icon" />
   </div>
+</div>
+
+<style>
+  /* CSS 部分 */
+  #loading-msg {
+    display: flex;
+    align-items: center; /* 確保文字跟圖片垂直居中對齊 */
+    font-size: 16px;     /* 你可以隨意改動字體大小，圖片會跟著縮放 */
+    color: #555;
+  }
+
+  .loading-icon {
+    height: 1.5em;       /* 圖片高度設定為字體的 1.5 倍，視覺最舒服 */
+    width: auto;         /* 寬度自動，避免變形 */
+    margin-left: 8px;    /* 與文字保持一點距離 */
+    
+    /* 啟動動畫：名稱 bounce，時間 0.8秒，無限循環 */
+    animation: bounce 0.8s infinite ease-in-out;
+  }
+
+  /* 定義跳動動畫 */
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px); /* 向上跳 5 像素 */
+    }
+  }
+</style>
+
   
   <div id="loginModal" class="modal">
     <div class="modal-content">
