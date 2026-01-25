@@ -97,8 +97,8 @@ body {
 /* ================= 載入動畫設定 ================= */
 #loading-msg { 
   display: flex;
-  flex-direction: column; /* 圖片文字垂直排 */
-  align-items: center;    /* 水平置中 */
+  flex-direction: column; 
+  align-items: center;    
   justify-content: center;
   padding-top: 100px; 
   color: #999; 
@@ -106,10 +106,10 @@ body {
 }
 
 .loading-icon {
-  width: 20%;            /* 原圖大小的 20% */
-  max-width: 100px;      /* 手機版防過大限制 */
+  width: 20%;            
+  max-width: 100px;      
   height: auto;
-  margin-bottom: 15px;   /* 圖片跟文字的距離 */
+  margin-bottom: 15px;   
   animation: bounce 0.8s infinite ease-in-out;
 }
 
@@ -331,6 +331,11 @@ function renderCards(items, roleName){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
+    // 邏輯判斷：如果不是 Admin，且狀態為「補貨」或「點貨中」，則不顯示
+    if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) {
+      return; 
+    }
+
     const card = document.createElement("div");
     card.className = "card";
     const statusConfig = getStatusConfig(item.status);
@@ -339,8 +344,9 @@ function renderCards(items, roleName){
       ? `<select class="admin-select" onchange="stageStatus('${item.name}', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
-          <option value="點貨中" ${item.status==="點貨中"?"selected":""}>點貨中</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
+          <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨</option>
+          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中</option>
          </select>`
       : `<div class="status-badge" style="background:${statusConfig.bg}">${item.status}</div>`;
 
@@ -363,6 +369,7 @@ function getStatusConfig(s) {
   if(s==="現貨") return {bg:"#FFF4BD"};
   if(s==="需預訂") return {bg:"#D4BBDD"};
   if(s==="搭飛機中") return {bg:"#C1E1C1"};
+  if(s==="補貨（不顯示）" || s==="點貨中（不顯示）") return {bg:"#e0e0e0"}; // Admin 看到的隱藏色
   return {bg:"#E7F2F8"};
 }
 
