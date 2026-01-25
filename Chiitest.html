@@ -171,12 +171,24 @@ body {
 .modal-content {
   background-color: #fff;
   margin: 20% auto;
-  padding: 24px;
+  padding: 32px 24px 24px 24px;
   width: 80%;
   max-width: 320px;
   border-radius: 20px;
   position: relative;
 }
+
+.close-modal {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  line-height: 1;
+}
+.close-modal:hover { color: #333; }
 
 .login-input {
   width: 100%;
@@ -224,7 +236,8 @@ body {
   </div>
   
   <div id="loginModal" class="modal">
-    <div class="modal-content">
+        <div class="modal-content">
+      <span class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
       <h3 style="margin-top:0;">管理員登入</h3>
       <input type="text" id="adminId" class="login-input" placeholder="ID">
       <input type="password" id="adminPwd" class="login-input" placeholder="Password">
