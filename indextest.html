@@ -87,9 +87,8 @@
     <div id="empty-msg">此角色內容載入中 ( ˘ω˘ )</div>
   </div>
 
-    <div class="bottom-bar">
-    <span>&copy;
- 2024 Chiikawa Sales</span>
+      <div class="bottom-bar">
+    <span>&copy; <span id="current-year"></span> Chiikawa Sales</span>
   </div>
 
 <script>
@@ -156,7 +155,11 @@
     }
   }, false);
 
+// 在原本的 <script> 標籤內的 initTabs() 附近或底部加上這一行
+    document.getElementById("current-year").textContent = new Date().getFullYear();
+
   initTabs();
+  
 </script>
 </body>
 </html>
