@@ -52,9 +52,8 @@ body {
   opacity: 0.9;
 }
 
-/* 新增：Admin 操作按鈕 */
 .admin-actions {
-  display: none; /* 預設隱藏 */
+  display: none; 
   gap: 8px;
 }
 .btn-save, .btn-cancel {
@@ -70,6 +69,20 @@ body {
 .btn-save { background: rgba(255,255,255,0.2); }
 .btn-cancel { opacity: 0.8; }
 
+.btn-logout {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.5);
+  font-size: 12px;
+  background: rgba(0,0,0,0.1);
+  color: #fff;
+  cursor: pointer;
+  display: none; 
+}
+
 /* ================= 商品展示區 ================= */
 #card-container {
   padding: 60px 10px 20px 10px;
@@ -81,6 +94,31 @@ body {
   min-height: 60vh; 
 }
 
+/* ================= 載入動畫設定 ================= */
+#loading-msg { 
+  display: flex;
+  flex-direction: column; /* 圖片文字垂直排 */
+  align-items: center;    /* 水平置中 */
+  justify-content: center;
+  padding-top: 100px; 
+  color: #999; 
+  font-weight: bold;
+}
+
+.loading-icon {
+  width: 20%;            /* 原圖大小的 20% */
+  max-width: 100px;      /* 手機版防過大限制 */
+  height: auto;
+  margin-bottom: 15px;   /* 圖片跟文字的距離 */
+  animation: bounce 0.8s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ================= 其他樣式 ================= */
 .type-divider {
   display: flex;
   align-items: center;
@@ -89,14 +127,6 @@ body {
   color: #333;
   font-weight: 700;
   font-size: 15px;
-  letter-spacing: 0.5px;
-}
-.type-divider::before,
-.type-divider::after {
-  content: "";
-  flex: 1;
-  border-top: 1px solid #e0e0e0;
-  margin: 0 12px;
 }
 
 .group-grid {
@@ -106,7 +136,6 @@ body {
   justify-items: center;
 }
 
-/* ================= 商品卡片 ================= */
 .card {
   width: 100%;
   max-width: 130px;
@@ -122,133 +151,30 @@ body {
   cursor: pointer;
 }
 .card:active { transform: scale(0.98); }
+.card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
+.card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; color: #333; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+.card .price { font-size: 13px; color: #d77485; font-weight: bold; margin-bottom: 6px; min-height: 19px; }
 
-.card img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  padding: 8px;
-  box-sizing: border-box;
-}
+.status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin: 0 auto 6px auto; }
+.admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; }
+.admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
-.card .name {
-  margin: 4px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #333;
-  min-height: 32px; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card .price {
-  font-size: 13px;
-  color: #d77485;
-  font-weight: bold;
-  margin-bottom: 6px;
-  min-height: 19px;
-}
-
-.status-badge {
-  display: inline-block;
-  border-radius: 20px;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  margin: 0 auto 6px auto;
-}
-
-/* ================= 管理員介面 ================= */
-.admin-select {
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 3px 5px;
-  font-size: 11px;
-  margin-bottom: 6px;
-}
-
-.admin-price-input {
-  width: 80%;
-  border: 1px dashed #ccc;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 13px;
-  padding: 2px 0;
-  margin-bottom: 4px;
-}
-
-/* ================= Modal & Overlay ================= */
-.modal {
-  display: none; 
-  position: fixed; 
-  z-index: 10000; 
-  left: 0; top: 0; width: 100%; height: 100%; 
-  background-color: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
-}
-.modal-content {
-  background-color: #fff;
-  margin: 20% auto;
-  padding: 32px 24px 24px 24px;
-  width: 80%;
-  max-width: 320px;
-  border-radius: 20px;
-  position: relative;
-}
-
-.close-modal {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #aaa;
-  cursor: pointer;
-  line-height: 1;
-}
-.close-modal:hover { color: #333; }
-
-.login-input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  box-sizing: border-box;
-}
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background: var(--tab-color);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#cardOverlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 11000;
-}
-
-#loading-msg { padding-top: 100px; color: #999; }
+.modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+.modal-content { background-color: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
+.close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
+.login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+.login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+#cardOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 11000; }
   </style>
 </head>
 <body>
 
   <div class="top-bar">
+    <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
     <div id="adminActions" class="admin-actions">
       <button class="btn-cancel" onclick="handleCancel()">取消</button>
       <button class="btn-save" onclick="handleSave()">儲存</button>
     </div>
-    
     <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
       <circle cx="12" cy="7" r="4"></circle>
@@ -256,9 +182,12 @@ body {
   </div>
 
   <div id="card-container">
-    <div id="loading-msg">正在載入吊娃們... ( ˘ω˘ )</div>
+    <div id="loading-msg">
+      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Chiikawa" class="loading-icon" />
+      <div>正在載入寶寶們...</div>
+    </div>
   </div>
-  
+
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
@@ -290,7 +219,7 @@ let isAdmin = false;
 let globalItems = []; 
 let currentRole = "吉伊";
 let supabaseOverrides = {}; 
-let pendingChanges = {}; // 暫存修改，待點擊儲存後才提交
+let pendingChanges = {};
 
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
 
@@ -300,21 +229,17 @@ function handleLogin() {
   if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
-    document.getElementById("adminActions").style.display = "flex"; // 顯示儲存/取消
+    document.getElementById("adminActions").style.display = "flex";
+    document.getElementById("logoutBtn").style.display = "block";
     renderCards(globalItems, currentRole); 
   } else {
     alert("帳號或密碼錯誤");
   }
 }
 
-// 處理儲存
 async function handleSave() {
   const changedKeys = Object.keys(pendingChanges);
-  if (changedKeys.length === 0) {
-    alert("沒有修改需要儲存");
-    return;
-  }
-
+  if (changedKeys.length === 0) { alert("沒有修改需要儲存"); return; }
   if (confirm(`確定要儲存這 ${changedKeys.length} 項修改嗎？`)) {
     if (sbClient) {
       const updates = changedKeys.map(name => ({
@@ -322,25 +247,25 @@ async function handleSave() {
         status: pendingChanges[name].status,
         price: pendingChanges[name].price
       }));
-
       const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-      
-      if (error) {
-        alert("儲存失敗：" + error.message);
-      } else {
-        alert("資料已成功儲存！");
-        pendingChanges = {}; // 清空暫存
-        loadSheetData(); // 重新整理資料
-      }
+      if (error) { alert("儲存失敗：" + error.message); } 
+      else { alert("資料已成功儲存！"); pendingChanges = {}; loadSheetData(); }
     }
   }
 }
 
-// 處理取消
-function handleCancel() {
-  if (confirm("確定要取消修改嗎？頁面將會重新整理且未儲存的變更將消失。")) {
-    location.reload();
+function handleLogout() {
+  if (confirm("確定要登出嗎？")) {
+    isAdmin = false;
+    document.getElementById("adminActions").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "none";
+    pendingChanges = {};
+    renderCards(globalItems, currentRole);
   }
+}
+
+function handleCancel() {
+  if (confirm("確定要取消修改嗎？頁面將會重新整理且未儲存的變更將消失。")) { location.reload(); }
 }
 
 async function loadSheetData(){
@@ -364,11 +289,8 @@ async function loadSheetData(){
       const itemName = row.c[3]?.v || "";
       const rawType = row.c[1]?.v || "";
       const style = row.c[2]?.v || "";
-
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
-
       const sbData = supabaseOverrides[itemName];
-      
       return {
         index: i,
         name: itemName,
@@ -386,27 +308,15 @@ async function loadSheetData(){
   }
 }
 
-// 僅更新本地暫存，不直接上傳 Supabase
 function stageStatus(itemName, newStatus) {
-  if(!pendingChanges[itemName]) {
-    pendingChanges[itemName] = { 
-      status: supabaseOverrides[itemName]?.status || "現貨", 
-      price: supabaseOverrides[itemName]?.price || "" 
-    };
-  }
+  if(!pendingChanges[itemName]) { pendingChanges[itemName] = { status: supabaseOverrides[itemName]?.status || "現貨", price: supabaseOverrides[itemName]?.price || "" }; }
   pendingChanges[itemName].status = newStatus;
-  // 更新本地視圖物件，以便渲染
   const item = globalItems.find(i => i.name === itemName);
   if(item) item.status = newStatus;
 }
 
 function stagePrice(itemName, newPrice) {
-  if(!pendingChanges[itemName]) {
-    pendingChanges[itemName] = { 
-      status: supabaseOverrides[itemName]?.status || "現貨", 
-      price: supabaseOverrides[itemName]?.price || "" 
-    };
-  }
+  if(!pendingChanges[itemName]) { pendingChanges[itemName] = { status: supabaseOverrides[itemName]?.status || "現貨", price: supabaseOverrides[itemName]?.price || "" }; }
   pendingChanges[itemName].price = newPrice;
   const item = globalItems.find(i => i.name === itemName);
   if(item) item.price = newPrice;
@@ -423,10 +333,8 @@ function renderCards(items, roleName){
   items.forEach(item => {
     const card = document.createElement("div");
     card.className = "card";
-    
     const statusConfig = getStatusConfig(item.status);
 
-    // 管理員看到的狀態選擇器：新增「搭飛機中」
     let statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageStatus('${item.name}', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -440,19 +348,10 @@ function renderCards(items, roleName){
     if (isAdmin) {
       priceHtml = `<input class="admin-price-input" type="text" value="${item.price}" onchange="stagePrice('${item.name}', this.value)" placeholder="輸入價錢" />`;
     } else {
-      if (item.status === "需預訂") {
-        priceHtml = `<div class="price">WhatsApp 查詢</div>`;
-      } else {
-        priceHtml = `<div class="price">${item.price ? '$'+item.price : 'WhatsApp 查詢'}</div>`;
-      }
+      priceHtml = `<div class="price">${(item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$'+item.price}</div>`;
     }
 
-    card.innerHTML = `
-      <img src="${item.img}" loading="lazy">
-      ${statusHtml}
-      <div class="name">${item.name}</div>
-      ${priceHtml}
-    `;
+    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
     card.onclick = (e) => { if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') openCardOverlay(item); };
     gdiv.appendChild(card);
   });
@@ -463,21 +362,14 @@ function renderCards(items, roleName){
 function getStatusConfig(s) {
   if(s==="現貨") return {bg:"#FFF4BD"};
   if(s==="需預訂") return {bg:"#D4BBDD"};
-  if(s==="搭飛機中") return {bg:"#C1E1C1"}; // 粉綠色代表運輸中
+  if(s==="搭飛機中") return {bg:"#C1E1C1"};
   return {bg:"#E7F2F8"};
 }
 
 function openCardOverlay(item) {
   const overlay = document.getElementById("cardOverlay");
-  // 彈窗也統一改為 WhatsApp 查詢
-  const displayPrice = (!isAdmin && item.status === "需預訂") ? "WhatsApp 查詢" : (item.price ? '$'+item.price : 'WhatsApp 查詢');
-  
-  overlay.innerHTML = `<div class="card" style="max-width:80%; padding:20px; background:#fff;">
-    <img src="${item.img}" style="max-height:60vh;">
-    <h3>${item.name}</h3>
-    <p style="color:#d77485; font-size:20px; font-weight:bold;">${displayPrice}</p>
-    <button onclick="document.getElementById('cardOverlay').style.display='none'" style="padding:10px 20px; border-radius:10px; border:none; background:#eee;">關閉</button>
-  </div>`;
+  const displayPrice = (!isAdmin && (item.status === "需預訂" || !item.price)) ? "WhatsApp 查詢" : (item.price ? '$'+item.price : 'WhatsApp 查詢');
+  overlay.innerHTML = `<div class="card" style="max-width:80%; padding:20px; background:#fff;"><img src="${item.img}" style="max-height:60vh;"><h3>${item.name}</h3><p style="color:#d77485; font-size:20px; font-weight:bold;">${displayPrice}</p><button onclick="document.getElementById('cardOverlay').style.display='none'" style="padding:10px 20px; border-radius:10px; border:none; background:#eee;">關閉</button></div>`;
   overlay.style.display = "flex";
 }
 
