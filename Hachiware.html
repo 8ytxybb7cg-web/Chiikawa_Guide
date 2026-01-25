@@ -108,7 +108,7 @@ body {
   <div id="card-container">
     <div id="loading-msg">
       <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
-      <div>正在載入小八寶寶中...</div>
+      <div>正在載入小八資料中...</div>
     </div>
   </div>
 
@@ -142,7 +142,12 @@ async function loadSheetData(){
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      if (data) data.forEach(row => { supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; });
+      // 將 Supabase 資料存入物件，Key 為 item_name
+      if (data) {
+        data.forEach(row => { 
+          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+        });
+      }
     }
 
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());
@@ -157,13 +162,24 @@ async function loadSheetData(){
       const style = row.c[2]?.v || "";
       const roleField = row.c[0]?.v || "";
 
-      // 關鍵過濾：小八 + (吊娃/娃)
       if (!itemName || !roleField.includes(keyword)) return null;
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
-      const sbData = supabaseOverrides[itemName];
+      // 關鍵匹配：處理「壞笑」與「小八壞笑」的匹配
+      // 1. 先找完全一樣的 2. 再找補上「小八」後一樣的 3. 找資料庫裡有包含這個名字的
+      let dbKey = itemName;
+      if (!supabaseOverrides[dbKey]) {
+        if (supabaseOverrides["小八" + itemName]) dbKey = "小八" + itemName;
+        else {
+          const foundKey = Object.keys(supabaseOverrides).find(k => k.includes(itemName));
+          if (foundKey) dbKey = foundKey;
+        }
+      }
+
+      const sbData = supabaseOverrides[dbKey];
       return {
-        name: itemName,
+        name: dbKey, // 使用資料庫中的全名
+        displayName: itemName, // 顯示在卡片上的短名 (可選)
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -188,13 +204,11 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 過濾隱藏商品 (非 Admin 模式)
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card";
     
-    // 管理員狀態選單 (同步自 Chiikawa.html)
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -202,10 +216,10 @@ function renderCards(items){
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
           <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
+          <option value="點貨中" ${item.status==="點貨中"?"selected":""}>點貨中</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
-    // 價格欄位
     const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
     const priceHtml = isAdmin 
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
@@ -213,7 +227,6 @@ function renderCards(items){
 
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
     
-    // 點擊卡片發送訊息給 index.html 顯示詳情彈窗
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
         window.parent.postMessage({ type: 'openModal', item: item }, '*');
@@ -229,6 +242,7 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
+  if(s==="點貨中") return "#FFE4E1";
   return "#E7F2F8";
 }
 
@@ -260,7 +274,12 @@ async function handleSave() {
   const keys = Object.keys(pendingChanges);
   if (!keys.length) { alert("沒有修改需要儲存"); return; }
   if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
-    const updates = keys.map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
+    const updates = keys.map(k => ({ 
+      item_name: k, 
+      status: pendingChanges[k].status, 
+      price: pendingChanges[k].price,
+      updated_at: new Date().toISOString()
+    }));
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     if (error) alert("儲存失敗：" + error.message);
     else { alert("儲存成功！"); pendingChanges = {}; loadSheetData(); }
