@@ -162,13 +162,8 @@ async function loadSheetData(){
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
       const sbData = supabaseOverrides[itemName];
-
-      // 新增前綴處理
-      const displayName = itemName.startsWith("小八") ? itemName : "小八 " + itemName;
-
       return {
-        name: itemName,       // 原始名稱 (Supabase Key)
-        displayName: displayName, // 前端顯示名稱
+        name: itemName,
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -199,7 +194,7 @@ function renderCards(items){
     const card = document.createElement("div");
     card.className = "card";
     
-    // 管理員狀態選單
+    // 管理員狀態選單 (同步自 Chiikawa.html)
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -216,15 +211,12 @@ function renderCards(items){
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
       : `<div class="price">${displayPrice}</div>`;
 
-    // 使用 item.displayName 顯示
-    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.displayName}</div>${priceHtml}`;
+    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
     
     // 點擊卡片發送訊息給 index.html 顯示詳情彈窗
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        // 發送給 Modal 的資料也使用 displayName
-        const modalItem = { ...item, name: item.displayName }; 
-        window.parent.postMessage({ type: 'openModal', item: modalItem }, '*');
+        window.parent.postMessage({ type: 'openModal', item: item }, '*');
       }
     };
     gdiv.appendChild(card);
