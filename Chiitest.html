@@ -379,16 +379,16 @@ function renderCards(items, roleName){
 
     // 價格顯示邏輯：
     // 1. 如果是管理員，顯示輸入框方便改價
-    // 2. 如果狀態是「需預訂」，非管理員一律看見「Whatsapp查詢」
+    // 2. 如果狀態是「需預訂」，非管理員一律看見「私訊詢問」
     // 3. 其他狀態顯示實際價格
     let priceHtml = "";
     if (isAdmin) {
       priceHtml = `<input class="admin-price-input" type="text" value="${item.price}" onchange="updatePrice('${item.name}', this.value)" placeholder="輸入價錢" />`;
     } else {
       if (item.status === "需預訂") {
-        priceHtml = `<div class="price">Whatsapp查詢</div>`;
+        priceHtml = `<div class="price">私訊詢問</div>`;
       } else {
-        priceHtml = `<div class="price">${item.price ? '$'+item.price : 'Whatsapp查詢'}</div>`;
+        priceHtml = `<div class="price">${item.price ? '$'+item.price : '私訊詢問'}</div>`;
       }
     }
 
@@ -414,7 +414,7 @@ function getStatusConfig(s) {
 function openCardOverlay(item) {
   const overlay = document.getElementById("cardOverlay");
   // Overlay 也同步「需預訂」隱藏價格邏輯
-  const displayPrice = (!isAdmin && item.status === "需預訂") ? "Whatsapp查詢" : (item.price ? '$'+item.price : 'Whatsapp查詢');
+  const displayPrice = (!isAdmin && item.status === "需預訂") ? "私訊詢問" : (item.price ? '$'+item.price : '私訊詢問');
   
   overlay.innerHTML = `<div class="card" style="max-width:80%; padding:20px; background:#fff;">
     <img src="${item.img}" style="max-height:60vh;">
