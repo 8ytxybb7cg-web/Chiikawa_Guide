@@ -164,7 +164,7 @@ async function loadSheetData(){
       const sbData = supabaseOverrides[itemName];
 
       // 新增前綴處理
-      const displayName = itemName.startsWith("小八") ? itemName : "小八 " + itemName;
+      const displayName = itemName.startsWith("小八") ? itemName : "小八" + itemName;
 
       return {
         name: itemName,       // 原始名稱 (Supabase Key)
