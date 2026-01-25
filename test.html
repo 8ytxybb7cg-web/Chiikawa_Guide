@@ -9,70 +9,32 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root { --tab-color:#d77485; }
-
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  background:#f9f9f9;margin:0;color:#333;text-align:center;
-}
-
-.top-bar{
-  background:var(--tab-color);color:#fff;height:44px;
-  position:fixed;top:0;left:0;width:100%;z-index:999;
-  display:flex;justify-content:flex-end;align-items:center;
-  padding:0 16px;box-sizing:border-box;
-}
-
+:root{--tab-color:#d77485;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+background:#f9f9f9;margin:0;color:#333;text-align:center;}
+.top-bar{background:var(--tab-color);color:#fff;height:44px;
+position:fixed;top:0;left:0;width:100%;z-index:10;
+display:flex;justify-content:flex-end;align-items:center;padding:0 16px;}
 .admin-icon{width:24px;height:24px;cursor:pointer;fill:#fff;}
 
-#card-container{
-  padding:70px 10px 20px;
-  max-width:1200px;margin:0 auto;
-}
-
-.group-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
-  gap:10px;justify-items:center;
-}
-
-.card{
-  width:100%;max-width:130px;
-  border:1px solid #eee;border-radius:12px;
-  background:#fff;cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
-}
-
-.card img{
-  width:100%;aspect-ratio:1;
-  object-fit:contain;padding:8px;
-}
-
+#card-container{padding:70px 10px 20px;max-width:1200px;margin:0 auto;}
+.group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
+.card{background:#fff;border:1px solid #eee;border-radius:12px;
+box-shadow:0 2px 8px rgba(0,0,0,.04);cursor:pointer;}
+.card img{width:100%;aspect-ratio:1;object-fit:contain;padding:8px;}
 .name{font-size:12px;font-weight:600;min-height:32px;}
 .price{font-size:13px;color:#666;margin-bottom:6px;}
+.status-badge{border-radius:20px;padding:3px 8px;font-size:11px;font-weight:600;margin:6px auto;}
 
-.status-badge{
-  border-radius:20px;padding:3px 8px;
-  font-size:11px;font-weight:600;margin:6px auto;
-}
-
-.admin-select,.admin-price-input{
-  width:80%;margin:4px auto;
-}
-
-#cardOverlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;justify-content:center;align-items:center;
-  z-index:9999;
-}
+#cardOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);
+display:none;justify-content:center;align-items:center;z-index:999;}
 </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-  <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24">
+  <svg class="admin-icon" viewBox="0 0 24 24">
     <circle cx="12" cy="7" r="4"></circle>
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
   </svg>
@@ -82,20 +44,12 @@ body{
   <div id="loading-msg">正在載入吊娃與娃娃…</div>
 </div>
 
-<div id="loginModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <input id="adminId" placeholder="ID">
-    <input id="adminPwd" type="password" placeholder="Password">
-    <button onclick="handleLogin()">登入</button>
-  </div>
-</div>
-
 <div id="cardOverlay"></div>
 
 <script>
 const SUPABASE_URL='https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY='sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const SHEET_ID="1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName="ちいかわ";
@@ -103,52 +57,43 @@ const sheetName="ちいかわ";
 const roleMap={吉伊:"吉",小八:"八",兔兔:"兔"};
 const colors={吉伊:"#d77485",小八:"#6293b8",兔兔:"#f9be3c"};
 
-let isAdmin=false,globalItems=[],currentRole="吉伊",overrides={};
-
-function openLoginModal(){loginModal.style.display="block";}
-function handleLogin(){
-  if(adminId.value==="1050267"&&adminPwd.value==="Penny01!"){
-    isAdmin=true;loginModal.style.display="none";
-    render();
-  }
-}
-
-function getRole(){
-  const r=new URLSearchParams(location.search).get("role");
-  return roleMap[r]?r:"吉伊";
-}
+let items=[],overrides={};
 
 async function load(){
-  currentRole=getRole();
-  document.documentElement.style.setProperty("--tab-color",colors[currentRole]);
-  
-  const sheet=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r=>r.text());
-  const json=JSON.parse(sheet.substr(47).slice(0,-2));
-  
+  const sheetText=await fetch(
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`
+  ).then(r=>r.text());
+
+  const json=JSON.parse(sheetText.substr(47).slice(0,-2));
+
   const {data}=await sb.from("chiikawa_data").select("item_name,status,price");
   data?.forEach(d=>overrides[d.item_name]=d);
 
-  globalItems=json.table.rows.map(r=>{
+  items=json.table.rows.map(r=>{
     const name=r.c[3]?.v||"";
     return{
       role:r.c[0]?.v||"",
       type:r.c[1]?.v||"",
       name,
       img:r.c[11]?.v,
-      price:overrides[name]?.price||r.c[5]?.v,
+      price:overrides[name]?.price||r.c[5]?.v||"",
       status:overrides[name]?.status||"現貨"
     };
-  }).filter(i=>i.role.includes(roleMap[currentRole])&&(i.type==="吊娃"||i.type==="娃"));
+  }).filter(i=>
+    i.role.includes("吉") && (i.type==="吊娃"||i.type==="娃")
+  );
 
   render();
 }
 
 function render(){
-  card-container.innerHTML="";
+  const container=document.getElementById("card-container");
+  container.innerHTML="";
+
   const grid=document.createElement("div");
   grid.className="group-grid";
 
-  globalItems.forEach(it=>{
+  items.forEach(it=>{
     const c=document.createElement("div");
     c.className="card";
     c.innerHTML=`
@@ -159,18 +104,20 @@ function render(){
     c.onclick=()=>openOverlay(it);
     grid.appendChild(c);
   });
-  card-container.appendChild(grid);
+
+  container.appendChild(grid);
 }
 
 function openOverlay(it){
-  cardOverlay.innerHTML=`
+  const o=document.getElementById("cardOverlay");
+  o.innerHTML=`
     <div class="card">
       <img src="${it.img}">
       <div class="name">${it.name}</div>
       <div class="price">$${it.price}</div>
     </div>`;
-  cardOverlay.style.display="flex";
-  cardOverlay.onclick=()=>cardOverlay.style.display="none";
+  o.style.display="flex";
+  o.onclick=()=>o.style.display="none";
 }
 
 load();
