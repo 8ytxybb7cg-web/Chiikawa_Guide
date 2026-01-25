@@ -22,19 +22,19 @@
     .logo-container img { width: 140px; height: auto; }
     h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
-    /* 角色圖示分頁 */
+    /* 角色圖示分頁：調整為自動流動排版，讓多個角色能併排 */
     .tabs {
       display: flex; justify-content: center; flex-wrap: wrap;
-      gap: 12px; padding: 15px; max-width: 600px; margin: 0 auto;
+      gap: 12px; padding: 15px; max-width: 100%; margin: 0 auto;
     }
     .tab {
       cursor: pointer; transition: transform 0.2s;
       display: flex; flex-direction: column; align-items: center;
-      width: 70px;
+      width: 65px; /* 稍微縮小寬度以容納更多圖示 */
     }
     .tab:active { transform: scale(0.9); }
     .tab-circle {
-      width: 60px; height: 60px;
+      width: 55px; height: 55px;
       border-radius: 50%; overflow: hidden;
       border: 3px solid transparent;
       transition: border-color 0.3s;
@@ -45,12 +45,23 @@
     .tab-name { font-size: 11px; font-weight: bold; margin-top: 6px; color: #666; }
     .tab.active .tab-name { color: var(--tab-color); }
 
-    /* 載入內容區域 */
-    #content-frame {
-      width: 100%; min-height: 1000px; /* 增加初始高度減少跳動 */
-      border: none; margin-top: 10px;
-      transition: opacity 0.3s;
+    /* 載入內容區域：隱藏子頁面管理員 Header 的關鍵設定 */
+    #main-content {
+      width: 100%;
+      overflow: hidden; /* 確保超出範圍的內容（Header）被裁切 */
+      position: relative;
     }
+
+    #content-frame {
+      width: 100%;
+      min-height: 1000px;
+      border: none;
+      /* 將 iframe 向上移動 44px (Chiikawa.html Header 的高度) */
+      margin-top: -44px; 
+      transition: opacity 0.3s;
+      display: block;
+    }
+
     #empty-msg {
       padding: 100px 20px; color: #999; font-size: 14px; display: none;
     }
@@ -81,8 +92,8 @@
   </div>
 
 <script>
-  // 角色配置資訊，所有 URL 都統一指向 Chiikawa.html 並帶參數
-    const roles = [
+  // 角色配置資訊
+  const roles = [
     { name: "吉伊", color: "#d77485", img: "https://i.postimg.cc/vZDs4YNZ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Chiikawa.html?role=吉伊" },
     { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "" },
     { name: "兔兔", color: "#f9be3c", img: "https://i.postimg.cc/xdzVPsYr/icon.png", url: "" },
@@ -98,7 +109,6 @@
   const frame = document.getElementById("content-frame");
   const emptyMsg = document.getElementById("empty-msg");
 
-  // 初始化分頁按鈕
   function initTabs() {
     roles.forEach((role, index) => {
       const tab = document.createElement("div");
@@ -113,45 +123,35 @@
       `;
 
       tab.onclick = () => {
-        // 更新 UI 狀態
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
-        
-        // 更新主題色
         document.documentElement.style.setProperty('--tab-color', role.color);
-        
-        // 切換內容
         loadContent(role.url);
       };
 
       tabsContainer.appendChild(tab);
     });
-    
-    // 預設載入第一個角色
     loadContent(roles[0].url);
   }
 
   function loadContent(url) {
     if (url) {
-      frame.style.opacity = "0.5"; // 切換時稍微變淡增加過場感
+      frame.style.opacity = "0.5";
       frame.src = url;
       frame.style.display = "block";
       emptyMsg.style.display = "none";
-      
-      // 監聽 iframe 載入完成
-      frame.onload = () => {
-        frame.style.opacity = "1";
-      };
+      frame.onload = () => { frame.style.opacity = "1"; };
     } else {
       frame.style.display = "none";
       emptyMsg.style.display = "block";
     }
   }
 
-  // 自動調整 iframe 高度邏輯 (接收來自 Chiikawa.html 的高度訊息)
+  // 接收高度訊息並自動補償 Header 被隱藏的高度
   window.addEventListener('message', function(e) {
     if (e.data && e.data.height) {
-      frame.style.height = e.data.height + 'px';
+      // 實際顯示高度應為子頁面總高度減去隱藏的 Header 高度 (44px)
+      frame.style.height = (e.data.height) + 'px';
     }
   }, false);
 
