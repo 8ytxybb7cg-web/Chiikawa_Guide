@@ -36,7 +36,7 @@ body {
   padding: 4px 12px; border-radius: 12px; border: 1px solid #fff;
   font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;
 }
-.btn-save { background: rgba(255,255,255,0.2); }
+.btn-save { background: rgba(255,255,255,0.4); border: 2px solid #fff; }
 .btn-logout { 
   position: absolute; left: 10px; top: 8px; 
   border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none; 
@@ -83,7 +83,7 @@ body {
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
 /* Admin 專用樣式 */
-.admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; }
+.admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; background: #fff; }
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
 /* ================= 5. Modal 與登入 ================= */
@@ -100,7 +100,7 @@ body {
     <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
     <div id="adminActions" class="admin-actions">
       <button class="btn-cancel" onclick="handleCancel()">取消</button>
-      <button class="btn-save" onclick="handleSave()">儲存</button>
+      <button class="btn-save" onclick="handleSave()">儲存修改</button>
     </div>
     <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
   </div>
@@ -133,7 +133,7 @@ const roleMap = { "小八":"八" };
 const colors  = { "小八":"#6293b8" };
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], currentRole = "小八", supabaseOverrides = {}, pendingChanges = {};
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
 
 // --- 初始化與載入 ---
 async function loadSheetData(){
@@ -143,7 +143,6 @@ async function loadSheetData(){
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
-        // 清空舊緩存
         supabaseOverrides = {};
         data.forEach(row => { 
           supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
@@ -166,28 +165,22 @@ async function loadSheetData(){
       if (!itemName || !roleField.includes(keyword)) return null;
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
-      // --- 智慧匹配邏輯 ---
       let dbKey = itemName;
       let sbData = null;
 
-      // 1. 優先嘗試「小八 + 名字」（例如：小八壞笑）
       if (supabaseOverrides["小八" + itemName]) {
         dbKey = "小八" + itemName;
         sbData = supabaseOverrides[dbKey];
-      } 
-      // 2. 其次嘗試「原始名字」（例如：壞笑）
-      else if (supabaseOverrides[itemName]) {
+      } else if (supabaseOverrides[itemName]) {
         dbKey = itemName;
         sbData = supabaseOverrides[dbKey];
-      }
-      // 3. 如果資料庫名稱已經帶了小八，而表格名字也是帶小八的
-      else if (itemName.startsWith("小八") && supabaseOverrides[itemName]) {
+      } else if (itemName.startsWith("小八") && supabaseOverrides[itemName]) {
         dbKey = itemName;
         sbData = supabaseOverrides[dbKey];
       }
 
       return {
-        name: dbKey, // 用於後台儲存的 Key
+        name: dbKey,
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -217,7 +210,6 @@ function renderCards(items){
     const card = document.createElement("div");
     card.className = "card";
     
-    // 【顯示邏輯】統一去掉前綴「小八」，讓前台客戶端看起來乾淨
     const clientDisplayName = item.name.replace(/^小八/, "");
 
     const statusHtml = isAdmin 
@@ -225,9 +217,9 @@ function renderCards(items){
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
+          <option value="點貨中" ${item.status==="點貨中"?"selected":""}>點貨中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
           <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
-          <option value="點貨中" ${item.status==="點貨中"?"selected":""}>點貨中</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
@@ -271,19 +263,23 @@ function handleLogin() {
   } else { alert("帳號或密碼錯誤"); }
 }
 
+// 修正：確保 pendingChanges 存儲的是最新的快照
 function stageChange(name, field, value) {
-  if(!pendingChanges[name]) {
-    const it = globalItems.find(i => i.name === name);
-    pendingChanges[name] = { status: it.status, price: it.price };
-  }
-  pendingChanges[name][field] = value;
   const item = globalItems.find(i => i.name === name);
-  if(item) item[field] = value;
+  if (item) {
+    item[field] = value; // 更新內存數據
+    if (!pendingChanges[name]) {
+      pendingChanges[name] = { ...item }; // 創建初始副本
+    }
+    pendingChanges[name][field] = value; // 更新變更集
+    console.log(`已記錄變更: ${name} -> ${field}: ${value}`);
+  }
 }
 
 async function handleSave() {
   const keys = Object.keys(pendingChanges);
-  if (!keys.length) { alert("沒有修改需要儲存"); return; }
+  if (!keys.length) { alert("沒有任何修改需要儲存"); return; }
+  
   if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
     const updates = keys.map(k => ({ 
       item_name: k, 
@@ -291,9 +287,17 @@ async function handleSave() {
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
     }));
+    
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if (error) alert("儲存失敗：" + error.message);
-    else { alert("儲存成功！"); pendingChanges = {}; loadSheetData(); }
+    
+    if (error) {
+      console.error("Supabase Error:", error);
+      alert("儲存失敗：" + error.message);
+    } else {
+      alert("儲存成功！");
+      pendingChanges = {}; // 清空變更緩存
+      await loadSheetData(); // 重新載入數據
+    }
   }
 }
 
