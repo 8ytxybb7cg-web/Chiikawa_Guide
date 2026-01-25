@@ -4,74 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Chiikawa 寶寶圖鑑</title>
-
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
-
   <style>
     :root { --tab-color: #dac7b7; }
     html, body {
       margin: 0; padding: 0; width: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f9f9f9; color: #333333;
-      text-align: center;
-      -webkit-font-smoothing: antialiased;
+      background-color: #f9f9f9; color: #333333; text-align: center;
     }
-
-    /* 頂部 Logo 區 */
     .logo-container { text-align: center; margin-top: 30px; }
     .logo-container img { width: 140px; height: auto; }
     h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
-    /* 角色圖示分頁 */
-    .tabs {
-      display: flex; justify-content: center; flex-wrap: wrap;
-      gap: 12px; padding: 15px; max-width: 100%; margin: 0 auto;
-    }
-    .tab {
-      cursor: pointer; transition: transform 0.2s;
-      display: flex; flex-direction: column; align-items: center;
-      width: 65px;
-    }
-    .tab:active { transform: scale(0.9); }
-    .tab-circle {
-      width: 55px; height: 55px;
-      border-radius: 50%; overflow: hidden;
-      border: 3px solid transparent;
-      transition: border-color 0.3s;
-      background: #eee;
-    }
+    .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 15px; margin: 0 auto; }
+    .tab { cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; width: 65px; }
+    .tab-circle { width: 55px; height: 55px; border-radius: 50%; overflow: hidden; border: 3px solid transparent; background: #eee; }
     .tab.active .tab-circle { border-color: var(--tab-color); }
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 11px; font-weight: bold; margin-top: 6px; color: #666; }
-    .tab.active .tab-name { color: var(--tab-color); }
 
-    /* 載入內容區域 */
-    #main-content {
-      width: 100%;
-      position: relative;
-      /* 移除 overflow: hidden 以免擋住彈窗 */
-    }
-
+    #main-content { width: 100%; position: relative; }
     #content-frame {
-      width: 100%;
-      min-height: 1000px;
-      border: none;
-      /* 向上移動以隱藏子頁面的 Header */
-      margin-top: -44px; 
-      /* 使用 clip-path 裁切掉頂部的 Header 區域，但允許下方彈窗顯示 */
-      clip-path: inset(44px 0 0 0); 
-      transition: opacity 0.3s;
-      display: block;
+      width: 100%; border: none; margin-top: -44px; 
+      clip-path: inset(44px 0 0 0); display: block;
     }
 
-    #empty-msg {
-      padding: 100px 20px; color: #999; font-size: 14px; display: none;
+    /* 在父頁面的 Modal 樣式，確保能覆蓋整個螢幕 */
+    #parentOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: none;
+      justify-content: center; align-items: center; z-index: 99999; padding: 20px;
+      box-sizing: border-box;
     }
+    .modal-card {
+      background: #fff; border-radius: 20px; padding: 20px;
+      width: 90%; max-width: 320px; text-align: center; position: relative;
+    }
+    .modal-card img { width: 100%; max-height: 50vh; object-fit: contain; }
+    .modal-card h3 { margin: 15px 0 5px; font-size: 18px; }
+    .modal-card .price { color: #d77485; font-size: 20px; font-weight: bold; margin: 10px 0; }
+    .close-btn { padding: 10px 20px; border: none; border-radius: 10px; background: #eee; cursor: pointer; }
 
-    .bottom-bar {
-      padding: 20px 0; background-color: #dac7b7; color: #fff;
-      font-weight: bold; margin-top: 30px;
-    }
+    .bottom-bar { padding: 20px 0; background-color: #dac7b7; color: #fff; margin-top: 30px; }
   </style>
 </head>
 <body>
@@ -79,18 +53,24 @@
   <div class="logo-container">
     <img src="./IMG_7282.png" alt="Chiikawa Logo" />
   </div>
-  
   <h1>Chiikawa 寶寶圖鑑</h1>
-
   <div class="tabs" id="tabs"></div>
 
   <div id="main-content">
     <iframe id="content-frame" src="" scrolling="no"></iframe>
-    <div id="empty-msg">此角色內容載入中 ( ˘ω˘ )</div>
+  </div>
+
+  <div id="parentOverlay" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <img id="modalImg" src="" alt="">
+      <h3 id="modalName"></h3>
+      <div class="price" id="modalPrice"></div>
+      <button class="close-btn" onclick="document.getElementById('parentOverlay').style.display='none'">關閉</button>
+    </div>
   </div>
 
   <div class="bottom-bar">
-    <span>&copy; <span id="current-year"></span> Chiikawa Sales</span>
+    &copy; <span id="current-year"></span> Chiikawa Sales
   </div>
 
 <script>
@@ -106,58 +86,42 @@
     { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "" }
   ];
 
-  const tabsContainer = document.getElementById("tabs");
   const frame = document.getElementById("content-frame");
-  const emptyMsg = document.getElementById("empty-msg");
+  const overlay = document.getElementById("parentOverlay");
 
   function initTabs() {
+    const tabsContainer = document.getElementById("tabs");
     roles.forEach((role, index) => {
       const tab = document.createElement("div");
-      tab.className = "tab";
-      if (index === 0) tab.classList.add("active");
-
-      tab.innerHTML = `
-        <div class="tab-circle" style="--tab-color: ${role.color}">
-          <img src="${role.img}" alt="${role.name}">
-        </div>
-        <div class="tab-name">${role.name}</div>
-      `;
-
+      tab.className = "tab" + (index === 0 ? " active" : "");
+      tab.innerHTML = `<div class="tab-circle" style="--tab-color:${role.color}"><img src="${role.img}"></div><div class="tab-name">${role.name}</div>`;
       tab.onclick = () => {
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
         document.documentElement.style.setProperty('--tab-color', role.color);
-        loadContent(role.url);
+        if(role.url) frame.src = role.url;
       };
-
       tabsContainer.appendChild(tab);
     });
-    loadContent(roles[0].url);
+    frame.src = roles[0].url;
   }
 
-  function loadContent(url) {
-    if (url) {
-      frame.style.opacity = "0.5";
-      frame.src = url;
-      frame.style.display = "block";
-      emptyMsg.style.display = "none";
-      frame.onload = () => { frame.style.opacity = "1"; };
-    } else {
-      frame.style.display = "none";
-      emptyMsg.style.display = "block";
-    }
-  }
-
+  // 監聽來自子頁面 (Chiikawa.html) 的訊息
   window.addEventListener('message', function(e) {
-    if (e.data && e.data.height) {
-      // 這裡的高度不需要減去 44，因為 iframe 向上移了 44，我們需要足夠的容器高度來容納它
-      frame.style.height = (e.data.height) + 'px';
+    if (e.data.height) {
+      frame.style.height = e.data.height + 'px';
+    }
+    // 處理打開彈窗的訊息
+    if (e.data.type === 'openModal') {
+      const item = e.data.item;
+      document.getElementById("modalImg").src = item.img;
+      document.getElementById("modalName").textContent = item.name;
+      document.getElementById("modalPrice").textContent = (item.status === '需預訂' || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
+      overlay.style.display = "flex";
     }
   }, false);
 
-  // 自動顯示當前年份
   document.getElementById("current-year").textContent = new Date().getFullYear();
-
   initTabs();
 </script>
 </body>
