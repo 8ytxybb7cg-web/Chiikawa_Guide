@@ -6,48 +6,31 @@
   <title>Chiikawa 寶寶圖鑑</title>
 
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root { --tab-color: #dac7b7; }
     html, body {
       margin: 0; padding: 0; width: 100%;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; color: #333333;
       text-align: center;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* 頂部管理員區域 */
-    .top-bar {
-      background: #dac7b7;
-      height: 44px;
-      position: fixed;
-      top: 0; left: 0; width: 100%;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0 16px;
-      box-sizing: border-box;
-    }
-    .admin-icon {
-      width: 24px; height: 24px;
-      cursor: pointer; fill: #fff;
-      opacity: 0.9;
-    }
-
-    .logo-container { text-align: center; margin-top: 70px; }
+    /* 頂部 Logo 區 */
+    .logo-container { text-align: center; margin-top: 30px; }
     .logo-container img { width: 140px; height: auto; }
-    h1 { margin: 10px 0; font-size: 18px; color: #A49393; }
+    h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
     /* 角色圖示分頁 */
     .tabs {
       display: flex; justify-content: center; flex-wrap: wrap;
-      gap: 10px; padding: 10px; max-width: 600px; margin: 0 auto;
+      gap: 12px; padding: 15px; max-width: 600px; margin: 0 auto;
     }
     .tab {
       cursor: pointer; transition: transform 0.2s;
       display: flex; flex-direction: column; align-items: center;
+      width: 70px;
     }
     .tab:active { transform: scale(0.9); }
     .tab-circle {
@@ -55,104 +38,72 @@
       border-radius: 50%; overflow: hidden;
       border: 3px solid transparent;
       transition: border-color 0.3s;
+      background: #eee;
     }
     .tab.active .tab-circle { border-color: var(--tab-color); }
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
-    .tab-name { font-size: 12px; font-weight: bold; margin-top: 5px; }
+    .tab-name { font-size: 11px; font-weight: bold; margin-top: 6px; color: #666; }
+    .tab.active .tab-name { color: var(--tab-color); }
 
     /* 載入內容區域 */
     #content-frame {
-      width: 100%; min-height: 800px;
-      border: none; margin-top: 20px;
+      width: 100%; min-height: 1000px; /* 增加初始高度減少跳動 */
+      border: none; margin-top: 10px;
+      transition: opacity 0.3s;
     }
     #empty-msg {
       padding: 100px 20px; color: #999; font-size: 14px; display: none;
-    }
-
-    /* 管理員登入 Modal (從原 Chiikawa.html 移植) */
-    .modal {
-      display: none; position: fixed; z-index: 10001; 
-      left: 0; top: 0; width: 100%; height: 100%; 
-      background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background-color: #fff; margin: 20% auto; padding: 24px;
-      width: 80%; max-width: 320px; border-radius: 20px; text-align: center;
-    }
-    .login-input {
-      width: 100%; padding: 12px; margin: 8px 0;
-      border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box;
-    }
-    .login-btn {
-      width: 100%; padding: 12px; background: #d77485;
-      color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
     }
 
     .bottom-bar {
       padding: 20px 0; background-color: #dac7b7; color: #fff;
       font-weight: bold; margin-top: 30px;
     }
-    .bottom-bar a { color: #fff; text-decoration: none; }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  </div>
-
   <div class="logo-container">
-    <img src="./IMG_7282.png" alt="Chiikawa" />
+    <img src="./IMG_7282.png" alt="Chiikawa Logo" />
   </div>
   
   <h1>Chiikawa 寶寶圖鑑</h1>
 
-  <div class="tabs" id="tabs">
-    </div>
+  <div class="tabs" id="tabs"></div>
 
   <div id="main-content">
-    <iframe id="content-frame" src=""></iframe>
-    <div id="empty-msg">此頁面內容規劃中 ( ˘ω˘ )</div>
-  </div>
-
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <h3 style="margin-top:0;">管理員登入</h3>
-      <input type="text" id="adminId" class="login-input" placeholder="ID">
-      <input type="password" id="adminPwd" class="login-input" placeholder="Password">
-      <button class="login-btn" onclick="handleLogin()">登入</button>
-    </div>
+    <iframe id="content-frame" src="" scrolling="no"></iframe>
+    <div id="empty-msg">此角色內容載入中 ( ˘ω˘ )</div>
   </div>
 
   <div class="bottom-bar">
-    <a href="https://jiwusales.github.io/jiwusales_nagano" target="_blank"> </a>
+    <span>&copy; 2024 Chiikawa Sales</span>
   </div>
 
 <script>
+  // 角色配置資訊，所有 URL 都統一指向 Chiikawa.html 並帶參數
   const roles = [
     { name: "吉伊", color: "#d77485", img: "https://i.postimg.cc/vZDs4YNZ/icon.png", url: "Chiikawa.html?role=吉伊" },
-    { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "" },
-    { name: "兔兔", color: "#f9be3c", img: "https://i.postimg.cc/xdzVPsYr/icon.png", url: "" },
-    { name: "小桃", color: "#838BC2", img: "https://i.postimg.cc/9MP36rrJ/icon.png", url: "" },
-    { name: "師傅", color: "#CCAFA5", img: "https://i.postimg.cc/fTq4Q4Rn/icon.png", url: "" },
-    { name: "栗子", color: "#94C973", img: "https://i.postimg.cc/FzGMK8bS/icon.png", url: "" },
-    { name: "獅薩", color: "#FBAA60", img: "https://i.postimg.cc/660Jz4sQ/icon.png", url: "" },
-    { name: "古本", color: "#eb9e97", img: "https://i.postimg.cc/nh5t7yyY/icon.png", url: "" },
-    { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "" }
+    { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "Chiikawa.html?role=小八" },
+    { name: "兔兔", color: "#f9be3c", img: "https://i.postimg.cc/xdzVPsYr/icon.png", url: "Chiikawa.html?role=兔兔" },
+    { name: "小桃", color: "#838BC2", img: "https://i.postimg.cc/9MP36rrJ/icon.png", url: "Chiikawa.html?role=小桃" },
+    { name: "師傅", color: "#CCAFA5", img: "https://i.postimg.cc/fTq4Q4Rn/icon.png", url: "Chiikawa.html?role=師傅" },
+    { name: "栗子", color: "#94C973", img: "https://i.postimg.cc/FzGMK8bS/icon.png", url: "Chiikawa.html?role=栗子" },
+    { name: "獅薩", color: "#FBAA60", img: "https://i.postimg.cc/660Jz4sQ/icon.png", url: "Chiikawa.html?role=獅薩" },
+    { name: "古本", color: "#eb9e97", img: "https://i.postimg.cc/nh5t7yyY/icon.png", url: "Chiikawa.html?role=古本" },
+    { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "Chiikawa.html?role=其他角色" }
   ];
 
   const tabsContainer = document.getElementById("tabs");
   const frame = document.getElementById("content-frame");
   const emptyMsg = document.getElementById("empty-msg");
 
+  // 初始化分頁按鈕
   function initTabs() {
     roles.forEach((role, index) => {
       const tab = document.createElement("div");
       tab.className = "tab";
-      if (index === 0) tab.classList.add("active"); // 預設選中吉伊
+      if (index === 0) tab.classList.add("active");
 
       tab.innerHTML = `
         <div class="tab-circle" style="--tab-color: ${role.color}">
@@ -162,51 +113,47 @@
       `;
 
       tab.onclick = () => {
+        // 更新 UI 狀態
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
+        
+        // 更新主題色
         document.documentElement.style.setProperty('--tab-color', role.color);
+        
+        // 切換內容
         loadContent(role.url);
       };
 
       tabsContainer.appendChild(tab);
     });
     
-    // 初始載入吉伊
+    // 預設載入第一個角色
     loadContent(roles[0].url);
   }
 
   function loadContent(url) {
     if (url) {
+      frame.style.opacity = "0.5"; // 切換時稍微變淡增加過場感
       frame.src = url;
       frame.style.display = "block";
       emptyMsg.style.display = "none";
+      
+      // 監聽 iframe 載入完成
+      frame.onload = () => {
+        frame.style.opacity = "1";
+      };
     } else {
       frame.style.display = "none";
       emptyMsg.style.display = "block";
     }
   }
 
-  // 管理員登入邏輯
-  function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
-  
-  function handleLogin() {
-    const id = document.getElementById("adminId").value;
-    const pwd = document.getElementById("adminPwd").value;
-    // 這裡維持你原本的帳密
-    if (id === "1050267" && pwd === "Penny01!") {
-      // 登入後透過 iframe 傳遞管理員狀態到子頁面
-      // 或者直接在子頁面重新登入也可以。
-      // 為求簡單，我們讓子頁面也開啟管理員功能：
-      frame.contentWindow.postMessage({ type: 'adminLogin', status: true }, '*');
-      document.getElementById("loginModal").style.display = "none";
-      alert("管理員登入成功！下方販售區已開啟編輯權限。");
-    } else {
-      alert("帳號或密碼錯誤");
+  // 自動調整 iframe 高度邏輯 (接收來自 Chiikawa.html 的高度訊息)
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.height) {
+      frame.style.height = e.data.height + 'px';
     }
-  }
-
-  // 關閉視窗
-  window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
+  }, false);
 
   initTabs();
 </script>
