@@ -142,8 +142,9 @@ async function loadSheetData(){
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      // 將 Supabase 資料存入物件，Key 為 item_name
       if (data) {
+        // 清空舊緩存
+        supabaseOverrides = {};
         data.forEach(row => { 
           supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
         });
@@ -156,8 +157,8 @@ async function loadSheetData(){
     const rows = data.table.rows || [];
     const keyword = roleMap["小八"];
 
-    globalItems = rows.map((row, i) => {
-      const itemName = row.c[3]?.v || "";
+    globalItems = rows.map((row) => {
+      let itemName = row.c[3]?.v || "";
       const rawType = row.c[1]?.v || "";
       const style = row.c[2]?.v || "";
       const roleField = row.c[0]?.v || "";
@@ -165,21 +166,28 @@ async function loadSheetData(){
       if (!itemName || !roleField.includes(keyword)) return null;
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
-      // 關鍵匹配：處理「壞笑」與「小八壞笑」的匹配
-      // 1. 先找完全一樣的 2. 再找補上「小八」後一樣的 3. 找資料庫裡有包含這個名字的
+      // --- 智慧匹配邏輯 ---
       let dbKey = itemName;
-      if (!supabaseOverrides[dbKey]) {
-        if (supabaseOverrides["小八" + itemName]) dbKey = "小八" + itemName;
-        else {
-          const foundKey = Object.keys(supabaseOverrides).find(k => k.includes(itemName));
-          if (foundKey) dbKey = foundKey;
-        }
+      let sbData = null;
+
+      // 1. 優先嘗試「小八 + 名字」（例如：小八壞笑）
+      if (supabaseOverrides["小八" + itemName]) {
+        dbKey = "小八" + itemName;
+        sbData = supabaseOverrides[dbKey];
+      } 
+      // 2. 其次嘗試「原始名字」（例如：壞笑）
+      else if (supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
+      }
+      // 3. 如果資料庫名稱已經帶了小八，而表格名字也是帶小八的
+      else if (itemName.startsWith("小八") && supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
       }
 
-      const sbData = supabaseOverrides[dbKey];
       return {
-        name: dbKey, // 使用資料庫中的全名
-        displayName: itemName, // 顯示在卡片上的短名 (可選)
+        name: dbKey, // 用於後台儲存的 Key
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -209,6 +217,9 @@ function renderCards(items){
     const card = document.createElement("div");
     card.className = "card";
     
+    // 【顯示邏輯】統一去掉前綴「小八」，讓前台客戶端看起來乾淨
+    const clientDisplayName = item.name.replace(/^小八/, "");
+
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -225,7 +236,7 @@ function renderCards(items){
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
       : `<div class="price">${displayPrice}</div>`;
 
-    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
+    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
