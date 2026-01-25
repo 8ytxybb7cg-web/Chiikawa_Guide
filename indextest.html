@@ -22,7 +22,7 @@
     .logo-container img { width: 140px; height: auto; }
     h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
-    /* 角色圖示分頁：調整為自動流動排版，讓多個角色能併排 */
+    /* 角色圖示分頁 */
     .tabs {
       display: flex; justify-content: center; flex-wrap: wrap;
       gap: 12px; padding: 15px; max-width: 100%; margin: 0 auto;
@@ -30,7 +30,7 @@
     .tab {
       cursor: pointer; transition: transform 0.2s;
       display: flex; flex-direction: column; align-items: center;
-      width: 65px; /* 稍微縮小寬度以容納更多圖示 */
+      width: 65px;
     }
     .tab:active { transform: scale(0.9); }
     .tab-circle {
@@ -45,19 +45,21 @@
     .tab-name { font-size: 11px; font-weight: bold; margin-top: 6px; color: #666; }
     .tab.active .tab-name { color: var(--tab-color); }
 
-    /* 載入內容區域：隱藏子頁面管理員 Header 的關鍵設定 */
+    /* 載入內容區域 */
     #main-content {
       width: 100%;
-      overflow: hidden; /* 確保超出範圍的內容（Header）被裁切 */
       position: relative;
+      /* 移除 overflow: hidden 以免擋住彈窗 */
     }
 
     #content-frame {
       width: 100%;
       min-height: 1000px;
       border: none;
-      /* 將 iframe 向上移動 44px (Chiikawa.html Header 的高度) */
+      /* 向上移動以隱藏子頁面的 Header */
       margin-top: -44px; 
+      /* 使用 clip-path 裁切掉頂部的 Header 區域，但允許下方彈窗顯示 */
+      clip-path: inset(44px 0 0 0); 
       transition: opacity 0.3s;
       display: block;
     }
@@ -87,12 +89,11 @@
     <div id="empty-msg">此角色內容載入中 ( ˘ω˘ )</div>
   </div>
 
-      <div class="bottom-bar">
+  <div class="bottom-bar">
     <span>&copy; <span id="current-year"></span> Chiikawa Sales</span>
   </div>
 
 <script>
-  // 角色配置資訊
   const roles = [
     { name: "吉伊", color: "#d77485", img: "https://i.postimg.cc/vZDs4YNZ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Chiikawa.html?role=吉伊" },
     { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "" },
@@ -147,19 +148,17 @@
     }
   }
 
-  // 接收高度訊息並自動補償 Header 被隱藏的高度
   window.addEventListener('message', function(e) {
     if (e.data && e.data.height) {
-      // 實際顯示高度應為子頁面總高度減去隱藏的 Header 高度 (44px)
+      // 這裡的高度不需要減去 44，因為 iframe 向上移了 44，我們需要足夠的容器高度來容納它
       frame.style.height = (e.data.height) + 'px';
     }
   }, false);
 
-// 在原本的 <script> 標籤內的 initTabs() 附近或底部加上這一行
-    document.getElementById("current-year").textContent = new Date().getFullYear();
+  // 自動顯示當前年份
+  document.getElementById("current-year").textContent = new Date().getFullYear();
 
   initTabs();
-  
 </script>
 </body>
 </html>
