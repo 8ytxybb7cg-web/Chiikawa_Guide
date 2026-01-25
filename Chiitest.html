@@ -403,6 +403,23 @@ function openCardOverlay(item) {
 
 loadSheetData();
 window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
+
+// 在 Chiikawa.html 的 script 底部加入這段，用於通知父頁面高度
+function sendHeight() {
+  const height = document.body.scrollHeight;
+  window.parent.postMessage({ height: height }, '*');
+}
+
+// 監聽內容載入後與視窗縮放後傳送高度
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+
+// 由於您的資料是異步載入的，請在 renderCards() 函數的最後面也執行一次
+// 範例：
+// function renderCards(items, roleName) {
+//   ... 原有的代碼 ...
+//   setTimeout(sendHeight, 500); // 確保圖片與卡片都渲染完畢後傳送高度
+// }
 </script>
 </body>
 </html>
