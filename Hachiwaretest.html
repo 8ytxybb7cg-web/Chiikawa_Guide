@@ -132,15 +132,6 @@ const sheetName = "ちいかわ";
 const roleMap = { "小八":"八" };
 const colors  = { "小八":"#6293b8" };
 
-// 需要自動補上「小八」前綴的清單
-const needsPrefixList = [
-  "壞笑", "睡衣派對", "天貓冬日圍巾", "出遊", "初代樂園", "平行時空", "玉子燒", 
-  "麵包零錢包", "來來", "魷魚", "手遊野餐", "手遊江戶", "5週年紀念", "天貓善", 
-  "泰迪熊聯名", "三麗鷗搪膠", "天貓不一樣表情", "娃娃鈴鐺吊飾 熊皮小八", 
-  "名創櫻花大福", "韓國基礎娃頭鏡", "麵包娃", "白熊揣手娃", "初代樂園S娃", 
-  "長毛", "睡衣派對S娃"
-];
-
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], currentRole = "小八", supabaseOverrides = {}, pendingChanges = {};
 
@@ -152,6 +143,8 @@ async function loadSheetData(){
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
+        // 清空舊緩存
+        supabaseOverrides = {};
         data.forEach(row => { 
           supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
         });
@@ -164,7 +157,7 @@ async function loadSheetData(){
     const rows = data.table.rows || [];
     const keyword = roleMap["小八"];
 
-    globalItems = rows.map((row, i) => {
+    globalItems = rows.map((row) => {
       let itemName = row.c[3]?.v || "";
       const rawType = row.c[1]?.v || "";
       const style = row.c[2]?.v || "";
@@ -173,17 +166,28 @@ async function loadSheetData(){
       if (!itemName || !roleField.includes(keyword)) return null;
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
-      // 【補回前綴邏輯】如果名稱在清單中且沒前綴，自動補上「小八」用於對接資料庫
+      // --- 智慧匹配邏輯 ---
       let dbKey = itemName;
-      if (needsPrefixList.includes(itemName) && !itemName.startsWith("小八")) {
+      let sbData = null;
+
+      // 1. 優先嘗試「小八 + 名字」（例如：小八壞笑）
+      if (supabaseOverrides["小八" + itemName]) {
         dbKey = "小八" + itemName;
+        sbData = supabaseOverrides[dbKey];
+      } 
+      // 2. 其次嘗試「原始名字」（例如：壞笑）
+      else if (supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
+      }
+      // 3. 如果資料庫名稱已經帶了小八，而表格名字也是帶小八的
+      else if (itemName.startsWith("小八") && supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
       }
 
-      // 嘗試從資料庫抓取資料
-      const sbData = supabaseOverrides[dbKey];
-      
       return {
-        name: dbKey, // 後台識別名 (含前綴)
+        name: dbKey, // 用於後台儲存的 Key
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -213,7 +217,7 @@ function renderCards(items){
     const card = document.createElement("div");
     card.className = "card";
     
-    // 前台顯示名：移除開頭的「小八」
+    // 【顯示邏輯】統一去掉前綴「小八」，讓前台客戶端看起來乾淨
     const clientDisplayName = item.name.replace(/^小八/, "");
 
     const statusHtml = isAdmin 
@@ -232,12 +236,10 @@ function renderCards(items){
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
       : `<div class="price">${displayPrice}</div>`;
 
-    // 渲染時顯示 clientDisplayName
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        // 發送訊息時保留原始 item 物件 (含 dbKey)
         window.parent.postMessage({ type: 'openModal', item: item }, '*');
       }
     };
