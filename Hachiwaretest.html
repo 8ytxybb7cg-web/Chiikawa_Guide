@@ -145,7 +145,9 @@ async function loadSheetData(){
       if (data) {
         supabaseOverrides = {};
         data.forEach(row => { 
-          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+          // 修正：如果資料庫裡是舊的 "點貨中"，載入時自動修正為 "點貨中（不顯示）"
+          let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
+          supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
         });
       }
     }
@@ -205,6 +207,7 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
+    // 修正：統一過濾掉不顯示的狀態
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
@@ -212,12 +215,12 @@ function renderCards(items){
     
     const clientDisplayName = item.name.replace(/^小八/, "");
 
+    // 修正：管理員選項中移除舊的 "點貨中"，統一使用 "點貨中（不顯示）"
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
-          <option value="點貨中" ${item.status==="點貨中"?"selected":""}>點貨中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
           <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
          </select>`
@@ -245,7 +248,7 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
-  if(s==="點貨中") return "#FFE4E1";
+  if(s==="點貨中（不顯示）") return "#FFE4E1";
   return "#E7F2F8";
 }
 
@@ -263,16 +266,14 @@ function handleLogin() {
   } else { alert("帳號或密碼錯誤"); }
 }
 
-// 修正：確保 pendingChanges 存儲的是最新的快照
 function stageChange(name, field, value) {
   const item = globalItems.find(i => i.name === name);
   if (item) {
-    item[field] = value; // 更新內存數據
+    item[field] = value;
     if (!pendingChanges[name]) {
-      pendingChanges[name] = { ...item }; // 創建初始副本
+      pendingChanges[name] = { ...item };
     }
-    pendingChanges[name][field] = value; // 更新變更集
-    console.log(`已記錄變更: ${name} -> ${field}: ${value}`);
+    pendingChanges[name][field] = value;
   }
 }
 
@@ -294,9 +295,9 @@ async function handleSave() {
       console.error("Supabase Error:", error);
       alert("儲存失敗：" + error.message);
     } else {
-      alert("儲存成功！");
-      pendingChanges = {}; // 清空變更緩存
-      await loadSheetData(); // 重新載入數據
+      alert("儲存成功！已統一狀態格式。");
+      pendingChanges = {}; 
+      await loadSheetData(); 
     }
   }
 }
