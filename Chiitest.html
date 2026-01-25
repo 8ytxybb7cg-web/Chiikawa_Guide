@@ -70,6 +70,20 @@ body {
 .btn-save { background: rgba(255,255,255,0.2); }
 .btn-cancel { opacity: 0.8; }
 
+.btn-logout {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.5);
+  font-size: 12px;
+  background: rgba(0,0,0,0.1);
+  color: #fff;
+  cursor: pointer;
+  display: none; /* 登入後才顯示 */
+}
+
 /* ================= 商品展示區 ================= */
 #card-container {
   padding: 60px 10px 20px 10px;
@@ -243,7 +257,8 @@ body {
 </head>
 <body>
 
-  <div class="top-bar">
+    <div class="top-bar">
+    <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
     <div id="adminActions" class="admin-actions">
       <button class="btn-cancel" onclick="handleCancel()">取消</button>
       <button class="btn-save" onclick="handleSave()">儲存</button>
@@ -298,9 +313,11 @@ function handleLogin() {
   const id = document.getElementById("adminId").value;
   const pwd = document.getElementById("adminPwd").value;
   if (id === "1050267" && pwd === "Penny01!") {
+      if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("adminActions").style.display = "flex"; // 顯示儲存/取消
+    document.getElementById("logoutBtn").style.display = "block";  // 顯示登出鍵
     renderCards(globalItems, currentRole); 
   } else {
     alert("帳號或密碼錯誤");
@@ -333,6 +350,17 @@ async function handleSave() {
         loadSheetData(); // 重新整理資料
       }
     }
+  }
+}
+
+// 處理登出
+function handleLogout() {
+  if (confirm("確定要登出嗎？")) {
+    isAdmin = false;
+    document.getElementById("adminActions").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "none";
+    pendingChanges = {}; // 清空未儲存的變更
+    renderCards(globalItems, currentRole); // 重新渲染回一般使用者介面
   }
 }
 
