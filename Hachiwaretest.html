@@ -108,7 +108,7 @@ body {
   <div id="card-container">
     <div id="loading-msg">
       <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
-      <div>正在載入寶寶們...</div>
+      <div>正在載入小八寶寶中...</div>
     </div>
   </div>
 
@@ -182,7 +182,7 @@ async function loadSheetData(){
 function renderCards(items){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
-  if (!items.length) { container.innerHTML = "目前沒有小八的娃類商品"; return; }
+  if (!items.length) { container.innerHTML = "目前沒有商品"; return; }
 
   const gdiv = document.createElement("div");
   gdiv.className = "group-grid";
@@ -194,7 +194,7 @@ function renderCards(items){
     const card = document.createElement("div");
     card.className = "card";
     
-    // 狀態選單 (同步 Chiikawa.html)
+    // 管理員狀態選單 (同步自 Chiikawa.html)
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -205,7 +205,7 @@ function renderCards(items){
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
-    // 價格欄位 (同步 Chiikawa.html)
+    // 價格欄位
     const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
     const priceHtml = isAdmin 
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
@@ -213,7 +213,7 @@ function renderCards(items){
 
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
     
-    // 點擊卡片發送訊息給 index.html 顯示 Modal
+    // 點擊卡片發送訊息給 index.html 顯示詳情彈窗
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
         window.parent.postMessage({ type: 'openModal', item: item }, '*');
@@ -234,6 +234,7 @@ function getStatusBg(s) {
 
 // --- 管理員操作 ---
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
+
 function handleLogin() {
   const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
   if (id === "1050267" && pwd === "Penny01!") {
