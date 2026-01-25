@@ -147,7 +147,6 @@ const sheetName = "ちいかわ";
 const roleMap = { "兔兔":"兔" };
 const colors  = { "兔兔":"#f9be3c" };
 
-// 確保 Supabase SDK 加載完成
 let sbClient = null;
 try {
   if (typeof supabase !== 'undefined') {
@@ -162,7 +161,6 @@ async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors["兔兔"]);
   
   try {
-    // 1. 嘗試從 Supabase 獲取覆蓋資料
     if (sbClient) {
       try {
         const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
@@ -173,31 +171,27 @@ async function loadSheetData(){
             supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
           });
         }
-      } catch (e) { console.warn("無法連線至資料庫，將使用 Sheet 原始資料"); }
+      } catch (e) { console.warn("Supabase 讀取異常"); }
     }
 
-    // 2. 獲取 Google Sheet 資料
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
-    const jsonText = sheetRes.substr(47).slice(0, -2);
-    const data = JSON.parse(jsonText);
+    const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = data.table.rows || [];
     const keyword = roleMap["兔兔"];
 
-    // 3. 處理資料
     globalItems = rows.map((row) => {
       let itemName = row.c[3]?.v || "";
       const rawType = (row.c[1]?.v || "").toString();
       const style = (row.c[2]?.v || "").toString();
       const roleField = (row.c[0]?.v || "").toString();
 
-      // 只保留兔兔的角色，且必須是「吊娃」或「娃」
+      // 篩選兔兔 & 吊娃/娃類別
       if (!itemName || !roleField.includes(keyword)) return null;
       if (!rawType.includes("吊娃") && !rawType.includes("娃") && !style.includes("吊娃") && !style.includes("娃")) return null;
       
+      // 邏輯重點：如果 DB 裡存的是 "兔兔坐姿娃"，優先使用 DB 的資料
       let dbKey = itemName;
       let sbData = null;
-
-      // 匹配資料庫鍵值邏輯
       if (supabaseOverrides["兔兔" + itemName]) {
         dbKey = "兔兔" + itemName;
         sbData = supabaseOverrides[dbKey];
@@ -207,7 +201,7 @@ async function loadSheetData(){
       }
 
       return {
-        name: dbKey,
+        name: dbKey, // 這裡存的是帶有前綴的 key，用於後台保存
         price: sbData?.price || row.c[5]?.v || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -218,8 +212,8 @@ async function loadSheetData(){
     renderCards(globalItems);
 
   } catch (error) {
-    console.error("載入程序出錯:", error);
-    document.getElementById("card-container").innerHTML = `<div style="padding:50px; color:red;">載入失敗，請檢查網路連線或 Sheet ID 是否正確。</div>`;
+    console.error("載入出錯:", error);
+    document.getElementById("card-container").innerHTML = "資料載入失敗";
   }
 }
 
@@ -228,21 +222,17 @@ function renderCards(items){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   
-  if (!items || items.length === 0) { 
-    container.innerHTML = `<div style="padding:50px; color:#999;">目前沒有符合「吊娃/娃」類別的兔兔商品。</div>`; 
-    return; 
-  }
-
   const gdiv = document.createElement("div");
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 訪客模式下隱藏不顯示的狀態
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card";
     
+    // 【邏輯強化】：移除顯示用的「兔兔」前綴
+    // 如果 item.name 為 "兔兔坐姿娃"，則變成 "坐姿娃"
     const clientDisplayName = item.name.replace(/^兔兔/, "");
 
     const statusHtml = isAdmin 
@@ -269,10 +259,7 @@ function renderCards(items){
     
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        // 如果是在 iframe 中，發送訊息給父視窗
-        if (window.parent) {
-          window.parent.postMessage({ type: 'openModal', item: item }, '*');
-        }
+        if (window.parent) window.parent.postMessage({ type: 'openModal', item: item }, '*');
       }
     };
     gdiv.appendChild(card);
@@ -292,8 +279,7 @@ function getStatusBg(s) {
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
 
 function handleLogin() {
-  const id = document.getElementById("adminId").value;
-  const pwd = document.getElementById("adminPwd").value;
+  const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
   if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
@@ -307,9 +293,7 @@ function stageChange(name, field, value) {
   const item = globalItems.find(i => i.name === name);
   if (item) {
     item[field] = value;
-    if (!pendingChanges[name]) {
-      pendingChanges[name] = { ...item };
-    }
+    if (!pendingChanges[name]) pendingChanges[name] = { ...item };
     pendingChanges[name][field] = value;
   }
 }
@@ -319,21 +303,16 @@ async function handleSave() {
   if (!keys.length) { alert("沒有任何修改需要儲存"); return; }
   
   if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
-    if (!sbClient) { alert("Supabase 未就緒，無法儲存"); return; }
+    if (!sbClient) return;
     const updates = keys.map(k => ({ 
-      item_name: k, 
+      item_name: k, // 這裡會帶回原來的前綴（如：兔兔坐姿娃）傳回資料庫
       status: pendingChanges[k].status, 
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
     }));
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if (error) {
-      alert("儲存失敗：" + error.message);
-    } else {
-      alert("儲存成功！");
-      pendingChanges = {}; 
-      await loadSheetData();
-    }
+    if (error) alert("儲存失敗");
+    else { alert("儲存成功"); pendingChanges = {}; await loadSheetData(); }
   }
 }
 
