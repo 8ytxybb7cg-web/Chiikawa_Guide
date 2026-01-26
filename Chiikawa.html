@@ -75,7 +75,9 @@ body {
   background: #fff; position: relative; text-align: center; padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-.card:active { transform: scale(0.98); }
+/* 管理員模式下卡片不縮放，避免編輯時跳動 */
+.card:not(.admin-mode):active { transform: scale(0.98); }
+
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
 .card .price { font-size: 13px; color: #d77485; font-weight: bold; margin-bottom: 6px; }
@@ -83,10 +85,10 @@ body {
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
 /* Admin 專用樣式 */
-.admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; }
+.admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; background: #fff; }
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
-/* ================= 5. Modal 與彈窗 ================= */
+/* ================= 5. 僅保留登入用的 Modal ================= */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
@@ -144,7 +146,11 @@ async function loadSheetData(){
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      if (data) data.forEach(row => { supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; });
+      if (data) data.forEach(row => { 
+        // 修正點貨中邏輯
+        let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
+        supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
+      });
     }
 
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
@@ -172,7 +178,7 @@ async function loadSheetData(){
     renderCards(globalItems);
   } catch (error) {
     console.error(error);
-    document.getElementById("card-container").innerHTML = "載入失敗，請檢查網絡連接。";
+    document.getElementById("card-container").innerHTML = "載入失敗，請稍後再試。";
   }
 }
 
@@ -190,9 +196,8 @@ function renderCards(items){
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "card" + (isAdmin ? " admin-mode" : "");
     
-    // 價格邏輯
     const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
 
     const statusHtml = isAdmin 
@@ -210,11 +215,20 @@ function renderCards(items){
       : `<div class="price">${displayPrice}</div>`;
 
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
+    
+    // 改動點：加入管理員判斷
     card.onclick = (e) => { 
-      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        openCardOverlay(item); 
+      // 如果點擊的是輸入框或下拉選單，或者是管理員模式，則不發送 Modal 指令
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        return; 
       }
+      // 普通用戶點擊，通知 index.html 彈出購物 Modal
+      window.parent.postMessage({
+        type: 'openModal',
+        item: item
+      }, '*');
     };
+
     gdiv.appendChild(card);
   });
   container.appendChild(gdiv);
@@ -265,16 +279,6 @@ async function handleSave() {
 
 function handleLogout() { if(confirm("確定要登出嗎？")) location.reload(); }
 function handleCancel() { if(confirm("確定要取消修改嗎？")) location.reload(); }
-
-// --- 其他功能 ---
-function openCardOverlay(item) {
-  // 向父頁面 (index.html) 發送開啟彈窗的指令
-  window.parent.postMessage({
-    type: 'openModal',
-    item: item,
-    isAdmin: isAdmin // 將管理員狀態傳過去，雖然 index 多數情況用不到，但可保留
-  }, '*');
-}
 
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
