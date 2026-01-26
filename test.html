@@ -199,9 +199,15 @@ function renderCards(items){
   
   items.forEach(item => {
     if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
+
+    // ✨ 核心修改：移除名稱前綴「吉伊」
+    // 使用正則表達式移除開頭的 "吉伊" 以及可能跟隨的符號如 " - " 或空格
+    const displayName = item.name.replace(/^(吉伊)\s*[-－]?\s*/, "");
+
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
     const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
+
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -213,16 +219,18 @@ function renderCards(items){
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
+    // 注意：這裡顯示使用 displayName，但功能邏輯（如 stageChange）依然使用原始的 item.name
     card.innerHTML = `
       <img src="${item.img}" loading="lazy">
       ${statusHtml}
       <div class="size-tag">${item.size || ''}</div>
-      <div class="name">${item.name}</div>
+      <div class="name">${displayName}</div>
       <div class="price">${displayPrice}</div>
     `;
     
     card.onclick = (e) => { 
       if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
+      // 點擊 Modal 時也傳送原始 item 名稱以確保跟後台對接正確
       window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
