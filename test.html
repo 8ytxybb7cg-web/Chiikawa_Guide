@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣Chiikawa</title>
+  <title>出賣Chii仔 - Admin Pro</title>
   <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -16,66 +16,45 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ================= 2. 頂部導航欄 ================= */
+/* ================= 2. 頂部導航欄 (更新) ================= */
 .top-bar {
-  background: var(--tab-color); color: #fff; height: 44px; position: fixed;
+  background: var(--tab-color); color: #fff; min-height: 44px; position: fixed;
   top: 0; left: 0; width: 100%; z-index: 999;
-  display: flex; align-items: center; justify-content: flex-end; 
-  padding: 0 16px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1); gap: 10px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; 
+  padding: 5px 16px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1); gap: 8px;
 }
 .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; opacity: 0.9; }
-.admin-actions { display: none; gap: 8px; }
-.btn-save, .btn-cancel, .btn-logout {
-  padding: 4px 12px; border-radius: 12px; border: 1px solid #fff;
+.admin-actions { display: none; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* 篩選與批量樣式 */
+.admin-filter-group { display: flex; gap: 4px; align-items: center; background: rgba(0,0,0,0.1); padding: 4px 8px; border-radius: 8px; }
+.admin-select-sm { font-size: 12px; border-radius: 4px; border: none; padding: 2px; }
+
+.btn-save, .btn-cancel, .btn-logout, .btn-batch {
+  padding: 4px 10px; border-radius: 12px; border: 1px solid #fff;
   font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;
 }
-.btn-save { background: rgba(255,255,255,0.2); }
+.btn-save { background: #4CAF50; border-color: #4CAF50; }
+.btn-batch { background: rgba(255,255,255,0.2); }
 .btn-logout { position: absolute; left: 10px; top: 8px; border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none; }
 
-/* ================= 3. 佈局與分類標題 ================= */
-#card-container {
-  padding: 60px 10px 20px 10px; max-width: 1200px; margin: 0 auto; min-height: 60vh; 
-}
+/* ================= 3. 佈局與其餘樣式 (保持不變) ================= */
+#card-container { padding: 80px 10px 20px 10px; max-width: 1200px; margin: 0 auto; min-height: 60vh; }
 .category-section { margin-bottom: 30px; width: 100%; }
-.category-title {
-  display: flex; align-items: center; justify-content: center;
-  margin: 25px 0 15px 0; color: var(--tab-color); font-weight: bold; font-size: 15px; opacity: 0.8;
-}
-.category-title::before, .category-title::after {
-  content: ""; flex: 1; height: 1px; background: #eee; margin: 0 15px;
-}
-
-/* ================= 4. 商品卡片樣式 ================= */
-.group-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px; justify-items: center; width: 100%;
-}
-.card {
-  width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
-  background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; 
-  cursor: pointer; height: 225px; display: flex; flex-direction: column; align-items: center;
-}
+.category-title { display: flex; align-items: center; justify-content: center; margin: 25px 0 15px 0; color: var(--tab-color); font-weight: bold; font-size: 15px; opacity: 0.8; }
+.category-title::before, .category-title::after { content: ""; flex: 1; height: 1px; background: #eee; margin: 0 15px; }
+.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; justify-items: center; width: 100%; }
+.card { width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px; background: #fff; position: relative; text-align: center; padding-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer; height: 235px; display: flex; flex-direction: column; align-items: center; }
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; flex-shrink: 0; }
-.status-badge { display: inline-block; min-width: 50px; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; margin-bottom: 4px; flex-shrink: 0; }
-.size-tag { font-size: 10px; color: #999; margin: -2px 0 2px 0; height: 12px; flex-shrink: 0; }
-.card .name { 
-  margin: 0 6px; font-size: 11px; font-weight: 600; line-height: 1.3; flex-grow: 1;
-  display: flex; align-items: center; justify-content: center; overflow: hidden;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-}
+.status-badge { display: inline-block; min-width: 50px; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+.size-tag { font-size: 10px; color: #999; margin: -2px 0 2px 0; height: 12px; }
+.card .name { margin: 0 6px; font-size: 11px; font-weight: 600; line-height: 1.3; flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 4px; }
-
-/* Admin 專用樣式 */
 .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 10px; width: 92%; background: #fff; margin-bottom: 4px; }
 .admin-price-input { width: 85%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; margin-bottom: 2px; padding: 2px 0; }
-
-/* 載入動畫 */
-#loading-msg { display: flex; flex-direction: column; align-items: center; padding-top: 100px; color: #999; font-weight: bold; gap: 15px; }
+#loading-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 150px; left: 50%; transform: translateX(-50%); color: #999; font-weight: bold; gap: 15px; z-index: 10; }
 .loading-icon { width: 80px; animation: bounce 0.8s infinite ease-in-out; }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-
-/* Modal */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
@@ -87,19 +66,30 @@ body {
 
   <div class="top-bar">
     <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
+    
     <div id="adminActions" class="admin-actions">
+      <div class="admin-filter-group">
+        <span style="font-size:10px">Filter:</span>
+        <select id="filterType" class="admin-select-sm" onchange="applyAdminFilter()">
+          <option value="all">所有種類</option>
+        </select>
+      </div>
+
+      <button class="btn-batch" onclick="handleBatchStatus()">批量狀態</button>
+      
       <button class="btn-cancel" onclick="handleCancel()">取消</button>
       <button class="btn-save" onclick="handleSave()">儲存</button>
     </div>
+    
     <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
   </div>
 
-  <div id="card-container">
-    <div id="loading-msg">
-      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" class="loading-icon" />
-      <div>正在載入寶寶資料中...</div>
-    </div>
+  <div id="loading-msg">
+    <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" class="loading-icon" />
+    <div>正在載入Chii仔資料中...</div>
   </div>
+
+  <div id="card-container"></div>
 
   <div id="loginModal" class="modal">
     <div class="modal-content">
@@ -121,12 +111,15 @@ const colors  = { "吉伊":"#d77485","小八":"#6293b8","兔兔":"#f9be3c","小�
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], currentRole = "吉伊", supabaseOverrides = {}, pendingChanges = {};
+let filteredItems = [];
 
 async function loadSheetData(){
   const p = new URLSearchParams(location.search).get("role");
   currentRole = roleMap[p] ? p : "吉伊";
   document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
   
+  document.getElementById("loading-msg").style.display = "flex";
+
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
@@ -137,15 +130,12 @@ async function loadSheetData(){
     const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = data.table.rows || [];
 
-        globalItems = rows.map((row, index) => {
-      // ✨ 修正 1：跳過第一行標題列
-      // rows[0] 通常是 Google Sheet 的 Header
+    globalItems = rows.map((row) => {
       const type = row.c[0]?.v || "其他";   
       const name = row.c[1]?.v || "";   
       const img  = row.c[3]?.v || "";   
       const size = row.c[5]?.v || "";   
 
-      // ✨ 修正 2：加強判斷，如果抓到的是標題文字也跳過
       if (!name || name === "名稱" || type === "類型") return null;
 
       const fullName = `${currentRole}${name}`; 
@@ -157,9 +147,40 @@ async function loadSheetData(){
       };
     }).filter(it => it !== null);
 
-    renderCards(globalItems);
+    filteredItems = [...globalItems];
+    updateFilterOptions();
+    renderCards(filteredItems);
   } catch (error) {
-    document.getElementById("card-container").innerHTML = "載入失敗";
+    document.getElementById("loading-msg").innerHTML = "載入失敗";
+  }
+}
+
+// 更新篩選選單
+function updateFilterOptions() {
+  const filterSelect = document.getElementById("filterType");
+  const types = [...new Set(globalItems.map(i => i.type))];
+  filterSelect.innerHTML = '<option value="all">所有種類</option>';
+  types.forEach(t => {
+    filterSelect.innerHTML += `<option value="${t}">${t}</option>`;
+  });
+}
+
+function applyAdminFilter() {
+  const typeVal = document.getElementById("filterType").value;
+  filteredItems = (typeVal === "all") ? [...globalItems] : globalItems.filter(i => i.type === typeVal);
+  renderCards(filteredItems);
+}
+
+// 批量修改狀態
+function handleBatchStatus() {
+  const newStatus = prompt("請輸入要批量修改的狀態：\n(現貨 / 需預訂 / 搭飛機中 / 補貨（不顯示） / 已售出（不顯示）)", "現貨");
+  if (!newStatus) return;
+  
+  if(confirm(`確定要將目前顯示的 ${filteredItems.length} 件商品全部改為「${newStatus}」嗎？`)) {
+    filteredItems.forEach(item => {
+      stageChange(item.name, 'status', newStatus);
+    });
+    renderCards(filteredItems);
   }
 }
 
@@ -167,25 +188,24 @@ function renderCards(items){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
 
-  // ✨ 分組邏輯
   const groups = {};
   items.forEach(item => {
-    // 關鍵過濾邏輯：
-    // 非管理員模式下，只顯示「非不顯示系列」的商品
     if (!isAdmin) {
       if (item.status && (item.status.includes("不顯示") || item.status.includes("已售出"))) return;
     }
-    
     if (!groups[item.type]) groups[item.type] = [];
     groups[item.type].push(item);
   });
 
-  // 如果這組完全沒東西，就不顯示標題
-  Object.keys(groups).forEach(type => {
+  const keys = Object.keys(groups);
+  if(keys.length === 0) {
+    container.innerHTML = "<div style='padding:50px; color:#999;'>暫無相關商品</div>";
+  }
+
+  keys.forEach(type => {
     const section = document.createElement("div");
     section.className = "category-section";
     section.innerHTML = `<div class="category-title">${type}</div>`;
-    
     const gdiv = document.createElement("div");
     gdiv.className = "group-grid";
     
@@ -223,10 +243,11 @@ function renderCards(items){
       };
       gdiv.appendChild(card);
     });
-    
     section.appendChild(gdiv);
     container.appendChild(section);
   });
+
+  document.getElementById("loading-msg").style.display = "none";
   setTimeout(sendHeight, 300);
 }
 
@@ -245,9 +266,10 @@ function handleLogin() {
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("adminActions").style.display = "flex";
     document.getElementById("logoutBtn").style.display = "block";
-    renderCards(globalItems); 
+    renderCards(filteredItems); 
   } else { alert("帳號或密碼錯誤"); }
 }
+
 function stageChange(name, field, value) {
   if(!pendingChanges[name]) {
     const it = globalItems.find(i => i.name === name);
@@ -257,18 +279,31 @@ function stageChange(name, field, value) {
   const item = globalItems.find(i => i.name === name);
   if(item) item[field] = value;
 }
+
 async function handleSave() {
   const keys = Object.keys(pendingChanges);
   if (!keys.length) { alert("沒有修改需要儲存"); return; }
-  if (confirm(`確定儲存修改？`)) {
+  if (confirm(`確定儲存 ${keys.length} 項修改？`)) {
     const updates = keys.map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     if (error) alert("失敗: " + error.message);
     else { alert("儲存成功！"); pendingChanges = {}; loadSheetData(); }
   }
 }
-function handleLogout() { location.reload(); }
-function handleCancel() { location.reload(); }
+
+// 登出確認
+function handleLogout() { 
+  if(confirm("確定要登出管理員模式嗎？")) {
+    location.reload(); 
+  }
+}
+
+function handleCancel() { 
+  if(confirm("捨棄所有未儲存的修改？")) {
+    location.reload(); 
+  }
+}
+
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 loadSheetData();
