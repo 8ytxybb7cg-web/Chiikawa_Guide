@@ -13,20 +13,20 @@
       background-color: #f9f9f9; color: #333333; text-align: center;
     }
     
-    /* 1. Logo 縮小至 50% */
+    /* Logo 縮小至 50% */
     .logo-container { text-align: center; margin-top: 25px; }
     .logo-container img { width: 70px; height: auto; }
     
     h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
-    /* 2. Icon 排版：穩定 5 個一排並自動置中 */
+    /* Icon 排版：穩定 5 個一排並自動置中 */
     .tabs { 
       display: flex; 
       flex-wrap: wrap;       
       justify-content: center; 
       gap: 12px 8px;         
       padding: 15px 10px; 
-      max-width: 380px;      /* 限制寬度確保 iPhone 上剛好 5 個一排 */
+      max-width: 380px;      
       margin: 0 auto; 
     }
     .tab { 
@@ -71,7 +71,6 @@
     .modal-card h3 { margin: 15px 0 5px; font-size: 18px; color: #333; }
     .modal-card .price { color: #d77485; font-size: 20px; font-weight: bold; margin: 10px 0; }
     
-    /* 按鈕樣式 */
     .btn-group { display: flex; gap: 10px; flex-direction: column; margin-top: 15px; }
     .btn-buy { background: #d77485; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
     .btn-cart { background: #f3f3f3; color: #333; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
@@ -90,7 +89,6 @@
       border-radius: 10px; border: 2px solid #fff; font-weight: bold;
     }
 
-    /* 購物車清單內容 */
     .cart-list { max-height: 45vh; overflow-y: auto; text-align: left; margin: 15px 0; }
     .cart-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
     .cart-item img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; }
@@ -99,7 +97,6 @@
     .cart-item-price { font-size: 13px; color: #d77485; font-weight: 500; }
     .remove-item { color: #ddd; cursor: pointer; font-size: 20px; padding: 0 5px; }
 
-    /* 3. 底部聯絡資訊 */
     .bottom-bar { padding: 40px 0; background-color: #dac7b7; color: #fff; margin-top: 50px; }
     .contact-icons { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
     .contact-icons a { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; }
@@ -136,7 +133,7 @@
       <h3 style="margin-top:0;">我的購物車</h3>
       <div id="cart-items" class="cart-list"></div>
       <div id="cart-total" style="font-weight:bold; margin-bottom:15px; text-align:right; font-size: 17px; color: #333;"></div>
-      <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">發送訂單到 WhatsApp</button>
+      <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">確認並傳送 WhatsApp 訂單</button>
       <button class="btn-close" onclick="document.getElementById('cartOverlay').style.display='none'">繼續瀏覽</button>
     </div>
   </div>
@@ -148,10 +145,10 @@
 
   <div class="bottom-bar">
     <div class="contact-icons">
-      <a href="#" target="_blank">
+      <a href="https://wa.me/YOUR_PHONE_NUMBER" target="_blank">
         <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" class="icon-img" alt="WhatsApp"> WhatsApp
       </a>
-      <a href="#">
+      <a href="mailto:YOUR_EMAIL@example.com">
         <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" class="icon-img" alt="Email"> Email
       </a>
     </div>
@@ -171,7 +168,6 @@
     { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Other.html" }
   ];
 
-  // 初始化購物車
   let cart = JSON.parse(localStorage.getItem('myCart')) || [];
   let currentItem = null;
 
@@ -200,6 +196,7 @@
   window.addEventListener('message', function(e) {
     if (e.data.height) frame.style.height = e.data.height + 'px';
     if (e.data.type === 'openModal') {
+      // 重點：這裡的 e.data.item 應該包含來自 Supabase 的 item_name
       currentItem = e.data.item;
       document.getElementById("modalImg").src = currentItem.img;
       document.getElementById("modalName").textContent = currentItem.name;
@@ -210,7 +207,7 @@
 
   function addToCart() {
     if (currentItem.status === '需預訂') {
-        alert("此為預訂商品，請直接 WhatsApp 聯絡查詢。");
+        alert("此商品需預訂，請點擊立即購買直接 WhatsApp 查詢。");
         return;
     }
     const exist = cart.find(i => i.name === currentItem.name);
@@ -225,8 +222,7 @@
 
   function quickBuy() {
     if (currentItem.status === '需預訂') {
-        alert("此商品需預訂，正在為您跳轉詢問...");
-        sendWhatsAppOrder(currentItem); // 直接詢問單件
+        sendWhatsAppOrder(currentItem); 
         return;
     }
     addToCart();
@@ -266,7 +262,7 @@
     });
 
     count.textContent = itemsCount;
-    totalEl.textContent = "總金額：$" + total;
+    totalEl.textContent = "總計：$" + total;
   }
 
   function removeItem(idx) {
@@ -278,26 +274,38 @@
     cartOverlay.style.display = (cartOverlay.style.display === "flex") ? "none" : "flex";
   }
 
+  // 修改後的 WhatsApp 訂單函數：確保使用正確的 item_name
   function sendWhatsAppOrder(singleItem = null) {
-    let text = "你好，我想訂購以下：\n\n";
+    let text = "你好，我想訂購/查詢以下商品：\n\n";
     let total = 0;
     
+    // 如果是 singleItem (立即購買)，包裝成陣列；否則使用購物車全體
     const itemsToOrder = singleItem ? [{...singleItem, qty: 1}] : cart;
     
-    if (itemsToOrder.length === 0) { alert("購物車是空的喔！"); return; }
+    if (itemsToOrder.length === 0) { 
+        alert("購物車目前是空的喔！"); 
+        return; 
+    }
     
     itemsToOrder.forEach((item, idx) => {
-      const p = parseFloat(item.price) || 0;
-      const subtotal = p * item.qty;
+      // 這裡確保輸出的是資料庫中的完整名稱
+      const itemName = item.name; 
+      const price = parseFloat(item.price) || 0;
+      const subtotal = price * item.qty;
       total += subtotal;
-      text += `${idx + 1}. ${item.name}\n數量：${item.qty}\n小計：${p === 0 ? '需預訂/查詢' : '$' + subtotal}\n\n`;
+      
+      text += `【${idx + 1}】 ${itemName}\n`;
+      text += `數量：${item.qty}\n`;
+      text += `價格：${price === 0 ? 'WhatsApp 查詢' : '$' + subtotal}\n\n`;
     });
     
     text += "------------------\n";
-    text += `總金額：$${total}\n\n請問目前還有貨嗎？`;
+    if (total > 0) text += `預計總金額：$${total}\n`;
+    text += `來源：Chiikawa 寶寶圖鑑\n`;
+    text += "\n請問目前還有貨嗎？";
     
     const encodedText = encodeURIComponent(text);
-    // 日後將下方的 YOUR_PHONE_NUMBER 換成你的手機號碼 (如 85290001234)
+    // 日後將下方的 YOUR_PHONE_NUMBER 換成你的手機號碼 (例如 85290001234)
     window.open(`https://wa.me/YOUR_PHONE_NUMBER?text=${encodedText}`, '_blank');
   }
 
