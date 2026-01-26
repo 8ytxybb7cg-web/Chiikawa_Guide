@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣小桃</title>
+  <title>其他角色目錄</title>
   
-  <link rel="icon" href="https://i.postimg.cc/rwcd7PSV/icon016.png" type="image/png" />
+  <link rel="icon" href="https://i.postimg.cc/PqVPpf0J/icon009.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
 /* ================= 1. 基礎與變數 ================= */
-:root { --tab-color: #838BC2; }
+:root { --tab-color: #45818e; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
@@ -36,7 +36,7 @@ body {
 /* ================= 3. 載入動畫與容器 ================= */
 #card-container { padding: 60px 10px 20px 10px; display: flex; flex-direction: column; gap: 12px; max-width: 1200px; margin: 0 auto; min-height: 60vh; }
 #loading-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 100px; color: #999; font-weight: bold; gap: 15px; }
-.loading-icon { width: 20%; max-width: 100px; height: auto; animation: bounce 0.8s infinite ease-in-out; }
+.loading-icon { width: 80px; height: auto; animation: bounce 0.8s infinite ease-in-out; }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
 /* ================= 4. 商品卡片樣式 ================= */
@@ -46,7 +46,7 @@ body {
 .card:not(.admin-mode):active { transform: scale(0.98); }
 
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
-.card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+.card .name { margin: 4px 6px; font-size: 11px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
 .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
@@ -75,8 +75,8 @@ body {
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/rwcd7PSV/icon016.png" alt="Loading" class="loading-icon" />
-      <div>正在載入小桃資料中...</div>
+      <img src="https://i.postimg.cc/PqVPpf0J/icon009.png" alt="Loading" class="loading-icon" />
+      <div>正在載入其他角色資料中...</div>
     </div>
   </div>
 
@@ -96,14 +96,14 @@ const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
 
-const roleMap = { "小桃":"桃" };
-const colors  = { "小桃":"#838BC2" };
+const roleMap = { "其他角色":"其" };
+const colors  = { "其他角色":"#45818e" };
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
 
 async function loadSheetData(){
-  document.documentElement.style.setProperty("--tab-color", colors["小桃"]);
+  document.documentElement.style.setProperty("--tab-color", colors["其他角色"]);
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
@@ -115,14 +115,14 @@ async function loadSheetData(){
       }
     }
 
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(r => r.text());
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
-    const keyword = roleMap["小桃"];
+    const keyword = roleMap["其他角色"];
 
     globalItems = rows.map((row) => {
-      let itemName = row.c[3]?.v || "";
+      let itemName = (row.c[3]?.v || "").toString().trim();
       const rawType = (row.c[1]?.v || "").toString();
       const style = (row.c[2]?.v || "").toString();
       const roleField = (row.c[0]?.v || "").toString();
@@ -132,8 +132,8 @@ async function loadSheetData(){
       
       let dbKey = itemName;
       let sbData = null;
-      if (supabaseOverrides["小桃" + itemName]) {
-        dbKey = "小桃" + itemName;
+      if (supabaseOverrides["其他" + itemName]) {
+        dbKey = "其他" + itemName;
         sbData = supabaseOverrides[dbKey];
       } else if (supabaseOverrides[itemName]) {
         dbKey = itemName;
@@ -164,12 +164,12 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 【自動隱藏邏輯】：非管理員模式，狀態含「（不顯示）」則隱藏
+    // 【自動隱藏邏輯】
     if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
-    const clientDisplayName = item.name.replace(/^小桃/, "");
+    const clientDisplayName = item.name.replace(/^其他/, "");
 
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
@@ -190,7 +190,7 @@ function renderCards(items){
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
-      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
       window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
@@ -222,9 +222,7 @@ function stageChange(name, field, value) {
   const item = globalItems.find(i => i.name === name);
   if (item) {
     item[field] = value;
-    if (!pendingChanges[name]) {
-      pendingChanges[name] = { ...item };
-    }
+    if (!pendingChanges[name]) pendingChanges[name] = { ...item };
     pendingChanges[name][field] = value;
   }
 }
