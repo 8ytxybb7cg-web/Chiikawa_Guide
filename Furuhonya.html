@@ -80,12 +80,15 @@ body {
   padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-.card:active { transform: scale(0.98); }
+
+/* 管理員模式下取消縮放動畫 */
+.card:not(.admin-mode):active { transform: scale(0.98); }
+
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px;
   font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
 .card .price { font-size: 13px;
-  color: #eb9e97; font-weight: bold; margin-bottom: 6px; }
+  color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
 
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600;
   margin-bottom: 6px; }
@@ -155,7 +158,6 @@ async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors["古本"]);
   
   try {
-    // 6. 非同步安全檢查
     if (sbClient) {
       try {
         const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
@@ -167,8 +169,7 @@ async function loadSheetData(){
           });
         }
       } catch (e) {
-        // 8. 錯誤回退機制：資料庫失敗則跳過，繼續載入 Google Sheet
-        console.warn("Supabase 讀取失敗，使用 Google Sheet 原始資料", e);
+        console.warn("Supabase 讀取失敗", e);
       }
     }
 
@@ -179,27 +180,21 @@ async function loadSheetData(){
     const keyword = roleMap["古本"];
 
     globalItems = rows.map((row) => {
-      let itemName = row.c[3]?.v || "";
-      const rawType = row.c[1]?.v || "";
-      const style = row.c[2]?.v || "";
-      const roleField = row.c[0]?.v || "";
+      let itemName = (row.c[3]?.v || "").toString().trim();
+      const rawType = (row.c[1]?.v || "").toString();
+      const style = (row.c[2]?.v || "").toString();
+      const roleField = (row.c[0]?.v || "").toString();
 
-      // 1. 卡片資料只保留吊娃、娃的部分
       if (!itemName || !roleField.includes(keyword)) return null;
-      // 7. 條件邏輯優化
       if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
       let dbKey = itemName;
       let sbData = null;
 
-      // 9. 資料匹配 (DB Key)
       if (supabaseOverrides["古本" + itemName]) {
         dbKey = "古本" + itemName;
         sbData = supabaseOverrides[dbKey];
       } else if (supabaseOverrides[itemName]) {
-        dbKey = itemName;
-        sbData = supabaseOverrides[dbKey];
-      } else if (itemName.startsWith("古本") && supabaseOverrides[itemName]) {
         dbKey = itemName;
         sbData = supabaseOverrides[dbKey];
       }
@@ -208,15 +203,14 @@ async function loadSheetData(){
         name: dbKey,
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
-        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
-        role: roleField
+        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
     }).filter(it => it !== null);
 
     renderCards(globalItems);
   } catch (error) {
     console.error(error);
-    document.getElementById("card-container").innerHTML = "載入失敗";
+    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px;'>載入失敗</div>";
   }
 }
 
@@ -224,7 +218,7 @@ async function loadSheetData(){
 function renderCards(items){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
-  if (!items.length) { container.innerHTML = "目前沒有商品"; return; }
+  if (!items.length) { container.innerHTML = "<div style='padding-top:100px;'>目前沒有商品</div>"; return; }
 
   const gdiv = document.createElement("div");
   gdiv.className = "group-grid";
@@ -233,9 +227,7 @@ function renderCards(items){
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
-    card.className = "card";
-    
-    // 5 & 10. 顯示過濾 (Display Name)
+    card.className = "card" + (isAdmin ? " admin-mode" : "");
     const clientDisplayName = item.name.replace(/^古本/, "");
 
     const statusHtml = isAdmin 
@@ -256,9 +248,8 @@ function renderCards(items){
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
-      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        window.parent.postMessage({ type: 'openModal', item: item }, '*');
-      }
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
   });
@@ -279,7 +270,6 @@ function openLoginModal() { document.getElementById("loginModal").style.display 
 
 function handleLogin() {
   const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
-  // 4. admin登入設定資料
   if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
@@ -313,10 +303,9 @@ async function handleSave() {
     }));
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     if (error) {
-      console.error("Supabase Error:", error);
       alert("儲存失敗：" + error.message);
     } else {
-      alert("儲存成功！已統一狀態格式。");
+      alert("儲存成功！");
       pendingChanges = {}; 
       await loadSheetData();
     }
