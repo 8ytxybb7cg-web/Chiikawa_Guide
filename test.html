@@ -40,23 +40,20 @@ body {
   border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none; 
 }
 
-/* ================= 3. 載入動畫 (修復位置) ================= */
+/* ================= 3. 載入動畫 ================= */
 #card-container {
   padding: 60px 10px 20px 10px;
   display: flex; flex-direction: column; gap: 12px;
   max-width: 1200px; margin: 0 auto; min-height: 60vh; 
 }
-
 #loading-msg { 
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding-top: 100px; color: #999; font-weight: bold; gap: 15px;
 }
-
 .loading-icon {
   width: 20%; max-width: 100px; height: auto;
   animation: bounce 0.8s infinite ease-in-out;
 }
-
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-15px); }
@@ -67,35 +64,21 @@ body {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 10px; justify-items: center; width: 100%;
 }
-
 .card {
   width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
   background: #fff; position: relative; text-align: center; padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
-  height: 220px; 
+  height: 225px; /* 固定高度防止撐開 */
   display: flex; flex-direction: column; align-items: center;
 }
-
 .card:not(.admin-mode):active { transform: scale(0.98); }
-
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; flex-shrink: 0; }
 
 .status-badge { 
-  display: inline-block; 
-  width: auto; 
-  min-width: 50px;
-  border-radius: 20px; 
-  padding: 3px 10px; 
-  font-size: 11px; 
-  font-weight: 600; 
-  margin-bottom: 4px; 
-  flex-shrink: 0; 
+  display: inline-block; width: auto; min-width: 50px; border-radius: 20px; 
+  padding: 3px 10px; font-size: 11px; font-weight: 600; margin-bottom: 4px; flex-shrink: 0; 
 }
-
-.size-tag {
-  font-size: 10px; color: #999; margin: -2px 0 2px 0;
-  height: 12px; line-height: 12px; flex-shrink: 0;
-}
+.size-tag { font-size: 10px; color: #999; margin: -2px 0 2px 0; height: 12px; line-height: 12px; flex-shrink: 0; }
 
 .card .name { 
   margin: 0 6px; font-size: 11px; font-weight: 600; line-height: 1.3; 
@@ -103,7 +86,6 @@ body {
   overflow: hidden; text-overflow: ellipsis;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-
 .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 4px; flex-shrink: 0; }
 
 /* Admin 專用 */
@@ -147,7 +129,6 @@ body {
   </div>
 
 <script>
-// --- 此處 JavaScript 與上一版相同 ---
 const SHEET_ID = "17gH9HZKvW_6fMCWYLyqnzMHj40rA7PiwWg6L0GvbFgQ"; 
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
@@ -164,6 +145,7 @@ async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
   
   try {
+    // 1. 獲取 Supabase 資料
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) data.forEach(row => { 
@@ -171,6 +153,7 @@ async function loadSheetData(){
       });
     }
 
+    // 2. 獲取 Google Sheet 圖鑑資料
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(currentRole)}`).then(r => r.text());
     const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = data.table.rows || [];
@@ -181,12 +164,24 @@ async function loadSheetData(){
       const img  = row.c[3]?.v || "";   
       const size = row.c[5]?.v || "";   
       if (!name || (type !== "吊娃" && type !== "娃")) return null;
-      const sbData = supabaseOverrides[name];
-      return { name, type, size, price: sbData?.price || "", status: sbData?.status || "現貨", img: img || "https://i.postimg.cc/bv5xRs04/image.png" };
+
+      // ✨ 對齊 Supabase 的名稱格式 (角色 - 名稱)
+      const fullName = `${currentRole} - ${name}`;
+      const sbData = supabaseOverrides[fullName] || supabaseOverrides[name];
+
+      return { 
+        name: (supabaseOverrides[fullName] ? fullName : (supabaseOverrides[name] ? name : fullName)), 
+        type, 
+        size, 
+        price: sbData?.price || "", 
+        status: sbData?.status || "現貨", 
+        img: img || "https://i.postimg.cc/bv5xRs04/image.png" 
+      };
     }).filter(it => it !== null);
 
     renderCards(globalItems);
   } catch (error) {
+    console.error(error);
     document.getElementById("card-container").innerHTML = "載入失敗";
   }
 }
@@ -200,9 +195,8 @@ function renderCards(items){
   items.forEach(item => {
     if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
 
-    // ✨ 核心修改：移除名稱前綴「吉伊」
-    // 使用正則表達式移除開頭的 "吉伊" 以及可能跟隨的符號如 " - " 或空格
-    const displayName = item.name.replace(/^(吉伊)\s*[-－]?\s*/, "");
+    // ✨ 移除顯示用的角色前綴
+    const displayName = item.name.replace(/^(吉伊|小八|兔兔|小桃|師傅|栗子|獅薩|古本|其他角色)\s*[-－]?\s*/, "");
 
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
@@ -219,18 +213,20 @@ function renderCards(items){
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
-    // 注意：這裡顯示使用 displayName，但功能邏輯（如 stageChange）依然使用原始的 item.name
+    const priceHtml = isAdmin 
+      ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
+      : `<div class="price">${displayPrice}</div>`;
+
     card.innerHTML = `
       <img src="${item.img}" loading="lazy">
       ${statusHtml}
       <div class="size-tag">${item.size || ''}</div>
       <div class="name">${displayName}</div>
-      <div class="price">${displayPrice}</div>
+      ${priceHtml}
     `;
     
     card.onclick = (e) => { 
       if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
-      // 點擊 Modal 時也傳送原始 item 名稱以確保跟後台對接正確
       window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
@@ -246,6 +242,7 @@ function getStatusBg(s) {
   return "#E7F2F8";
 }
 
+// 管理員功能邏輯
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
 function handleLogin() {
   const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
