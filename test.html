@@ -101,7 +101,6 @@
     .contact-icons { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; }
     .contact-icons a { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; }
     
-    /* 移除之前的白色濾鏡，顯示原始顏色 */
     .icon-img { width: 35px; height: 35px; object-fit: contain; transition: transform 0.2s; }
     .icon-img:hover { transform: scale(1.1); }
   </style>
@@ -136,7 +135,7 @@
       <h3 style="margin-top:0;">我的購物車</h3>
       <div id="cart-items" class="cart-list"></div>
       <div id="cart-total" style="font-weight:bold; margin-bottom:15px; text-align:right; font-size: 17px; color: #333;"></div>
-      <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">確認訂單並傳送到 WhatsApp</button>
+      <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">確認並傳送 WhatsApp 訂單</button>
       <button class="btn-close" onclick="document.getElementById('cartOverlay').style.display='none'">繼續瀏覽</button>
     </div>
   </div>
@@ -175,6 +174,7 @@
 
   let cart = JSON.parse(localStorage.getItem('myCart')) || [];
   let currentItem = null;
+  let activeRoleName = "吉伊"; // 追蹤當前選擇的角色
 
   const frame = document.getElementById("content-frame");
   const overlay = document.getElementById("parentOverlay");
@@ -189,6 +189,7 @@
       tab.onclick = () => {
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
+        activeRoleName = role.name; // 更新當前角色名
         document.documentElement.style.setProperty('--tab-color', role.color);
         frame.src = role.url;
       };
@@ -201,7 +202,8 @@
   window.addEventListener('message', function(e) {
     if (e.data.height) frame.style.height = e.data.height + 'px';
     if (e.data.type === 'openModal') {
-      currentItem = e.data.item;
+      // 接收資料並把當前分頁名稱存入 item 中
+      currentItem = { ...e.data.item, category: activeRoleName };
       document.getElementById("modalImg").src = currentItem.img;
       document.getElementById("modalName").textContent = currentItem.name;
       document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : '$' + currentItem.price;
@@ -211,7 +213,7 @@
 
   function addToCart() {
     if (currentItem.status === '需預訂') {
-        alert("此商品需預訂，請直接 WhatsApp 聯絡查詢。");
+        alert("此商品需預訂，請按立即購買直接查詢。");
         return;
     }
     const exist = cart.find(i => i.name === currentItem.name);
@@ -257,7 +259,7 @@
       div.innerHTML = `
         <img src="${item.img}">
         <div class="cart-item-info">
-          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-name">[${item.category}] ${item.name}</div>
           <div class="cart-item-price">$${item.price} x ${item.qty}</div>
         </div>
         <div class="remove-item" onclick="removeItem(${idx})">&times;</div>
@@ -278,6 +280,7 @@
     cartOverlay.style.display = (cartOverlay.style.display === "flex") ? "none" : "flex";
   }
 
+  // 修改後的 WhatsApp 訂單格式
   function sendWhatsAppOrder(singleItem = null) {
     let text = "你好，我想訂購/查詢以下商品：\n\n";
     let total = 0;
@@ -289,7 +292,9 @@
       const p = parseFloat(item.price) || 0;
       const subtotal = p * item.qty;
       total += subtotal;
-      text += `【${idx + 1}】 商品：${item.name}\n`; // 這裡會輸出正確的 Supabase 名稱
+      
+      // 格式：【1】 [角色名] Supabase商品名
+      text += `【${idx + 1}】 [${item.category}] ${item.name}\n`; 
       text += `數量：${item.qty}\n`;
       text += `價格：${p === 0 ? '需預訂/查詢' : '$' + subtotal}\n\n`;
     });
@@ -299,7 +304,7 @@
     text += "\n請問目前還有貨嗎？";
     
     const encodedText = encodeURIComponent(text);
-    // 日後手動將 YOUR_PHONE_NUMBER 改為 852xxxxxxx
+    // 請將 YOUR_PHONE_NUMBER 換成你的電話號碼
     window.open(`https://wa.me/YOUR_PHONE_NUMBER?text=${encodedText}`, '_blank');
   }
 
