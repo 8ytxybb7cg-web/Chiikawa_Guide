@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣Chiikawa</title>
+  <title>出賣Chii仔</title>
   <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -70,8 +70,12 @@ body {
 .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 10px; width: 92%; background: #fff; margin-bottom: 4px; }
 .admin-price-input { width: 85%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; margin-bottom: 2px; padding: 2px 0; }
 
-/* 載入動畫 */
-#loading-msg { display: flex; flex-direction: column; align-items: center; padding-top: 100px; color: #999; font-weight: bold; gap: 15px; }
+/* 載入動畫 (獨立層級) */
+#loading-msg { 
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: absolute; top: 150px; left: 50%; transform: translateX(-50%);
+  color: #999; font-weight: bold; gap: 15px; z-index: 10;
+}
 .loading-icon { width: 80px; animation: bounce 0.8s infinite ease-in-out; }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
@@ -94,12 +98,12 @@ body {
     <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
   </div>
 
-  <div id="card-container">
-    <div id="loading-msg">
-      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" class="loading-icon" />
-      <div>正在載入寶寶資料中...</div>
-    </div>
+  <div id="loading-msg">
+    <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" class="loading-icon" />
+    <div>正在載入Chii仔資料中...</div>
   </div>
+
+  <div id="card-container"></div>
 
   <div id="loginModal" class="modal">
     <div class="modal-content">
@@ -127,6 +131,9 @@ async function loadSheetData(){
   currentRole = roleMap[p] ? p : "吉伊";
   document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
   
+  // 顯示載入中
+  document.getElementById("loading-msg").style.display = "flex";
+
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
@@ -137,15 +144,12 @@ async function loadSheetData(){
     const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = data.table.rows || [];
 
-        globalItems = rows.map((row, index) => {
-      // ✨ 修正 1：跳過第一行標題列
-      // rows[0] 通常是 Google Sheet 的 Header
+    globalItems = rows.map((row) => {
       const type = row.c[0]?.v || "其他";   
       const name = row.c[1]?.v || "";   
       const img  = row.c[3]?.v || "";   
       const size = row.c[5]?.v || "";   
 
-      // ✨ 修正 2：加強判斷，如果抓到的是標題文字也跳過
       if (!name || name === "名稱" || type === "類型") return null;
 
       const fullName = `${currentRole}${name}`; 
@@ -159,7 +163,7 @@ async function loadSheetData(){
 
     renderCards(globalItems);
   } catch (error) {
-    document.getElementById("card-container").innerHTML = "載入失敗";
+    document.getElementById("loading-msg").innerHTML = "載入失敗";
   }
 }
 
@@ -167,20 +171,15 @@ function renderCards(items){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
 
-  // ✨ 分組邏輯
   const groups = {};
   items.forEach(item => {
-    // 關鍵過濾邏輯：
-    // 非管理員模式下，只顯示「非不顯示系列」的商品
     if (!isAdmin) {
       if (item.status && (item.status.includes("不顯示") || item.status.includes("已售出"))) return;
     }
-    
     if (!groups[item.type]) groups[item.type] = [];
     groups[item.type].push(item);
   });
 
-  // 如果這組完全沒東西，就不顯示標題
   Object.keys(groups).forEach(type => {
     const section = document.createElement("div");
     section.className = "category-section";
@@ -227,6 +226,9 @@ function renderCards(items){
     section.appendChild(gdiv);
     container.appendChild(section);
   });
+
+  // ✨ 資料渲染完成，隱藏載入動畫
+  document.getElementById("loading-msg").style.display = "none";
   setTimeout(sendHeight, 300);
 }
 
