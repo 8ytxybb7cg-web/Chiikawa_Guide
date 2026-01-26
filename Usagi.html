@@ -80,7 +80,9 @@ body {
   padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-.card:active { transform: scale(0.98); }
+/* 管理員模式下卡片不縮放 */
+.card:not(.admin-mode):active { transform: scale(0.98); }
+
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px;
   font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
@@ -96,7 +98,7 @@ body {
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px;
   padding: 2px 0; margin-bottom: 4px; }
 
-/* ================= 5. Modal 與登入 ================= */
+/* ================= 5. Modal 僅用於管理員登入 ================= */
 .modal { display: none; position: fixed; z-index: 10000;
   left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 20% auto;
@@ -185,11 +187,9 @@ async function loadSheetData(){
       const style = (row.c[2]?.v || "").toString();
       const roleField = (row.c[0]?.v || "").toString();
 
-      // 篩選兔兔 & 吊娃/娃類別
       if (!itemName || !roleField.includes(keyword)) return null;
       if (!rawType.includes("吊娃") && !rawType.includes("娃") && !style.includes("吊娃") && !style.includes("娃")) return null;
       
-      // 邏輯重點：如果 DB 裡存的是 "兔兔坐姿娃"，優先使用 DB 的資料
       let dbKey = itemName;
       let sbData = null;
       if (supabaseOverrides["兔兔" + itemName]) {
@@ -201,7 +201,7 @@ async function loadSheetData(){
       }
 
       return {
-        name: dbKey, // 這裡存的是帶有前綴的 key，用於後台保存
+        name: dbKey,
         price: sbData?.price || row.c[5]?.v || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
@@ -229,10 +229,8 @@ function renderCards(items){
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "card" + (isAdmin ? " admin-mode" : "");
     
-    // 【邏輯強化】：移除顯示用的「兔兔」前綴
-    // 如果 item.name 為 "兔兔坐姿娃"，則變成 "坐姿娃"
     const clientDisplayName = item.name.replace(/^兔兔/, "");
 
     const statusHtml = isAdmin 
@@ -257,10 +255,14 @@ function renderCards(items){
       ${priceHtml}
     `;
     
+    // 【關鍵修改】：管理員身分判斷
     card.onclick = (e) => { 
-      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        if (window.parent) window.parent.postMessage({ type: 'openModal', item: item }, '*');
+      // 如果是管理員模式，或是點到輸入框/下拉選單，則不觸發 index 的 Modal
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        return; 
       }
+      // 普通用戶點擊，發送消息給 index.html
+      if (window.parent) window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
   });
@@ -305,7 +307,7 @@ async function handleSave() {
   if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
     if (!sbClient) return;
     const updates = keys.map(k => ({ 
-      item_name: k, // 這裡會帶回原來的前綴（如：兔兔坐姿娃）傳回資料庫
+      item_name: k, 
       status: pendingChanges[k].status, 
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
