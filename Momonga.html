@@ -43,7 +43,6 @@ body {
 .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center; width: 100%; }
 .card { width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px; background: #fff; position: relative; text-align: center; padding-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer; }
 
-/* 管理員模式下卡片不縮放，方便編輯 */
 .card:not(.admin-mode):active { transform: scale(0.98); }
 
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
@@ -55,7 +54,7 @@ body {
 .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; background: #fff; }
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
-/* ================= 5. Modal (僅用於後台登入) ================= */
+/* ================= 5. Modal ================= */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
@@ -111,13 +110,12 @@ async function loadSheetData(){
       if (data) {
         supabaseOverrides = {};
         data.forEach(row => { 
-          let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
-          supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
+          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
         });
       }
     }
 
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${encodeURIComponent(sheetName)}`).then(r => r.text());
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
@@ -166,7 +164,8 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
+    // 【自動隱藏邏輯】：非管理員模式，狀態含「（不顯示）」則隱藏
+    if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
@@ -178,7 +177,8 @@ function renderCards(items){
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
-          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
+          <option value="Hold貨（不顯示）" ${item.status==="Hold貨（不顯示）"?"selected":""}>Hold貨（不顯示）</option>
+          <option value="已售出（不顯示）" ${item.status==="已售出（不顯示）"?"selected":""}>已售出（不顯示）</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
@@ -189,12 +189,8 @@ function renderCards(items){
 
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
-    // 修改點擊邏輯：管理員攔截
     card.onclick = (e) => { 
-      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-        return; 
-      }
-      // 非管理員點擊才發送訊息給 index.html
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
       window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
@@ -207,7 +203,6 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
-  if(s==="點貨中（不顯示）") return "#FFE4E1";
   return "#E7F2F8";
 }
 
@@ -236,18 +231,15 @@ function stageChange(name, field, value) {
 
 async function handleSave() {
   const keys = Object.keys(pendingChanges);
-  if (!keys.length) { alert("沒有任何修改需要儲存"); return; }
-  
-  if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
+  if (!keys.length) { alert("沒有修改需要儲存"); return; }
+  if (confirm(`確定儲存 ${keys.length} 項修改？`)) {
     const updates = keys.map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
-      price: pendingChanges[k].price,
-      updated_at: new Date().toISOString()
+      price: pendingChanges[k].price
     }));
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     if (error) {
-      console.error("Supabase Error:", error);
       alert("儲存失敗：" + error.message);
     } else {
       alert("儲存成功！");
