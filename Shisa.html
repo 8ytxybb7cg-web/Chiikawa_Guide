@@ -67,10 +67,12 @@ body {
   background: #fff; position: relative; text-align: center;
   padding-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-.card:active { transform: scale(0.98); }
+/* 管理員模式下取消點擊縮放，避免輸入時跳動 */
+.card:not(.admin-mode):active { transform: scale(0.98); }
+
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px; font-size: 11px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
-.card .price { font-size: 13px; color: #e67e22; font-weight: bold; margin-bottom: 6px; }
+.card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 10px; font-weight: 600; margin-bottom: 6px; }
 
 /* Admin 專用 */
@@ -130,7 +132,6 @@ async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors["獅薩"]);
   
   try {
-    // 1. 安全抓取 Supabase
     if (sbClient) {
       try {
         const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
@@ -141,10 +142,9 @@ async function loadSheetData(){
             supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
           });
         }
-      } catch (e) { console.warn("Supabase 失敗，跳過並繼續"); }
+      } catch (e) { console.warn("Supabase 失敗"); }
     }
 
-    // 2. 抓取 Google Sheet
     const fetchUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
     const response = await fetch(fetchUrl);
     const text = await response.text();
@@ -159,14 +159,13 @@ async function loadSheetData(){
       const style = (row.c[2]?.v || "").toString();
       const roleField = (row.c[0]?.v || "").toString();
 
-      // 只保留獅薩的吊娃、娃
       if (!itemName || !roleField.includes(keyword)) return null;
       if (!rawType.includes("吊娃") && !rawType.includes("娃") && !style.includes("吊娃") && !style.includes("娃")) return null;
       
       let dbKey = itemName;
       let sbData = null;
 
-      // 【修正後的匹配邏輯】支援「風獅」、「獅薩」或「無前綴」
+      // 匹配邏輯
       if (supabaseOverrides["風獅" + itemName]) {
         dbKey = "風獅" + itemName;
         sbData = supabaseOverrides[dbKey];
@@ -180,7 +179,7 @@ async function loadSheetData(){
 
       return {
         name: dbKey,
-        price: sbData?.price || row.c[5]?.v || "", 
+        price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
@@ -190,7 +189,7 @@ async function loadSheetData(){
 
   } catch (error) {
     console.error("載入失敗:", error);
-    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px; color:red;'>載入失敗，請重新整理</div>";
+    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px;'>載入資料失敗</div>";
   }
 }
 
@@ -206,9 +205,9 @@ function renderCards(items){
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "card" + (isAdmin ? " admin-mode" : "");
     
-    // 【修正後的顯示過濾】前台統一刪除「風獅」或「獅薩」前綴
+    // 前台顯示過濾
     const clientDisplayName = item.name.replace(/^(風獅|獅薩)/, "");
 
     const statusHtml = isAdmin 
@@ -229,9 +228,9 @@ function renderCards(items){
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
-      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        window.parent.postMessage({ type: 'openModal', item: item }, '*');
-      }
+      // 管理員模式點擊不觸發彈窗
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
   });
@@ -243,6 +242,7 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
+  if(s==="點貨中（不顯示）") return "#FFE4E1";
   return "#E7F2F8";
 }
 
@@ -271,7 +271,7 @@ async function handleSave() {
   const keys = Object.keys(pendingChanges);
   if (!keys.length) return;
   
-  if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
+  if (confirm(`確定儲存這 ${keys.length} 項修改？`)) {
     const updates = keys.map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
