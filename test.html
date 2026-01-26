@@ -147,9 +147,8 @@ async function loadSheetData(){
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) data.forEach(row => { 
-        // 修正點貨中邏輯
-        let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
-        supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
+        // 這裡保留 Supabase 原始狀態，邏輯判斷移到渲染層
+        supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
       });
     }
 
@@ -192,21 +191,24 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 過濾隱藏商品 (非 Admin 模式)
-    if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
+    // 【修改點 1】：過濾隱藏商品邏輯 (非 Admin 模式下)
+    // 只要包含「（不顯示）」字眼的狀態，客人都睇唔到
+    if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
     
     const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
 
+    // 【修改點 2】：更新管理員下拉選單選項
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
-          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
+          <option value="Hold貨（不顯示）" ${item.status==="Hold貨（不顯示）"?"selected":""}>Hold貨（不顯示）</option>
+          <option value="已售出（不顯示）" ${item.status==="已售出（不顯示）"?"selected":""}>已售出（不顯示）</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
@@ -216,17 +218,9 @@ function renderCards(items){
 
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
     
-    // 改動點：加入管理員判斷
     card.onclick = (e) => { 
-      // 如果點擊的是輸入框或下拉選單，或者是管理員模式，則不發送 Modal 指令
-      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-        return; 
-      }
-      // 普通用戶點擊，通知 index.html 彈出購物 Modal
-      window.parent.postMessage({
-        type: 'openModal',
-        item: item
-      }, '*');
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
+      window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
 
     gdiv.appendChild(card);
