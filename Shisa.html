@@ -98,7 +98,7 @@ body {
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/85z99C8S/icon007.png" alt="Loading" class="loading-icon" />
+      <img src="https://i.postimg.cc/Ghn9s5gF/icon007.png" alt="Loading" class="loading-icon" />
       <div>正在載入風獅資料中...</div>
     </div>
   </div>
@@ -115,59 +115,62 @@ body {
 
 <script>
 // --- 配置資訊 ---
-[span_1](start_span)const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';[span_1](end_span)
-[span_2](start_span)const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';[span_2](end_span)
-[span_3](start_span)const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";[span_3](end_span)
-[span_4](start_span)const sheetName = "ちいかわ";[span_4](end_span)
+const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
+const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
+const sheetName = "ちいかわ";
 
-[span_5](start_span)const roleMap = { "獅薩":"獅" };[span_5](end_span)
+const roleMap = { "獅薩":"獅" };
 const colors  = { "獅薩":"#FBAA60" };
 
-[span_6](start_span)let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;[span_6](end_span)
-[span_7](start_span)let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};[span_7](end_span)
+let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
 
 async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors["獅薩"]);
   
   try {
-    [span_8](start_span)// 1. 非同步安全檢查 Supabase[span_8](end_span)
+    // 1. 安全抓取 Supabase
     if (sbClient) {
       try {
         const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
         if (data && !error) {
           supabaseOverrides = {};
           data.forEach(row => { 
-            [span_9](start_span)let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;[span_9](end_span)
+            let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
             supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
           });
         }
-      } catch (e) { console.warn("Supabase 獲取失敗，跳過並繼續渲染"); } // 錯誤回退機制
+      } catch (e) { console.warn("Supabase 失敗，跳過並繼續"); }
     }
 
     // 2. 抓取 Google Sheet
     const fetchUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
     const response = await fetch(fetchUrl);
     const text = await response.text();
-    [span_10](start_span)const jsonText = text.substr(47).slice(0, -2);[span_10](end_span)
+    const jsonText = text.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
     const keyword = roleMap["獅薩"];
 
     globalItems = rows.map((row) => {
-      [span_11](start_span)let itemName = row.c[3]?.v || "";[span_11](end_span)
+      let itemName = (row.c[3]?.v || "").toString().trim();
       const rawType = (row.c[1]?.v || "").toString();
       const style = (row.c[2]?.v || "").toString();
       const roleField = (row.c[0]?.v || "").toString();
 
-      [span_12](start_span)// 篩選：必須包含「獅薩」關鍵字，且限定「吊娃」或「娃」[span_12](end_span)
+      // 只保留獅薩的吊娃、娃
       if (!itemName || !roleField.includes(keyword)) return null;
       if (!rawType.includes("吊娃") && !rawType.includes("娃") && !style.includes("吊娃") && !style.includes("娃")) return null;
       
       let dbKey = itemName;
       let sbData = null;
 
-      [span_13](start_span)// 資料匹配邏輯 (DB Key)[span_13](end_span)
-      if (supabaseOverrides["獅薩" + itemName]) {
+      // 【修正後的匹配邏輯】支援「風獅」、「獅薩」或「無前綴」
+      if (supabaseOverrides["風獅" + itemName]) {
+        dbKey = "風獅" + itemName;
+        sbData = supabaseOverrides[dbKey];
+      } else if (supabaseOverrides["獅薩" + itemName]) {
         dbKey = "獅薩" + itemName;
         sbData = supabaseOverrides[dbKey];
       } else if (supabaseOverrides[itemName]) {
@@ -187,7 +190,7 @@ async function loadSheetData(){
 
   } catch (error) {
     console.error("載入失敗:", error);
-    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px; color:red;'>載入失敗，請稍後再試</div>";
+    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px; color:red;'>載入失敗，請重新整理</div>";
   }
 }
 
@@ -200,14 +203,13 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    [span_14](start_span)// 過濾不顯示的狀態[span_14](end_span)
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card";
     
-    [span_15](start_span)// 顯示過濾 (Display Name)：前台去掉「獅薩」前綴[span_15](end_span)
-    const clientDisplayName = item.name.replace(/^獅薩/, "");
+    // 【修正後的顯示過濾】前台統一刪除「風獅」或「獅薩」前綴
+    const clientDisplayName = item.name.replace(/^(風獅|獅薩)/, "");
 
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
@@ -217,18 +219,18 @@ function renderCards(items){
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
           <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
          </select>`
-      [span_16](start_span): `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;[span_16](end_span)
+      : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
-    const displayPrice = (item.status === "需預訂" || !item.price) ? [span_17](start_span)'WhatsApp 查詢' : '$' + item.price;[span_17](end_span)
+    const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
     const priceHtml = isAdmin 
-      ? [span_18](start_span)`<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`[span_18](end_span)
+      ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
       : `<div class="price">${displayPrice}</div>`;
 
-    [span_19](start_span)card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;[span_19](end_span)
+    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
       if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        [span_20](start_span)window.parent.postMessage({ type: 'openModal', item: item }, '*');[span_20](end_span)
+        window.parent.postMessage({ type: 'openModal', item: item }, '*');
       }
     };
     gdiv.appendChild(card);
@@ -240,18 +242,18 @@ function renderCards(items){
 function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
-  [span_21](start_span)if(s==="搭飛機中") return "#C1E1C1";[span_21](end_span)
+  if(s==="搭飛機中") return "#C1E1C1";
   return "#E7F2F8";
 }
 
-function openLoginModal() { document.getElementById("loginModal").style.display = "block"; [span_22](start_span)}
+function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
 
 function handleLogin() {
   const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
-  if (id === "1050267" && pwd === "Penny01!") {[span_22](end_span)
+  if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
-    [span_23](start_span)document.getElementById("adminActions").style.display = "flex";[span_23](end_span)
+    document.getElementById("adminActions").style.display = "flex";
     document.getElementById("logoutBtn").style.display = "block";
     renderCards(globalItems); 
   } else { alert("帳號或密碼錯誤"); }
@@ -261,7 +263,7 @@ function stageChange(name, field, value) {
   const item = globalItems.find(i => i.name === name);
   if (item) {
     item[field] = value;
-    [span_24](start_span)pendingChanges[name] = { ...item };[span_24](end_span)
+    pendingChanges[name] = { ...item };
   }
 }
 
@@ -269,27 +271,27 @@ async function handleSave() {
   const keys = Object.keys(pendingChanges);
   if (!keys.length) return;
   
-  [span_25](start_span)if (confirm(`確定儲存這 ${keys.length} 項修改嗎？`)) {[span_25](end_span)
+  if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
     const updates = keys.map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
     }));
-    [span_26](start_span)const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });[span_26](end_span)
+    const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     if (error) {
-      [span_27](start_span)alert("儲存失敗：" + error.message);[span_27](end_span)
+      alert("儲存失敗：" + error.message);
     } else {
       alert("儲存成功！");
       pendingChanges = {}; 
-      [span_28](start_span)await loadSheetData();[span_28](end_span)
+      await loadSheetData();
     }
   }
 }
 
-function handleLogout() { if(confirm("確定登出？")) location.reload(); [span_29](start_span)}
+function handleLogout() { if(confirm("確定登出？")) location.reload(); }
 function handleCancel() { if(confirm("取消所有修改？")) location.reload(); }
-function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }[span_29](end_span)
+function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 window.onload = loadSheetData;
 window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
