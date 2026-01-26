@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣Chiikawa</title>
+  <title>出賣小八</title>
   
-  <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
+  <link rel="icon" href="https://i.postimg.cc/Ss5kqJ3L/icon002.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
 /* ================= 1. 基礎與變數 ================= */
-:root { --tab-color: #d77485; }
+:root { --tab-color: #6293b8; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -36,7 +36,7 @@ body {
   padding: 4px 12px; border-radius: 12px; border: 1px solid #fff;
   font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;
 }
-.btn-save { background: rgba(255,255,255,0.2); }
+.btn-save { background: rgba(255,255,255,0.4); border: 2px solid #fff; }
 .btn-logout { 
   position: absolute; left: 10px; top: 8px; 
   border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none; 
@@ -75,12 +75,11 @@ body {
   background: #fff; position: relative; text-align: center; padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-/* 管理員模式下卡片不縮放，避免編輯時跳動 */
 .card:not(.admin-mode):active { transform: scale(0.98); }
 
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
-.card .price { font-size: 13px; color: #d77485; font-weight: bold; margin-bottom: 6px; }
+.card .price { font-size: 13px; color: #6293b8; font-weight: bold; margin-bottom: 6px; }
 
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
@@ -88,7 +87,7 @@ body {
 .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; background: #fff; }
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
-/* ================= 5. 僅保留登入用的 Modal ================= */
+/* ================= 5. Modal 僅用於登入 ================= */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
@@ -102,15 +101,15 @@ body {
     <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
     <div id="adminActions" class="admin-actions">
       <button class="btn-cancel" onclick="handleCancel()">取消</button>
-      <button class="btn-save" onclick="handleSave()">儲存</button>
+      <button class="btn-save" onclick="handleSave()">儲存修改</button>
     </div>
     <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
   </div>
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Loading" class="loading-icon" />
-      <div>正在載入寶寶資料中...</div>
+      <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
+      <div>正在載入小八資料中...</div>
     </div>
   </div>
 
@@ -131,53 +130,67 @@ const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
 
-const roleMap = { "吉伊":"吉","小八":"八","兔兔":"兔","小桃":"桃","師傅":"獺","栗子":"栗","獅薩":"獅","古本":"古","其他角色":"其" };
-const colors  = { "吉伊":"#d77485","小八":"#6293b8","兔兔":"#f9be3c","小桃":"#838BC2","師傅":"#CCAFA5","栗子":"#94C973","獅薩":"#FBAA60","古本":"#eb9e97","其他角色":"#45818e" };
+const roleMap = { "小八":"八" };
+const colors  = { "小八":"#6293b8" };
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], currentRole = "吉伊", supabaseOverrides = {}, pendingChanges = {};
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
 
 // --- 初始化與載入 ---
 async function loadSheetData(){
-  const p = new URLSearchParams(location.search).get("role");
-  currentRole = roleMap[p] ? p : "吉伊";
-  document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
+  document.documentElement.style.setProperty("--tab-color", colors["小八"]);
   
   try {
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      if (data) data.forEach(row => { 
-        // 這裡保留 Supabase 原始狀態，邏輯判斷移到渲染層
-        supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
-      });
+      if (data) {
+        supabaseOverrides = {};
+        data.forEach(row => { 
+          // 這裡簡化邏輯：直接存入原始 status
+          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+        });
+      }
     }
 
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
-    const keyword = roleMap[currentRole];
+    const keyword = roleMap["小八"];
 
-    globalItems = rows.map((row, i) => {
-      const itemName = row.c[3]?.v || "";
+    globalItems = rows.map((row) => {
+      let itemName = row.c[3]?.v || "";
       const rawType = row.c[1]?.v || "";
       const style = row.c[2]?.v || "";
-      if (!itemName || (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃")) return null;
+      const roleField = row.c[0]?.v || "";
+
+      if (!itemName || !roleField.includes(keyword)) return null;
+      if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
-      const sbData = supabaseOverrides[itemName];
+      let dbKey = itemName;
+      let sbData = null;
+
+      if (supabaseOverrides["小八" + itemName]) {
+        dbKey = "小八" + itemName;
+        sbData = supabaseOverrides[dbKey];
+      } else if (supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
+      }
+
       return {
-        name: itemName,
+        name: dbKey,
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
-        role: row.c[0]?.v || ""
+        role: roleField
       };
-    }).filter(it => it && it.role.includes(keyword));
+    }).filter(it => it !== null);
 
     renderCards(globalItems);
   } catch (error) {
     console.error(error);
-    document.getElementById("card-container").innerHTML = "載入失敗，請稍後再試。";
+    document.getElementById("card-container").innerHTML = "載入失敗";
   }
 }
 
@@ -191,16 +204,15 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 【修改點 1】：過濾隱藏商品邏輯 (非 Admin 模式下)
-    // 只要包含「（不顯示）」字眼的狀態，客人都睇唔到
+    // 【修改點 1】：過濾邏輯 —— 非管理員模式下，任何包含「（不顯示）」嘅狀態都唔會出現
     if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
     
-    const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
+    const clientDisplayName = item.name.replace(/^小八/, "");
 
-    // 【修改點 2】：更新管理員下拉選單選項
+    // 【修改點 2】：管理員下拉選單選項更新
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
@@ -212,17 +224,17 @@ function renderCards(items){
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
+    const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
     const priceHtml = isAdmin 
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
       : `<div class="price">${displayPrice}</div>`;
 
-    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.name}</div>${priceHtml}`;
+    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
       if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
       window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
-
     gdiv.appendChild(card);
   });
   container.appendChild(gdiv);
@@ -251,29 +263,41 @@ function handleLogin() {
 }
 
 function stageChange(name, field, value) {
-  if(!pendingChanges[name]) {
-    const it = globalItems.find(i => i.name === name);
-    pendingChanges[name] = { status: it.status, price: it.price };
-  }
-  pendingChanges[name][field] = value;
   const item = globalItems.find(i => i.name === name);
-  if(item) item[field] = value;
+  if (item) {
+    item[field] = value;
+    if (!pendingChanges[name]) {
+      pendingChanges[name] = { ...item };
+    }
+    pendingChanges[name][field] = value;
+  }
 }
 
 async function handleSave() {
   const keys = Object.keys(pendingChanges);
-  if (!keys.length) { alert("沒有修改需要儲存"); return; }
+  if (!keys.length) { alert("沒有任何修改需要儲存"); return; }
+  
   if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
-    const updates = keys.map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
+    const updates = keys.map(k => ({ 
+      item_name: k, 
+      status: pendingChanges[k].status, 
+      price: pendingChanges[k].price
+    }));
+    
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if (error) alert("儲存失敗：" + error.message);
-    else { alert("儲存成功！"); pendingChanges = {}; loadSheetData(); }
+    
+    if (error) {
+      alert("儲存失敗：" + error.message);
+    } else {
+      alert("儲存成功！");
+      pendingChanges = {}; 
+      await loadSheetData(); 
+    }
   }
 }
 
 function handleLogout() { if(confirm("確定要登出嗎？")) location.reload(); }
 function handleCancel() { if(confirm("確定要取消修改嗎？")) location.reload(); }
-
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 // --- 啟動 ---
