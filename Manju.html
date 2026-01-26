@@ -81,7 +81,6 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
 
-/* 管理員模式下取消縮放動畫，方便輸入 */
 .card:not(.admin-mode):active { transform: scale(0.98); }
 
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
@@ -153,8 +152,8 @@ async function loadSheetData(){
       if (data && !error) {
         supabaseOverrides = {};
         data.forEach(row => { 
-          let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
-          supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
+          // 直接抓取 Supabase 的狀態
+          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
         });
       }
     }
@@ -213,19 +212,22 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
+    // 【修改點】：自動隱藏邏輯 —— 非管理員模式下，包含「（不顯示）」嘅貨品會隱藏
+    if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
 
     const card = document.createElement("div");
     card.className = "card" + (isAdmin ? " admin-mode" : "");
     const clientDisplayName = item.name.replace(/^栗子/, "");
 
+    // 【修改點】：管理員下拉選單選項更新
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
-          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
+          <option value="Hold貨（不顯示）" ${item.status==="Hold貨（不顯示）"?"selected":""}>Hold貨（不顯示）</option>
+          <option value="已售出（不顯示）" ${item.status==="已售出（不顯示）"?"selected":""}>已售出（不顯示）</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
@@ -237,10 +239,7 @@ function renderCards(items){
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
-      // 管理員模式或點擊輸入控制項時不發送彈窗訊息
-      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-        return; 
-      }
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
       window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
@@ -253,7 +252,6 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
-  if(s==="點貨中（不顯示）") return "#FFE4E1";
   return "#E7F2F8";
 }
 
@@ -290,8 +288,7 @@ async function handleSave() {
     const updates = keys.map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
-      price: pendingChanges[k].price,
-      updated_at: new Date().toISOString()
+      price: pendingChanges[k].price
     }));
     
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
