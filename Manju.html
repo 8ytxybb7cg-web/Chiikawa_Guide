@@ -80,10 +80,13 @@ body {
   padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-.card:active { transform: scale(0.98); }
+
+/* 管理員模式下取消縮放動畫，方便輸入 */
+.card:not(.admin-mode):active { transform: scale(0.98); }
+
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
-.card .price { font-size: 13px; color: #d69b00; font-weight: bold; margin-bottom: 6px; }
+.card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
 
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
@@ -137,7 +140,6 @@ const sheetName = "ちいかわ";
 const roleMap = { "栗子":"栗" };
 const colors  = { "栗子":"#94C973" };
 
-// 非同步安全檢查：確保 sbClient 存在
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
 
@@ -146,21 +148,17 @@ async function loadSheetData(){
   document.documentElement.style.setProperty("--tab-color", colors["栗子"]);
   
   try {
-    // 8. 錯誤回退機制：如果資料庫獲取失敗，腳本會跳過繼續執行
     if (sbClient) {
-      try {
-        const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-        if (data && !error) {
-          supabaseOverrides = {};
-          data.forEach(row => { 
-            let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
-            supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
-          });
-        }
-      } catch (dbErr) { console.warn("Supabase 資料獲取跳過:", dbErr); }
+      const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
+      if (data && !error) {
+        supabaseOverrides = {};
+        data.forEach(row => { 
+          let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
+          supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
+        });
+      }
     }
 
-    // 獲取 Google Sheet 資料
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
@@ -169,20 +167,16 @@ async function loadSheetData(){
 
     globalItems = rows.map((row) => {
       let itemName = row.c[3]?.v || "";
-      const rawType = row.c[1]?.v || "";
-      const style = row.c[2]?.v || "";
-      const roleField = row.c[0]?.v || "";
+      const rawType = (row.c[1]?.v || "").toString();
+      const style = (row.c[2]?.v || "").toString();
+      const roleField = (row.c[0]?.v || "").toString();
 
-      // 1. 卡片資料過濾：只保留「栗子」角色，且類別必須包含「吊娃」或「娃」
       if (!itemName || !roleField.includes(keyword)) return null;
-      // 7. 條件邏輯優化：修復篩選邏輯判斷
-      const isDoll = (rawType === "吊娃" || rawType === "娃" || style === "吊娃" || style === "娃");
-      if (!isDoll) return null;
+      if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
       let dbKey = itemName;
       let sbData = null;
 
-      // 9. 資料匹配 (DB Key)：自動檢查「栗子+名稱」或「名稱」
       if (supabaseOverrides["栗子" + itemName]) {
         dbKey = "栗子" + itemName;
         sbData = supabaseOverrides[dbKey];
@@ -192,7 +186,7 @@ async function loadSheetData(){
       }
 
       return {
-        name: dbKey, // 這裡儲存原始 DB Key 供後台更新
+        name: dbKey,
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
         img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
@@ -202,7 +196,7 @@ async function loadSheetData(){
     renderCards(globalItems);
   } catch (error) {
     console.error("載入失敗:", error);
-    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px;'>載入資料失敗，請檢查網路。</div>";
+    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px;'>載入資料失敗</div>";
   }
 }
 
@@ -211,7 +205,7 @@ function renderCards(items){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   if (!items.length) { 
-    container.innerHTML = "<div style='padding-top:100px;'>目前沒有栗子的相關商品</div>"; 
+    container.innerHTML = "<div style='padding-top:100px;'>目前沒有商品</div>"; 
     return; 
   }
 
@@ -219,13 +213,10 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 修正：非管理員過濾掉不顯示狀態
     if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
-    card.className = "card";
-    
-    // 10. 顯示過濾 (Display Name)：前台卡片展示前綴不加上「栗子」
+    card.className = "card" + (isAdmin ? " admin-mode" : "");
     const clientDisplayName = item.name.replace(/^栗子/, "");
 
     const statusHtml = isAdmin 
@@ -246,9 +237,11 @@ function renderCards(items){
     card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
-      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-        window.parent.postMessage({ type: 'openModal', item: item }, '*');
+      // 管理員模式或點擊輸入控制項時不發送彈窗訊息
+      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        return; 
       }
+      window.parent.postMessage({ type: 'openModal', item: item }, '*');
     };
     gdiv.appendChild(card);
   });
@@ -269,7 +262,6 @@ function openLoginModal() { document.getElementById("loginModal").style.display 
 
 function handleLogin() {
   const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
-  // 4. 管理員登入設定
   if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
