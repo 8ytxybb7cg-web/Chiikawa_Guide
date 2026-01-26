@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  
   <title>Chiikawa 寶寶圖鑑</title>
+  <meta property="og:title" content="Chiikawa 寶寶圖鑑">
+  <meta property="og:description" content="Chiikawa 產品圖鑑，提供最新現貨資訊及代購服務。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/">
+  <meta property="og:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
+
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
   <style>
     :root { --tab-color: #dac7b7; }
@@ -177,10 +186,7 @@
   }, false);
 
   function addToCart() {
-    if (currentItem.status === '需預訂') {
-        alert("此商品需預訂，請按立即購買直接查詢。");
-        return;
-    }
+    if (currentItem.status === '需預訂') { alert("此商品需預訂，請按立即購買直接查詢。"); return; }
     const exist = cart.find(i => i.name === currentItem.name);
     if (exist) { exist.qty += 1; } else { cart.push({ ...currentItem, qty: 1 }); }
     saveCart();
@@ -231,7 +237,6 @@
     if (total > 0) text += `預計總額：$${total}\n`;
     text += "\n請問目前還有貨嗎？";
     const encodedText = encodeURIComponent(text);
-    // 更新後的電話號碼
     window.open(`https://wa.me/85291368535?text=${encodedText}`, '_blank');
   }
 
