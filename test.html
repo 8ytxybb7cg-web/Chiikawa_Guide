@@ -137,12 +137,16 @@ async function loadSheetData(){
     const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = data.table.rows || [];
 
-    globalItems = rows.map((row) => {
+        globalItems = rows.map((row, index) => {
+      // ✨ 修正 1：跳過第一行標題列
+      // rows[0] 通常是 Google Sheet 的 Header
       const type = row.c[0]?.v || "其他";   
       const name = row.c[1]?.v || "";   
       const img  = row.c[3]?.v || "";   
       const size = row.c[5]?.v || "";   
-      if (!name) return null;
+
+      // ✨ 修正 2：加強判斷，如果抓到的是標題文字也跳過
+      if (!name || name === "名稱" || type === "類型") return null;
 
       const fullName = `${currentRole}${name}`; 
       const sbData = supabaseOverrides[fullName];
