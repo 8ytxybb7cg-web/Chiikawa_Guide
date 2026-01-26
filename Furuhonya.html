@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>出賣古本</title>
+  
+  <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+/* ================= 1. 基礎與變數 ================= */
+:root { 
+  --tab-color: #eb9e97; [span_0](start_span)/* 古本專屬顏色[span_0](end_span) */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0; padding: 0; color: #333;
+  [span_1](start_span)text-align: center;[span_1](end_span)
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================= 2. 頂部導航欄 ================= */
+.top-bar {
+  background: var(--tab-color);
+  color: #fff; height: 44px; position: fixed;
+  [span_2](start_span)top: 0; left: 0; width: 100%; z-index: 999;[span_2](end_span)
+  display: flex; align-items: center; justify-content: flex-end; 
+  padding: 0 16px; box-sizing: border-box;
+  [span_3](start_span)box-shadow: 0 1px 5px rgba(0,0,0,0.1);[span_3](end_span)
+  gap: 10px;
+}
+[span_4](start_span).admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; opacity: 0.9;[span_4](end_span) }
+.admin-actions { display: none; gap: 8px; }
+.btn-save, .btn-cancel, .btn-logout {
+  padding: 4px 12px; border-radius: 12px; border: 1px solid #fff;
+  [span_5](start_span)font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;[span_5](end_span)
+}
+[span_6](start_span).btn-save { background: rgba(255,255,255,0.4); border: 2px solid #fff;[span_6](end_span) }
+[span_7](start_span).btn-logout { position: absolute; left: 10px; top: 8px; border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none;[span_7](end_span) }
+
+/* ================= 3. 載入動畫與容器 ================= */
+#card-container {
+  [span_8](start_span)padding: 60px 10px 20px 10px;[span_8](end_span)
+  display: flex; flex-direction: column; gap: 12px;
+  max-width: 1200px; margin: 0 auto; min-height: 60vh; 
+}
+#loading-msg { 
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  [span_9](start_span)padding-top: 100px; color: #999; font-weight: bold; gap: 15px;[span_9](end_span)
+}
+.loading-icon {
+  width: 80px; height: auto;
+  [span_10](start_span)animation: bounce 0.8s infinite ease-in-out;[span_10](end_span)
+}
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); [span_11](start_span)} }[span_11](end_span)
+
+/* ================= 4. 商品卡片樣式 ================= */
+.group-grid {
+  [span_12](start_span)display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));[span_12](end_span)
+  gap: 10px; justify-items: center; width: 100%;
+}
+.card {
+  width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
+  background: #fff; position: relative; text-align: center;
+  [span_13](start_span)padding-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;[span_13](end_span)
+}
+[span_14](start_span).card:active { transform: scale(0.98);[span_14](end_span) }
+.card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
+[span_15](start_span).card .name { margin: 4px 6px; font-size: 11px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center;[span_15](end_span) }
+[span_16](start_span).card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px;[span_16](end_span) }
+[span_17](start_span).status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 10px; font-weight: 600; margin-bottom: 6px;[span_17](end_span) }
+
+[span_18](start_span).admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px; font-size: 10px; margin-bottom: 4px; width: 90%; background: #fff;[span_18](end_span) }
+[span_19](start_span).admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; margin-bottom: 4px;[span_19](end_span) }
+
+/* ================= 5. Modal ================= */
+[span_20](start_span).modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);[span_20](end_span) }
+[span_21](start_span).modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 300px; border-radius: 20px; position: relative;[span_21](end_span) }
+[span_22](start_span).close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer;[span_22](end_span) }
+[span_23](start_span).login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box;[span_23](end_span) }
+[span_24](start_span).login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;[span_24](end_span) }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
+    <div id="adminActions" class="admin-actions">
+      <button class="btn-cancel" onclick="handleCancel()">取消</button>
+      <button class="btn-save" onclick="handleSave()">儲存修改</button>
+    </div>
+    <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+  </div>
+
+  <div id="card-container">
+    <div id="loading-msg">
+      <img src="https://i.postimg.cc/2jsL76yB/icon008.png" alt="Loading" class="loading-icon" />
+      <div>正在載入古本資料中...</div>
+    </div>
+  </div>
+
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
+      <h3 style="margin-top:0;">管理員登入</h3>
+      <input type="text" id="adminId" class="login-input" placeholder="ID">
+      <input type="password" id="adminPwd" class="login-input" placeholder="Password">
+      <button class="login-btn" onclick="handleLogin()">登入</button>
+    </div>
+  </div>
+
+<script>
+// --- 配置資訊 ---
+const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
+[span_25](start_span)const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';[span_25](end_span)
+const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
+const sheetName = "ちいかわ";
+
+const roleMap = { "古本":"古" };
+[span_26](start_span)const colors  = { "古本":"#eb9e97" };[span_26](end_span)
+
+[span_27](start_span)let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;[span_27](end_span)
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
+
+async function loadSheetData(){
+  document.documentElement.style.setProperty("--tab-color", colors["古本"]);
+  
+  try {
+    // 1. 安全抓取 Supabase
+    if (sbClient) {
+      try {
+        [span_28](start_span)const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');[span_28](end_span)
+        if (data && !error) {
+          supabaseOverrides = {};
+          data.forEach(row => { 
+            [span_29](start_span)let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;[span_29](end_span)
+            supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
+          });
+        }
+      } catch (e) { console.warn("Supabase 失敗，跳過並繼續"); }
+    }
+
+    // 2. 抓取 Google Sheet
+    const fetchUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+    const response = await fetch(fetchUrl);
+    const text = await response.text();
+    const jsonText = text.substr(47).slice(0, -2);
+    [span_30](start_span)const data = JSON.parse(jsonText);[span_30](end_span)
+    const rows = data.table.rows || [];
+    const keyword = roleMap["古本"];
+
+    globalItems = rows.map((row) => {
+      let itemName = (row.c[3]?.v || "").toString().trim();
+      const rawType = (row.c[1]?.v || "").toString();
+      const style = (row.c[2]?.v || "").toString();
+      const roleField = (row.c[0]?.v || "").toString();
+
+      // 篩選：只保留古本的「吊娃」或「娃」 [需求 1, 7]
+      if (!itemName || !roleField.includes(keyword)) return null;
+      if (!rawType.includes("吊娃") && !rawType.includes("娃") && !style.includes("吊娃") && !style.includes("娃")) return null;
+      
+      let dbKey = itemName;
+      let sbData = null;
+
+      // 匹配邏輯：優先匹配「古本 + 名稱」或「原名」 [需求 9]
+      if (supabaseOverrides["古本" + itemName]) {
+        dbKey = "古本" + itemName;
+        sbData = supabaseOverrides[dbKey];
+      } else if (supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
+      }
+
+      return {
+        name: dbKey,
+        price: sbData?.price || "", 
+        status: sbData?.status || "現貨", 
+        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
+      };
+    }).filter(it => it !== null);
+
+    renderCards(globalItems);
+
+  } catch (error) {
+    console.error("載入失敗:", error);
+    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px; color:red;'>載入失敗，請重新整理</div>";
+  }
+}
+
+function renderCards(items){
+  const container = document.getElementById("card-container");
+  container.innerHTML = "";
+  if (!items.length) { container.innerHTML = "<div style='padding-top:100px;'>目前沒有相關商品</div>"; return; }
+
+  const gdiv = document.createElement("div");
+  gdiv.className = "group-grid";
+  
+  items.forEach(item => {
+    [span_31](start_span)if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;[span_31](end_span)
+
+    const card = document.createElement("div");
+    card.className = "card";
+    
+    // 顯示過濾：自動去掉「古本」前綴 [需求 10]
+    const clientDisplayName = item.name.replace(/^古本/, "");
+
+    const statusHtml = isAdmin 
+      ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
+          <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
+          <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
+          <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
+          <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
+          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
+         </select>`
+      : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
+
+    const displayPrice = (item.status === "需預訂" || !item.price) ? [span_32](start_span)'WhatsApp 查詢' : '$' + item.price;[span_32](end_span)
+    const priceHtml = isAdmin 
+      ? [span_33](start_span)`<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`[span_33](end_span)
+      : `<div class="price">${displayPrice}</div>`;
+
+    [span_34](start_span)card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;[span_34](end_span)
+    
+    card.onclick = (e) => { 
+      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        [span_35](start_span)window.parent.postMessage({ type: 'openModal', item: item }, '*');[span_35](end_span)
+      }
+    };
+    gdiv.appendChild(card);
+  });
+  container.appendChild(gdiv);
+  setTimeout(sendHeight, 300);
+}
+
+function getStatusBg(s) {
+  if(s==="現貨") return "#FFF4BD";
+  if(s==="需預訂") return "#D4BBDD";
+  [span_36](start_span)if(s==="搭飛機中") return "#C1E1C1";[span_36](end_span)
+  return "#E7F2F8";
+}
+
+[span_37](start_span)function openLoginModal() { document.getElementById("loginModal").style.display = "block";[span_37](end_span) }
+
+function handleLogin() {
+  const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
+  [span_38](start_span)if (id === "1050267" && pwd === "Penny01!") {[span_38](end_span)
+    isAdmin = true;
+    document.getElementById("loginModal").style.display = "none";
+    document.getElementById("adminActions").style.display = "flex";
+    [span_39](start_span)document.getElementById("logoutBtn").style.display = "block";[span_39](end_span)
+    renderCards(globalItems); 
+  } else { alert("帳號或密碼錯誤"); }
+}
+
+function stageChange(name, field, value) {
+  const item = globalItems.find(i => i.name === name);
+  if (item) {
+    item[field] = value;
+    [span_40](start_span)pendingChanges[name] = { ...item };[span_40](end_span)
+  }
+}
+
+async function handleSave() {
+  const keys = Object.keys(pendingChanges);
+  if (!keys.length) return;
+  
+  if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
+    const updates = keys.map(k => ({ 
+      item_name: k, 
+      status: pendingChanges[k].status, 
+      price: pendingChanges[k].price,
+      updated_at: new Date().toISOString()
+    }));
+    [span_41](start_span)const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });[span_41](end_span)
+    if (error) {
+      alert("儲存失敗：" + error.message);
+    } else {
+      alert("儲存成功！");
+      pendingChanges = {}; 
+      await loadSheetData();
+    }
+  }
+}
+
+function handleLogout() { if(confirm("確定登出？")) location.reload(); }
+function handleCancel() { if(confirm("取消所有修改？")) location.reload(); }
+function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); [span_42](start_span)[span_43](start_span)}
+
+window.onload = loadSheetData;
+window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
+window.addEventListener('resize', sendHeight);
+</script>
+</body>
+</html>
