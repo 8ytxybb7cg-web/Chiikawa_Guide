@@ -1,327 +1,285 @@
 <!DOCTYPE html>
-<html lang="zh-Hk">
+<html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>其他角色目錄</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chiikawa 寶寶圖鑑</title>
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-/* ================= 1. 基礎與變數 ================= */
-:root { 
-  --tab-color: #45818e; 
-}
+    :root { --tab-color: #dac7b7; }
+    html, body {
+      margin: 0; padding: 0; width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9f9f9; color: #333333; text-align: center;
+    }
+    /* 1. Logo 縮小至 50% (原 140px -> 70px) */
+    .logo-container { text-align: center; margin-top: 20px; }
+    .logo-container img { width: 70px; height: auto; }
+    
+    h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f9f9f9;
-  margin: 0; padding: 0; color: #333;
-  text-align: center;
-  -webkit-font-smoothing: antialiased;
-}
+    /* 2. Icon 排版優化：5個一列 */
+    .tabs { 
+      display: grid; 
+      grid-template-columns: repeat(5, 1fr); 
+      gap: 10px; 
+      padding: 10px; 
+      max-width: 400px; 
+      margin: 0 auto; 
+    }
+    .tab { cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+    .tab-circle { width: 55px; height: 55px; border-radius: 50%; overflow: hidden; border: 3px solid transparent; background: #eee; }
+    .tab.active .tab-circle { border-color: var(--tab-color); }
+    .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .tab-name { font-size: 10px; font-weight: bold; margin-top: 4px; color: #666; white-space: nowrap; }
 
-/* ================= 2. 頂部導航欄 ================= */
-.top-bar {
-  background: var(--tab-color);
-  color: #fff; height: 44px; position: fixed;
-  top: 0; left: 0; width: 100%; z-index: 999;
-  display: flex; align-items: center; justify-content: flex-end; 
-  padding: 0 16px; box-sizing: border-box;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-  gap: 10px;
-}
+    #main-content { width: 100%; position: relative; }
+    #content-frame {
+      width: 100%; border: none; margin-top: -44px; 
+      clip-path: inset(44px 0 0 0); display: block;
+    }
 
-.admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; opacity: 0.9; }
+    /* Modal 樣式優化 */
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: none;
+      justify-content: center; align-items: center; z-index: 99999; padding: 20px;
+      box-sizing: border-box; backdrop-filter: blur(5px);
+    }
+    .modal-card {
+      background: #fff; border-radius: 20px; padding: 20px;
+      width: 90%; max-width: 320px; text-align: center; position: relative;
+    }
+    .modal-card img { width: 100%; max-height: 40vh; object-fit: contain; border-radius: 10px; }
+    .modal-card h3 { margin: 15px 0 5px; font-size: 18px; }
+    .modal-card .price { color: #d77485; font-size: 20px; font-weight: bold; margin: 10px 0; }
+    
+    .btn-group { display: flex; gap: 10px; flex-direction: column; margin-top: 15px; }
+    .btn-buy { background: #d77485; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    .btn-cart { background: #f3f3f3; color: #333; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    .btn-close { color: #999; font-size: 14px; margin-top: 10px; cursor: pointer; background: none; border: none; }
 
-.admin-actions { display: none; gap: 8px; }
-.btn-save, .btn-cancel, .btn-logout {
-  padding: 4px 12px; border-radius: 12px; border: 1px solid #fff;
-  font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;
-}
-.btn-save { background: rgba(255,255,255,0.4); border: 2px solid #fff; }
-.btn-logout { 
-  position: absolute; left: 10px; top: 8px; 
-  border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none;
-}
+    /* 購物車懸浮按鈕 */
+    #cart-badge {
+      position: fixed; bottom: 30px; right: 20px; 
+      background: #d77485; color: white; width: 60px; height: 60px; 
+      border-radius: 50%; display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 9999;
+    }
+    #cart-count {
+      position: absolute; top: 0; right: 0; background: red; color: white;
+      font-size: 12px; padding: 2px 6px; border-radius: 10px; border: 2px solid #fff;
+    }
 
-/* ================= 3. 載入動畫與容器 ================= */
-#card-container {
-  padding: 60px 10px 20px 10px;
-  display: flex; flex-direction: column; gap: 12px;
-  max-width: 1200px; margin: 0 auto; min-height: 60vh; 
-}
+    /* 購物車列表樣式 */
+    .cart-list { max-height: 50vh; overflow-y: auto; text-align: left; margin: 15px 0; }
+    .cart-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .cart-item img { width: 40px; height: 40px; border-radius: 5px; }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-size: 14px; font-weight: bold; }
+    .cart-item-price { font-size: 12px; color: #d77485; }
+    .remove-item { color: #ccc; cursor: pointer; font-size: 18px; }
 
-#loading-msg { 
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding-top: 100px; color: #999; font-weight: bold; gap: 15px;
-}
-
-.loading-icon {
-  width: 80px; height: auto;
-  animation: bounce 0.8s infinite ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-/* ================= 4. 商品卡片樣式 ================= */
-.group-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px; justify-items: center; width: 100%;
-}
-
-.card {
-  width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
-  background: #fff; position: relative; text-align: center;
-  padding-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
-}
-/* 管理員模式下取消點擊縮放，防止輸入時跳動 */
-.card:not(.admin-mode):active { transform: scale(0.98); }
-
-.card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
-.card .name { margin: 4px 6px;
-  font-size: 11px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
-.card .price { font-size: 13px;
-  color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
-
-.status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600;
-  margin-bottom: 6px; }
-
-/* Admin 專用樣式 */
-.admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px;
-  width: 90%; background: #fff; }
-.admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px;
-  padding: 2px 0; margin-bottom: 4px; }
-
-/* ================= 5. Modal 與登入 ================= */
-.modal { display: none; position: fixed; z-index: 10000;
-  left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
-.modal-content { background: #fff; margin: 20% auto;
-  padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
-.close-modal { position: absolute; top: 12px;
-  right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
-.login-input { width: 100%; padding: 12px; margin: 8px 0;
-  border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-.login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border: none;
-  border-radius: 12px; font-weight: bold; cursor: pointer; }
+    /* 3. 底部資訊優化 */
+    .bottom-bar { padding: 30px 0; background-color: #dac7b7; color: #fff; margin-top: 50px; }
+    .contact-icons { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
+    .contact-icons a { color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; font-size: 14px; }
+    .icon-img { width: 24px; height: 24px; filter: brightness(0) invert(1); }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">登出</button>
-    <div id="adminActions" class="admin-actions">
-      <button class="btn-cancel" onclick="handleCancel()">取消</button>
-      <button class="btn-save" onclick="handleSave()">儲存修改</button>
-    </div>
-    <svg class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+  <div class="logo-container">
+    <img src="https://i.postimg.cc/3R7nNT0k/icon.png" alt="Chiikawa Logo" />
+  </div>
+  <h1>Chiikawa 寶寶圖鑑</h1>
+  <div class="tabs" id="tabs"></div>
+
+  <div id="main-content">
+    <iframe id="content-frame" src="" scrolling="no"></iframe>
   </div>
 
-  <div id="card-container">
-    <div id="loading-msg">
-      <img src="https://i.postimg.cc/PqVPpf0J/icon009.png" alt="Loading" class="loading-icon" />
-      <div>正在載入其他角色資料中...</div>
+  <div id="parentOverlay" class="overlay" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <img id="modalImg" src="" alt="">
+      <h3 id="modalName"></h3>
+      <div class="price" id="modalPrice"></div>
+      <div class="btn-group">
+        <button class="btn-buy" onclick="quickBuy()">立即購買</button>
+        <button class="btn-cart" onclick="addToCart()">加入購物車</button>
+      </div>
+      <button class="btn-close" onclick="document.getElementById('parentOverlay').style.display='none'">暫時看看</button>
     </div>
   </div>
 
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
-      <h3 style="margin-top:0;">管理員登入</h3>
-      <input type="text" id="adminId" class="login-input" placeholder="ID">
-      <input type="password" id="adminPwd" class="login-input" placeholder="Password">
-      <button class="login-btn" onclick="handleLogin()">登入</button>
+  <div id="cartOverlay" class="overlay" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3>我的購物車</h3>
+      <div id="cart-items" class="cart-list">
+        </div>
+      <div id="cart-total" style="font-weight:bold; margin-bottom:15px; text-align:right;"></div>
+      <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">傳送訂單到 WhatsApp</button>
+      <button class="btn-close" onclick="document.getElementById('cartOverlay').style.display='none'">繼續購物</button>
     </div>
+  </div>
+
+  <div id="cart-badge" onclick="toggleCart()">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+    <div id="cart-count">0</div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="contact-icons">
+      <a href="https://wa.me/YOUR_PHONE_NUMBER" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" class="icon-img" alt="WhatsApp"> WhatsApp
+      </a>
+      <a href="mailto:your-email@example.com">
+        <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" class="icon-img" alt="Email"> Email
+      </a>
+    </div>
+    &copy; <span id="current-year"></span> Chiikawa Sales
   </div>
 
 <script>
-// --- 配置資訊 ---
-const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
-const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
-const sheetName = "ちいかわ";
+  const roles = [
+    { name: "吉伊", color: "#d77485", img: "https://i.postimg.cc/vZDs4YNZ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Chiikawa.html" },
+    { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Hachiware.html" },
+    { name: "兔兔", color: "#f9be3c", img: "https://i.postimg.cc/xdzVPsYr/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Usagi.html" },
+    { name: "小桃", color: "#838BC2", img: "https://i.postimg.cc/9MP36rrJ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Momonga.html" },
+    { name: "師傅", color: "#CCAFA5", img: "https://i.postimg.cc/fTq4Q4Rn/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Master.html" },
+    { name: "栗子", color: "#94C973", img: "https://i.postimg.cc/FzGMK8bS/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Manju.html" },
+    { name: "獅薩", color: "#FBAA60", img: "https://i.postimg.cc/660Jz4sQ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Shisa.html" },
+    { name: "古本", color: "#eb9e97", img: "https://i.postimg.cc/nh5t7yyY/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Furuhonya.html" },
+    { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Other.html" }
+  ];
 
-const roleMap = { "其他角色":"其" };
-const colors  = { "其他角色":"#45818e" };
+  let cart = JSON.parse(localStorage.getItem('myCart')) || [];
+  let currentItem = null; // 當前 Modal 顯示的商品
 
-let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
+  const frame = document.getElementById("content-frame");
+  const overlay = document.getElementById("parentOverlay");
+  const cartOverlay = document.getElementById("cartOverlay");
 
-// --- 初始化與載入 ---
-async function loadSheetData(){
-  document.documentElement.style.setProperty("--tab-color", colors["其他角色"]);
-  
-  try {
-    if (sbClient) {
-      try {
-        const { data, error } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-        if (data && !error) {
-          supabaseOverrides = {};
-          data.forEach(row => { 
-            let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
-            supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
-          });
-        }
-      } catch (e) {
-        console.warn("Supabase 讀取失敗", e);
-      }
-    }
-
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());
-    const jsonText = sheetRes.substr(47).slice(0, -2);
-    const data = JSON.parse(jsonText);
-    const rows = data.table.rows || [];
-    const keyword = roleMap["其他角色"];
-
-    globalItems = rows.map((row) => {
-      let itemName = (row.c[3]?.v || "").toString().trim();
-      const rawType = (row.c[1]?.v || "").toString();
-      const style = (row.c[2]?.v || "").toString();
-      const roleField = (row.c[0]?.v || "").toString();
-
-      // 篩選：僅保留其他角色的吊娃、娃
-      if (!itemName || !roleField.includes(keyword)) return null;
-      if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
-      
-      let dbKey = itemName;
-      let sbData = null;
-
-      // 資料匹配
-      if (supabaseOverrides["其他" + itemName]) {
-        dbKey = "其他" + itemName;
-        sbData = supabaseOverrides[dbKey];
-      } else if (supabaseOverrides[itemName]) {
-        dbKey = itemName;
-        sbData = supabaseOverrides[dbKey];
-      }
-
-      return {
-        name: dbKey,
-        price: sbData?.price || "", 
-        status: sbData?.status || "現貨", 
-        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
+  function initTabs() {
+    const tabsContainer = document.getElementById("tabs");
+    roles.forEach((role, index) => {
+      const tab = document.createElement("div");
+      tab.className = "tab" + (index === 0 ? " active" : "");
+      tab.innerHTML = `<div class="tab-circle" style="--tab-color:${role.color}"><img src="${role.img}"></div><div class="tab-name">${role.name}</div>`;
+      tab.onclick = () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        document.documentElement.style.setProperty('--tab-color', role.color);
+        frame.src = role.url;
       };
-    }).filter(it => it !== null);
-
-    renderCards(globalItems);
-  } catch (error) {
-    console.error(error);
-    document.getElementById("card-container").innerHTML = "<div style='padding-top:100px;'>載入資料失敗</div>";
+      tabsContainer.appendChild(tab);
+    });
+    frame.src = roles[0].url;
+    updateCartUI();
   }
-}
 
-// --- 渲染功能 ---
-function renderCards(items){
-  const container = document.getElementById("card-container");
-  container.innerHTML = "";
-  if (!items.length) { container.innerHTML = "<div style='padding-top:100px;'>目前沒有商品</div>"; return; }
-
-  const gdiv = document.createElement("div");
-  gdiv.className = "group-grid";
-  
-  items.forEach(item => {
-    if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
-
-    const card = document.createElement("div");
-    card.className = "card" + (isAdmin ? " admin-mode" : "");
-    
-    // 顯示過濾：將名稱開頭的「其他」刪除
-    const clientDisplayName = item.name.replace(/^其他/, "");
-
-    const statusHtml = isAdmin 
-      ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
-          <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
-          <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
-          <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
-          <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
-          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
-         </select>`
-      : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
-
-    const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
-    const priceHtml = isAdmin 
-      ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
-      : `<div class="price">${displayPrice}</div>`;
-
-    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
-    
-    card.onclick = (e) => { 
-      // 管理員模式點擊不觸發彈窗
-      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      window.parent.postMessage({ type: 'openModal', item: item }, '*');
-    };
-    gdiv.appendChild(card);
-  });
-  container.appendChild(gdiv);
-  setTimeout(sendHeight, 300);
-}
-
-function getStatusBg(s) {
-  if(s==="現貨") return "#FFF4BD";
-  if(s==="需預訂") return "#D4BBDD";
-  if(s==="搭飛機中") return "#C1E1C1";
-  if(s==="點貨中（不顯示）") return "#FFE4E1";
-  return "#E7F2F8";
-}
-
-// --- 管理員操作 ---
-function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
-
-function handleLogin() {
-  const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
-  if (id === "1050267" && pwd === "Penny01!") {
-    isAdmin = true;
-    document.getElementById("loginModal").style.display = "none";
-    document.getElementById("adminActions").style.display = "flex";
-    document.getElementById("logoutBtn").style.display = "block";
-    renderCards(globalItems); 
-  } else { alert("帳號或密碼錯誤"); }
-}
-
-function stageChange(name, field, value) {
-  const item = globalItems.find(i => i.name === name);
-  if (item) {
-    item[field] = value;
-    if (!pendingChanges[name]) pendingChanges[name] = { ...item };
-    pendingChanges[name][field] = value;
-  }
-}
-
-async function handleSave() {
-  const keys = Object.keys(pendingChanges);
-  if (!keys.length) { alert("沒有任何修改需要儲存"); return; }
-  
-  if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
-    const updates = keys.map(k => ({ 
-      item_name: k, 
-      status: pendingChanges[k].status, 
-      price: pendingChanges[k].price,
-      updated_at: new Date().toISOString()
-    }));
-    const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if (error) {
-      alert("儲存失敗：" + error.message);
-    } else {
-      alert("儲存成功！");
-      pendingChanges = {}; 
-      await loadSheetData();
+  // 監聽子頁面通訊
+  window.addEventListener('message', function(e) {
+    if (e.data.height) frame.style.height = e.data.height + 'px';
+    if (e.data.type === 'openModal') {
+      currentItem = e.data.item;
+      document.getElementById("modalImg").src = currentItem.img;
+      document.getElementById("modalName").textContent = currentItem.name;
+      document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : '$' + currentItem.price;
+      overlay.style.display = "flex";
     }
+  }, false);
+
+  // 購物車邏輯
+  function addToCart() {
+    if (currentItem.status === '需預訂') {
+        alert("此為預訂商品，請直接 WhatsApp 聯絡查詢。");
+        return;
+    }
+    const exist = cart.find(i => i.name === currentItem.name);
+    if (exist) {
+      exist.qty += 1;
+    } else {
+      cart.push({ ...currentItem, qty: 1 });
+    }
+    saveCart();
+    overlay.style.display = "none";
+    alert("已加入購物車！");
   }
-}
 
-function handleLogout() { if(confirm("確定要登出嗎？")) location.reload(); }
-function handleCancel() { if(confirm("確定要取消修改嗎？")) location.reload(); }
-function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
+  function quickBuy() {
+    addToCart();
+    toggleCart();
+  }
 
-// --- 啟動 ---
-loadSheetData();
-window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
-window.addEventListener('resize', sendHeight);
+  function saveCart() {
+    localStorage.setItem('myCart', JSON.stringify(cart));
+    updateCartUI();
+  }
+
+  function updateCartUI() {
+    const list = document.getElementById("cart-items");
+    const count = document.getElementById("cart-count");
+    const totalEl = document.getElementById("cart-total");
+    list.innerHTML = "";
+    
+    let total = 0;
+    let itemsCount = 0;
+
+    cart.forEach((item, idx) => {
+      const p = parseFloat(item.price) || 0;
+      total += p * item.qty;
+      itemsCount += item.qty;
+
+      const div = document.createElement("div");
+      div.className = "cart-item";
+      div.innerHTML = `
+        <img src="${item.img}">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-price">$${item.price} x ${item.qty}</div>
+        </div>
+        <div class="remove-item" onclick="removeItem(${idx})">&times;</div>
+      `;
+      list.appendChild(div);
+    });
+
+    count.textContent = itemsCount;
+    totalEl.textContent = "總金額：$" + total;
+  }
+
+  function removeItem(idx) {
+    cart.splice(idx, 1);
+    saveCart();
+  }
+
+  function toggleCart() {
+    cartOverlay.style.display = (cartOverlay.style.display === "flex") ? "none" : "flex";
+  }
+
+  function sendWhatsAppOrder() {
+    if (cart.length === 0) { alert("購物車是空的喔！"); return; }
+    
+    let text = "你好，我想訂購以下：\n\n";
+    let total = 0;
+    
+    cart.forEach((item, idx) => {
+      const subtotal = (parseFloat(item.price) || 0) * item.qty;
+      total += subtotal;
+      text += `${idx + 1}. ${item.name}\n數量：${item.qty}\n小計：$${subtotal}\n\n`;
+    });
+    
+    text += "------------------\n";
+    text += `總金額：$${total}\n\n請問目前還有貨嗎？`;
+    
+    const encodedText = encodeURIComponent(text);
+    // 這裡替換成你的 WhatsApp 號碼 (例如 85212345678)
+    const whatsappUrl = `https://wa.me/YOUR_PHONE_NUMBER?text=${encodedText}`;
+    window.open(whatsappUrl, '_blank');
+  }
+
+  document.getElementById("current-year").textContent = new Date().getFullYear();
+  initTabs();
 </script>
 </body>
 </html>
