@@ -157,6 +157,7 @@ let supabaseOverrides = {}, pendingChanges = {};
 
 async function loadData() {
   try {
+    supabaseOverrides = {}; // 清空舊的覆蓋數據
     if (sbClient) {
       // 修改 config_key 以區分其他角色頁面
       const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_others').single();
@@ -337,9 +338,11 @@ async function handleSaveConfig() {
       if (itemErr) throw itemErr;
     }
 
-    alert("儲存成功！");
-    location.reload();
-  } catch (e) { 
+        alert("儲存成功！");
+    // 不再使用 reload，改為清除暫存並重新載入數據
+    pendingChanges = {}; 
+    await loadData(); 
+  } catch (e) {  
     console.error(e);
     alert("儲存失敗，請檢查控制台錯誤訊息。");
   }
