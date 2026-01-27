@@ -20,11 +20,17 @@
     }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-    .header-wrapper {
-      position: fixed;
-      top: 0; left: 0; width: 100%; z-index: 999;
-      background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        .header-wrapper {
+      position: -webkit-sticky; /* 支援 Safari */
+      position: sticky;
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      z-index: 999;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
+
     .top-bar {
       background: var(--tab-color); color: #fff; height: 44px;
       display: flex;
@@ -50,8 +56,9 @@
     }
     .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
 
-    #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
-    .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
+        #card-container { padding: 20px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
+        .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
+ scroll-margin-top: 100px; }
     .category-title { 
       font-size: 18px; font-weight: bold; margin-bottom: 15px; 
       padding-left: 10px;
@@ -315,7 +322,8 @@ async function handleSaveConfig() {
 
 function scrollToCat(cat) {
   const el = document.getElementById(`cat-${cat}`);
-  if (el) window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
+  if (el)       // 90px 為導覽列約略高度，可視實際外觀微調
+      window.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
 }
 
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
