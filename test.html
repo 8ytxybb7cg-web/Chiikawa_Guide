@@ -14,6 +14,14 @@
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
     }
 
+    /* 載入動畫圖示樣式：手機佔 20%，大螢幕限制 100px */
+    .loading-icon {
+      width: 20%;
+      max-width: 100px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
     /* 頂部固定的 Header */
     .header-wrapper {
       position: fixed; top: 0; left: 0; width: 100%; z-index: 999;
@@ -43,22 +51,6 @@
     }
     .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
 
-    [span_1](start_span)/* 載入動畫樣式優化[span_1](end_span) */
-    #loading-msg { 
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding-top: 100px; color: #999; font-weight: bold; gap: 15px;
-    }
-    .loading-icon {
-      width: 20%;        [span_2](start_span)/* 保留你想要的 20% 設定[span_2](end_span) */
-      max-width: 100px;  [span_3](start_span)/* 限制最大寬度，防止在電腦版過大[span_3](end_span) */
-      height: auto;
-      [span_4](start_span)animation: bounce 0.8s infinite ease-in-out;[span_4](end_span)
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); [span_5](start_span)}
-      50% { transform: translateY(-10px); }[span_5](end_span)
-    }
-
     /* 商品內容區 */
     #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; }
     .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
@@ -68,29 +60,30 @@
     }
     .group-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      [span_6](start_span)gap: 10px; justify-items: center; width: 100%;[span_6](end_span)
+      gap: 10px; justify-items: center; width: 100%;
     }
 
     /* 商品卡片樣式 */
     .card {
       width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-      [span_7](start_span)box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;[span_7](end_span)
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
     }
-    .card:active { transform: scale(0.98); [span_8](start_span)}
+    .card:active { transform: scale(0.98); }
     .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
-    .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }[span_8](end_span)
-    .card .price { font-size: 13px; color: #d77485; font-weight: bold; margin-bottom: 6px; [span_9](start_span)}
-    .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }[span_9](end_span)
+    .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+    .card .price { font-size: 13px; color: #d77485; font-weight: bold; margin-bottom: 6px; }
+
+    .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
     /* 按鈕與彈窗 */
-    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; [span_10](start_span)}
-    .btn-save, .btn-logout { padding: 4px 12px; border-radius: 12px; border: 1px solid #fff; font-size: 12px; cursor: pointer; color: #fff; background: transparent; }[span_10](end_span)
+    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
+    .btn-save, .btn-logout { padding: 4px 12px; border-radius: 12px; border: 1px solid #fff; font-size: 12px; cursor: pointer; color: #fff; background: transparent; }
     .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
-    .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); [span_11](start_span)}
-    .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }[span_11](end_span)
-    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; [span_12](start_span)}
-    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }[span_12](end_span)
+    .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
+    .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -129,10 +122,10 @@
 
 <script>
 // --- 基本配置 ---
-[span_13](start_span)const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';[span_13](end_span)
-[span_14](start_span)const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';[span_14](end_span)
-[span_15](start_span)const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";[span_15](end_span)
-[span_16](start_span)const sheetName = "ちいかわ";[span_16](end_span)
+const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi'; 
+const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
+const sheetName = "ちいかわ";
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], allCategories = [], visibleCategories = [];
@@ -145,12 +138,12 @@ async function loadData() {
       const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories').single();
       visibleCategories = config ? config.config_value : ["吊娃", "娃"];
 
-      [span_17](start_span)const { data: items } = await sbClient.from('chiikawa_data').select('*');[span_17](end_span)
-      [span_18](start_span)items?.forEach(row => { supabaseOverrides[row.item_name] = row; });[span_18](end_span)
+      const { data: items } = await sbClient.from('chiikawa_data').select('*');
+      items?.forEach(row => { supabaseOverrides[row.item_name] = row; });
     }
 
-    [span_19](start_span)const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());[span_19](end_span)
-    [span_20](start_span)const json = JSON.parse(sheetRes.substr(47).slice(0, -2));[span_20](end_span)
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());
+    const json = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = json.table.rows || [];
 
     const tempCats = new Set();
@@ -167,15 +160,15 @@ async function loadData() {
         type,
         price: sb.price || "",
         status: sb.status || "現貨",
-        [span_21](start_span)img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"[span_21](end_span)
+        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
-    [span_22](start_span)}).filter(i => i !== null);[span_22](end_span)
+    }).filter(i => i !== null);
 
     allCategories = Array.from(tempCats);
     renderApp();
   } catch (e) {
     console.error("載入失敗:", e);
-    [span_23](start_span)document.getElementById("card-container").innerHTML = "資料載入失敗";[span_23](end_span)
+    document.getElementById("loading-msg").innerText = "資料載入失敗，請檢查網絡或資料表設定。";
   }
 }
 
@@ -189,15 +182,20 @@ function renderApp() {
 function renderNavBar() {
   const nav = document.getElementById("nav-bar");
   const catsToShow = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
-  nav.innerHTML = catsToShow.map(cat => `<a class="nav-item" onclick="scrollToCat('${cat}')">${cat}</a>`).join("");
+  
+  nav.innerHTML = catsToShow.map(cat => 
+    `<a class="nav-item" onclick="scrollToCat('${cat}')">${cat}</a>`
+  ).join("");
 }
 
 function renderAdminToggles() {
   const container = document.getElementById("category-toggles");
   if (!isAdmin) return;
+  
   container.innerHTML = allCategories.map(cat => `
     <label class="category-checkbox">
-      <input type="checkbox" ${visibleCategories.includes(cat) ? 'checked' : ''} onchange="updateVisibleList('${cat}', this.checked)"> ${cat}
+      <input type="checkbox" ${visibleCategories.includes(cat) ? 'checked' : ''} 
+             onchange="updateVisibleList('${cat}', this.checked)"> ${cat}
     </label>
   `).join("");
 }
@@ -210,32 +208,44 @@ function updateVisibleList(cat, isChecked) {
 function renderCards() {
   const container = document.getElementById("card-container");
   container.innerHTML = "";
+  
   const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
-  if (catsToDisplay.length === 0) { container.innerHTML = "目前管理員未開放任何分類顯示。"; return; [span_24](start_span)}
+
+  if (catsToDisplay.length === 0) {
+    container.innerHTML = "目前管理員未開放任何分類顯示。";
+    return;
+  }
 
   catsToDisplay.forEach(cat => {
     const items = globalItems.filter(i => i.type === cat);
     if (items.length === 0) return;
+
     const section = document.createElement("div");
     section.id = `cat-${cat}`;
     section.className = "category-section";
     section.innerHTML = `<div class="category-title">${cat}</div>`;
+    
     const grid = document.createElement("div");
     grid.className = "group-grid";
 
     items.forEach(item => {
-      if (!isAdmin && (item.status.includes("不顯示"))) return;[span_24](end_span)
+      if (!isAdmin && (item.status.includes("不顯示"))) return;
+
       const card = document.createElement("div");
       card.className = "card";
+      
       const statusColor = item.status === "現貨" ? "#FFF4BD" : "#E7F2F8";
+      
       card.innerHTML = `
         <img src="${item.img}" loading="lazy">
         <div style="min-height:25px;">
           ${isAdmin ? renderAdminSelect(item) : `<span class="status-badge" style="background:${statusColor}">${item.status}</span>`}
         </div>
         <div class="name">${item.name}</div>
-        <div class="price">${isAdmin ? renderAdminPrice(item) : (item.price ? '$' + item.price : 'WhatsApp 查詢')}</div>
-      [span_25](start_span)`;[span_25](end_span)
+        <div class="price">
+          ${isAdmin ? renderAdminPrice(item) : (item.price ? '$' + item.price : 'WhatsApp 查詢')}
+        </div>
+      `;
       grid.appendChild(card);
     });
     section.appendChild(grid);
@@ -244,16 +254,16 @@ function renderCards() {
 }
 
 function renderAdminSelect(item) {
-  return `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
+  return `<select style="font-size:11px; margin-bottom:5px;" onchange="stageChange('${item.name}', 'status', this.value)">
     <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
     <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
     <option value="補貨（不顯示）" ${item.status.includes("補貨")?"selected":""}>補貨(隱藏)</option>
     <option value="點貨中（不顯示）" ${item.status.includes("點貨中")?"selected":""}>點貨中(隱藏)</option>
-  [span_26](start_span)</select>`;[span_26](end_span)
+  </select>`;
 }
 
 function renderAdminPrice(item) {
-  [span_27](start_span)return `<input type="text" class="admin-price-input" style="width:70px; text-align:center; font-size:12px;" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價格">`;[span_27](end_span)
+  return `<input type="text" style="width:70px; text-align:center; font-size:12px;" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價格">`;
 }
 
 function stageChange(name, field, value) {
@@ -261,32 +271,53 @@ function stageChange(name, field, value) {
     const original = globalItems.find(i => i.name === name);
     pendingChanges[name] = { status: original.status, price: original.price };
   }
-  [span_28](start_span)pendingChanges[name][field] = value;[span_28](end_span)
+  pendingChanges[name][field] = value;
 }
 
 async function handleSaveConfig() {
-  [span_29](start_span)if (!confirm("確定要儲存所有修改嗎？")) return;[span_29](end_span)
+  if (!confirm("確定要儲存分類顯示設定與所有商品修改嗎？")) return;
   try {
-    await sbClient.from('chiikawa_config').upsert({ config_key: 'visible_categories', config_value: visibleCategories, updated_at: new Date().toISOString() }, { onConflict: 'config_key' });
-    const updates = Object.keys(pendingChanges).map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price, updated_at: new Date().toISOString() }));
-    if (updates.length > 0) { await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' }); [span_30](start_span)}
-    alert("儲存成功！"); location.reload();[span_30](end_span)
-  } catch (e) { alert("儲存失敗"); }
+    await sbClient.from('chiikawa_config').upsert({ 
+      config_key: 'visible_categories', 
+      config_value: visibleCategories,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'config_key' });
+    
+    const updates = Object.keys(pendingChanges).map(k => ({ 
+      item_name: k, 
+      status: pendingChanges[k].status, 
+      price: pendingChanges[k].price,
+      updated_at: new Date().toISOString()
+    }));
+    
+    if (updates.length > 0) {
+      await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
+    }
+    
+    alert("儲存成功！");
+    location.reload();
+  } catch (e) { alert("儲存失敗，請查看控制台。"); }
 }
 
-function scrollToCat(cat) { const el = document.getElementById(`cat-${cat}`); if (el) window.scrollTo({ top: el.offsetTop - 95, behavior: 'smooth' }); }
-function openLoginModal() { document.getElementById("loginModal").style.display = "block"; [span_31](start_span)}
+function scrollToCat(cat) {
+  const el = document.getElementById(`cat-${cat}`);
+  if (el) window.scrollTo({ top: el.offsetTop - 95, behavior: 'smooth' });
+}
+
+function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
 function handleLogin() {
-  if (document.getElementById("adminId").value === "1050267" && document.getElementById("adminPwd").value === "Penny01!") {[span_31](end_span)
+  if (document.getElementById("adminId").value === "1050267" && document.getElementById("adminPwd").value === "Penny01!") {
     isAdmin = true;
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("adminPanel").style.display = "block";
     document.getElementById("adminActions").style.display = "block";
-    [span_32](start_span)document.getElementById("logoutBtn").style.display = "block";[span_32](end_span)
+    document.getElementById("logoutBtn").style.display = "block";
     renderApp();
   } else { alert("身份驗證失敗"); }
 }
+
 function handleLogout() { location.reload(); }
+
 loadData();
 window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
 </script>
