@@ -17,7 +17,7 @@ body {
   background-color: #f9f9f9;
   margin: 0; padding: 0; color: #333; text-align: center;
   -webkit-font-smoothing: antialiased;
-  padding-top: calc(var(--header-height) + var(--nav-height)); /* 留出頭部空間 */
+  padding-top: calc(var(--header-height) + var(--nav-height)); 
 }
 
 /* ================= 2. 頂部導航欄 (Header) ================= */
@@ -25,24 +25,25 @@ body {
   background: var(--tab-color);
   color: #fff; height: var(--header-height); position: fixed;
   top: 0; left: 0; width: 100%; z-index: 999;
-  display: flex; align-items: center; justify-content: flex-end; 
-  padding: 0 16px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-  gap: 10px;
+  display: flex; align-items: center; justify-content: space-between; /* 左右分開 */
+  padding: 0 12px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1);
 }
 
 .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; opacity: 0.9; }
 
-.admin-actions { display: none; gap: 8px; margin-right: auto; padding-left: 10px; }
-.btn-save, .btn-cancel, .btn-settings {
-  padding: 4px 12px; border-radius: 12px; border: 1px solid #fff;
-  font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;
-}
-.btn-save { background: rgba(255,255,255,0.4); border: 2px solid #fff; }
+/* 右側按鈕群組 */
+.right-actions { display: flex; align-items: center; gap: 6px; }
 
-.btn-settings { 
-  position: absolute; left: 10px; top: 8px; 
-  border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.1); display: none; 
+.admin-actions { display: none; gap: 6px; align-items: center; }
+
+.btn-header {
+  padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.7);
+  font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent;
+  white-space: nowrap;
 }
+.btn-save { background: rgba(255,255,255,0.3); border-color: #fff; }
+.btn-settings { background: rgba(0,0,0,0.1); display: none; }
+.btn-logout { background: rgba(0,0,0,0.1); }
 
 /* ================= 3. 分類導航列 (Sub-Header) ================= */
 .nav-bar {
@@ -50,111 +51,67 @@ body {
   background: #fff; z-index: 998; border-bottom: 1px solid #eee;
   display: flex; align-items: center; overflow-x: auto; white-space: nowrap;
   padding: 0 10px; box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
 }
-.nav-bar::-webkit-scrollbar { display: none; } /* 隱藏滾動條 */
+.nav-bar::-webkit-scrollbar { display: none; }
 .nav-item {
   display: inline-block; padding: 0 12px; font-size: 13px; color: #666; font-weight: 500;
   cursor: pointer; line-height: var(--nav-height);
 }
-.nav-item:hover, .nav-item.active { color: var(--tab-color); font-weight: bold; }
 
-/* ================= 4. 載入動畫與容器 ================= */
-#card-container {
-  padding: 10px;
-  display: flex; flex-direction: column; gap: 20px;
-  max-width: 1200px; margin: 0 auto; min-height: 60vh; 
-}
+/* ================= 4. 容器與商品樣式 ================= */
+#card-container { padding: 10px; display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; min-height: 60vh; }
+#loading-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 100px; color: #999; font-weight: bold; gap: 15px; }
+.loading-icon { width: 20%; max-width: 100px; height: auto; animation: bounce 0.8s infinite ease-in-out; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-#loading-msg { 
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding-top: 100px; color: #999; font-weight: bold; gap: 15px;
-}
-
-.loading-icon {
-  width: 20%; max-width: 100px; height: auto;
-  animation: bounce 0.8s infinite ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-/* ================= 5. 商品卡片樣式 ================= */
 .category-section { width: 100%; margin-bottom: 10px; }
-.category-title { 
-  text-align: left; margin: 10px 5px; font-size: 15px; font-weight: bold; 
-  color: var(--tab-color); border-left: 4px solid var(--tab-color); padding-left: 8px;
-  scroll-margin-top: 90px; /* 修正滾動定位 */
-}
-
-.group-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px; justify-items: center; width: 100%;
-}
-
-.card {
-  width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
-  background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
-}
-.card:not(.admin-mode):active { transform: scale(0.98); }
-
+.category-title { text-align: left; margin: 10px 5px; font-size: 15px; font-weight: bold; color: var(--tab-color); border-left: 4px solid var(--tab-color); padding-left: 8px; scroll-margin-top: 90px; }
+.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center; width: 100%; }
+.card { width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px; background: #fff; position: relative; text-align: center; padding-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer; }
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
 .card .price { font-size: 13px; color: #6293b8; font-weight: bold; margin-bottom: 6px; }
-
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
-
-/* Admin 專用樣式 */
 .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; background: #fff; }
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
-/* ================= 6. Modal (登入 & 設定) ================= */
+/* ================= 5. Modal ================= */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 15% auto; padding: 24px; width: 85%; max-width: 350px; border-radius: 20px; position: relative; max-height: 80vh; overflow-y: auto; text-align: left; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
-
-/* Login Styles */
 .login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
 .login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-align: center;}
-
-/* Settings Styles */
 .settings-section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-.settings-section h4 { margin: 0 0 10px 0; color: #333; }
-.checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
-.checkbox-item { display: flex; align-items: center; font-size: 13px; background: #f0f0f0; padding: 5px 10px; border-radius: 15px; }
-.checkbox-item input { margin-right: 5px; }
-
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.checkbox-item { display: flex; align-items: center; font-size: 12px; background: #f4f4f4; padding: 4px 8px; border-radius: 12px; }
 .batch-controls { display: flex; flex-direction: column; gap: 8px; }
 .batch-row { display: flex; align-items: center; gap: 5px; font-size: 13px; }
 .batch-select { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid #ddd; }
-
 .modal-footer { display: flex; gap: 10px; margin-top: 10px; }
 .btn-modal-save { flex: 1; padding: 10px; background: var(--tab-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .btn-modal-cancel { flex: 1; padding: 10px; background: #ddd; color: #333; border: none; border-radius: 8px; cursor: pointer; }
-
   </style>
 </head>
 <body>
 
   <div class="top-bar">
-    <button id="settingsBtn" class="btn-settings" onclick="openSettingsModal()">設定</button>
+    <button id="settingsBtn" class="btn-header btn-settings" onclick="openSettingsModal()">設定</button>
+    <div id="spacer" style="flex:1"></div>
     
-    <div id="adminActions" class="admin-actions">
-      <button class="btn-cancel" onclick="handleCancel()">取消</button>
-      <button class="btn-save" onclick="handleSave()">儲存變更</button>
-    </div>
+    <div class="right-actions">
+      <div id="adminActions" class="admin-actions">
+        <button class="btn-header" onclick="handleCancel()">取消</button>
+        <button class="btn-header btn-save" onclick="handleSave()">儲存</button>
+      </div>
 
-    <div id="authIconWrapper" onclick="handleAuthClick()">
-      <svg id="loginIcon" class="admin-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-      <svg id="logoutIcon" class="admin-icon" style="display:none;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      <div id="authArea">
+        <svg id="loginIcon" class="admin-icon" onclick="handleAuthClick()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <button id="logoutBtn" class="btn-header btn-logout" style="display:none;" onclick="handleAuthClick()">登出</button>
+      </div>
     </div>
   </div>
 
-  <div id="nav-bar" class="nav-bar">
-    </div>
+  <div id="nav-bar" class="nav-bar"></div>
 
   <div id="card-container">
     <div id="loading-msg">
@@ -166,7 +123,7 @@ body {
   <div id="loginModal" class="modal">
     <div class="modal-content" style="text-align:center;">
       <span class="close-modal" onclick="closeModal('loginModal')">&times;</span>
-      <h3 style="margin-top:0;">管理員登入</h3>
+      <h3>管理員登入</h3>
       <input type="text" id="adminId" class="login-input" placeholder="ID">
       <input type="password" id="adminPwd" class="login-input" placeholder="Password">
       <button class="login-btn" onclick="handleLogin()">登入</button>
@@ -176,37 +133,18 @@ body {
   <div id="settingsModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="closeModal('settingsModal')">&times;</span>
-      <h3 style="margin-top:0; text-align:center;">系統設定</h3>
+      <h3 style="text-align:center;">系統設定</h3>
       
       <div class="settings-section">
-        <h4>向客戶展示的商品類型：</h4>
-        <div id="typeCheckboxes" class="checkbox-group">
-          </div>
+        <h4>展示類型：</h4>
+        <div id="typeCheckboxes" class="checkbox-group"></div>
       </div>
 
       <div class="settings-section">
         <h4>批量更改狀態：</h4>
         <div class="batch-controls">
-          <div class="batch-row">
-            <span>將所有</span>
-            <select id="batchFrom" class="batch-select">
-              <option value="現貨">現貨</option>
-              <option value="需預訂">需預訂</option>
-              <option value="搭飛機中">搭飛機中</option>
-              <option value="補貨（不顯示）">補貨（不顯示）</option>
-            </select>
-          </div>
-          <div class="batch-row">
-            <span>更改為</span>
-            <select id="batchTo" class="batch-select">
-              <option value="現貨">現貨</option>
-              <option value="需預訂">需預訂</option>
-              <option value="搭飛機中">搭飛機中</option>
-              <option value="補貨（不顯示）">補貨（不顯示）</option>
-              <option value="Hold貨（不顯示）">Hold貨（不顯示）</option>
-              <option value="已售出（不顯示）">已售出（不顯示）</option>
-            </select>
-          </div>
+          <div class="batch-row"><span>從</span><select id="batchFrom" class="batch-select"><option value="現貨">現貨</option><option value="需預訂">需預訂</option><option value="搭飛機中">搭飛機中</option><option value="補貨（不顯示）">補貨（不顯示）</option></select></div>
+          <div class="batch-row"><span>轉為</span><select id="batchTo" class="batch-select"><option value="現貨">現貨</option><option value="需預訂">需預訂</option><option value="搭飛機中">搭飛機中</option><option value="補貨（不顯示）">補貨（不顯示）</option><option value="Hold貨（不顯示）">Hold貨（不顯示）</option><option value="已售出（不顯示）">已售出（不顯示）</option></select></div>
         </div>
       </div>
 
@@ -218,362 +156,142 @@ body {
   </div>
 
 <script>
-// --- 配置資訊 ---
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
-
-const roleMap = { "小八":"八" };
-const colors  = { "小八":"#6293b8" };
-// 用於儲存設定的特殊 Key (存放於 chiikawa_data 表中，item_name = SYSTEM_CONFIG)
 const CONFIG_KEY = "SYSTEM_CONFIG";
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false;
-let globalItems = []; // 原始資料
-let displayItems = []; // 過濾後資料
-let supabaseOverrides = {};
-let pendingChanges = {};
-let allTypes = new Set(); // 所有的類型
-let allowedTypes = []; // 允許顯示的類型
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {}, allTypes = new Set(), allowedTypes = [];
 
-// --- 初始化與載入 ---
 async function loadSheetData(){
-  document.documentElement.style.setProperty("--tab-color", colors["小八"]);
-  
   try {
-    // 1. 讀取 Supabase 資料 (包含商品狀態 & 系統設定)
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
         supabaseOverrides = {};
         data.forEach(row => { 
-          if(row.item_name === CONFIG_KEY) {
-            // 讀取設定
-            allowedTypes = row.status ? row.status.split(',') : [];
-          } else {
-            supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
-          }
+          if(row.item_name === CONFIG_KEY) allowedTypes = row.status ? row.status.split(',') : [];
+          else supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
         });
       }
     }
-
-    // 2. 讀取 Google Sheet
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
-    const keyword = roleMap["小八"];
-
-    globalItems = [];
-    allTypes.clear();
-
+    globalItems = []; allTypes.clear();
     rows.forEach((row) => {
       let itemName = row.c[3]?.v || "";
-      const rawType = row.c[1]?.v || "其他"; // 類型
-      const style = row.c[2]?.v || "";
+      const rawType = row.c[1]?.v || "其他";
       const roleField = row.c[0]?.v || "";
-
-      if (!itemName || !roleField.includes(keyword)) return;
-      
-      // 收集所有出現過的類型
-      if(rawType) allTypes.add(rawType);
-
-      let dbKey = itemName;
-      let sbData = null;
-
-      if (supabaseOverrides["小八" + itemName]) {
-        dbKey = "小八" + itemName;
-        sbData = supabaseOverrides[dbKey];
-      } else if (supabaseOverrides[itemName]) {
-        dbKey = itemName;
-        sbData = supabaseOverrides[dbKey];
-      }
-
-      globalItems.push({
-        name: dbKey,
-        type: rawType, // 儲存類型用於分組
-        price: sbData?.price || "", 
-        status: sbData?.status || "現貨", 
-        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
-        role: roleField
-      });
+      if (!itemName || !roleField.includes("八")) return;
+      allTypes.add(rawType);
+      let dbKey = supabaseOverrides["小八" + itemName] ? "小八" + itemName : itemName;
+      let sbData = supabaseOverrides[dbKey];
+      globalItems.push({ name: dbKey, type: rawType, price: sbData?.price || "", status: sbData?.status || "現貨", img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png" });
     });
-
-    // 如果是第一次運行或沒有設定，預設顯示所有類型
-    if(allowedTypes.length === 0 && allTypes.size > 0) {
-       allowedTypes = Array.from(allTypes);
-    }
-
+    if(allowedTypes.length === 0) allowedTypes = Array.from(allTypes);
     renderApp();
-
-  } catch (error) {
-    console.error(error);
-    document.getElementById("card-container").innerHTML = `<div style="padding:20px;">載入失敗: ${error.message}</div>`;
-  }
+  } catch (e) { console.error(e); }
 }
 
-// --- 渲染主程式 ---
-function renderApp() {
-  renderNavBar();
-  renderCards();
-}
+function renderApp() { renderNavBar(); renderCards(); }
 
-// --- 渲染導航列 ---
 function renderNavBar() {
-  const navBar = document.getElementById("nav-bar");
-  navBar.innerHTML = "";
-  
-  // 只顯示允許的類型
-  const sortedTypes = Array.from(allTypes).filter(t => allowedTypes.includes(t));
-  
-  sortedTypes.forEach(type => {
-    const span = document.createElement("div");
-    span.className = "nav-item";
-    span.innerText = type;
-    span.onclick = () => {
-       const el = document.getElementById("cat-" + type);
-       if(el) {
-         const top = el.getBoundingClientRect().top + window.pageYOffset - 90; // 減去 header 高度
-         window.scrollTo({ top: top, behavior: 'smooth' });
-       }
+  const nav = document.getElementById("nav-bar");
+  nav.innerHTML = "";
+  Array.from(allTypes).filter(t => allowedTypes.includes(t)).forEach(type => {
+    const item = document.createElement("div");
+    item.className = "nav-item";
+    item.innerText = type;
+    item.onclick = () => {
+      const el = document.getElementById("cat-" + type);
+      if(el) window.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
     };
-    navBar.appendChild(span);
+    nav.appendChild(item);
   });
 }
 
-// --- 渲染商品卡片 (分組顯示) ---
 function renderCards(){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
-  
-  if (!globalItems.length) { container.innerHTML = "目前沒有商品"; return; }
-
-  // 1. 根據 allowedTypes 過濾
-  // 2. 根據 Admin 狀態過濾 (非Admin不顯示隱藏品)
-  const validItems = globalItems.filter(item => {
-    // 類型過濾
-    if(!allowedTypes.includes(item.type)) return false;
-    // 狀態過濾
-    if (!isAdmin && item.status && item.status.includes("（不顯示）")) return false;
-    return true;
-  });
-
-  if(validItems.length === 0) {
-    container.innerHTML = "<div style='text-align:center; padding:20px; color:#999;'>目前沒有符合顯示條件的商品</div>";
-    return;
-  }
-
-  // 3. 分組
+  const validItems = globalItems.filter(i => allowedTypes.includes(i.type) && (isAdmin || !i.status.includes("（不顯示）")));
   const grouped = {};
-  allowedTypes.forEach(t => grouped[t] = []); // 初始化順序
-  validItems.forEach(item => {
-    if(!grouped[item.type]) grouped[item.type] = [];
-    grouped[item.type].push(item);
+  allowedTypes.forEach(t => {
+    const items = validItems.filter(i => i.type === t);
+    if(items.length) {
+      const sec = document.createElement("div");
+      sec.className = "category-section";
+      sec.innerHTML = `<div id="cat-${t}" class="category-title">${t}</div>`;
+      const grid = document.createElement("div");
+      grid.className = "group-grid";
+      items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+        const statusHtml = isAdmin ? `<select class="admin-select" onchange="stageChange('${item.name}','status',this.value)">${['現貨','需預訂','搭飛機中','補貨（不顯示）','Hold貨（不顯示）','已售出（不顯示）'].map(s=>`<option value="${s}" ${item.status===s?'selected':''}>${s}</option>`).join('')}</select>` : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
+        const priceHtml = isAdmin ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}','price',this.value)" />` : `<div class="price">${(item.status==='需預訂'||!item.price)?'查詢':'$'+item.price}</div>`;
+        card.innerHTML = `<img src="${item.img}"><div class="name">${item.name.replace(/^小八/,"")}</div>${statusHtml}${priceHtml}`;
+        grid.appendChild(card);
+      });
+      sec.appendChild(grid);
+      container.appendChild(sec);
+    }
   });
-
-  // 4. 渲染每一組
-  for (const [type, items] of Object.entries(grouped)) {
-    if(!items || items.length === 0) continue;
-
-    const section = document.createElement("div");
-    section.className = "category-section";
-    
-    // 標題錨點
-    section.innerHTML = `<div id="cat-${type}" class="category-title">${type}</div>`;
-    
-    const grid = document.createElement("div");
-    grid.className = "group-grid";
-
-    items.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card" + (isAdmin ? " admin-mode" : "");
-      
-      const clientDisplayName = item.name.replace(/^小八/, "");
-
-      // 狀態顯示
-      const statusHtml = isAdmin 
-        ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
-            <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
-            <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
-            <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
-            <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
-            <option value="Hold貨（不顯示）" ${item.status==="Hold貨（不顯示）"?"selected":""}>Hold貨（不顯示）</option>
-            <option value="已售出（不顯示）" ${item.status==="已售出（不顯示）"?"selected":""}>已售出（不顯示）</option>
-           </select>`
-        : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
-
-      // 價錢顯示
-      const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
-      const priceHtml = isAdmin 
-        ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
-        : `<div class="price">${displayPrice}</div>`;
-
-      card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
-      
-      card.onclick = (e) => { 
-        if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
-        window.parent.postMessage({ type: 'openModal', item: item }, '*');
-      };
-      grid.appendChild(card);
-    });
-
-    section.appendChild(grid);
-    container.appendChild(section);
-  }
-  
-  setTimeout(sendHeight, 300);
+  sendHeight();
 }
 
-function getStatusBg(s) {
-  if(s==="現貨") return "#FFF4BD";
-  if(s==="需預訂") return "#D4BBDD";
-  if(s==="搭飛機中") return "#C1E1C1";
-  return "#E7F2F8";
-}
+function getStatusBg(s) { return s==="現貨"?"#FFF4BD":s==="需預訂"?"#D4BBDD":s==="搭飛機中"?"#C1E1C1":"#eee"; }
 
-// --- 認證與管理員邏輯 ---
 function handleAuthClick() {
-  if(isAdmin) {
-    // 登出
-    if(confirm("確定要登出嗎？")) location.reload();
-  } else {
-    // 開啟登入
-    document.getElementById("loginModal").style.display = "block";
-  }
+  if(isAdmin) { if(confirm("確定要登出嗎？")) location.reload(); }
+  else document.getElementById("loginModal").style.display = "block";
 }
 
 function handleLogin() {
-  const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
-  if (id === "1050267" && pwd === "Penny01!") {
+  if (document.getElementById("adminId").value === "1050267" && document.getElementById("adminPwd").value === "Penny01!") {
     isAdmin = true;
     closeModal("loginModal");
-    
-    // UI 變更
-    document.getElementById("adminActions").style.display = "flex"; // 顯示儲存/取消
-    document.getElementById("settingsBtn").style.display = "block"; // 左上顯示設定
-    
-    // Icon 變更
+    document.getElementById("adminActions").style.display = "flex";
+    document.getElementById("settingsBtn").style.display = "block";
     document.getElementById("loginIcon").style.display = "none";
-    document.getElementById("logoutIcon").style.display = "block";
-
-    renderCards(); 
-  } else { alert("帳號或密碼錯誤"); }
+    document.getElementById("logoutBtn").style.display = "block";
+    renderCards();
+  } else alert("錯誤");
 }
 
-// --- 設定 Modal 邏輯 ---
 function openSettingsModal() {
   const container = document.getElementById("typeCheckboxes");
-  container.innerHTML = "";
-  
-  // 生成 Checkbox
-  allTypes.forEach(type => {
-    const isChecked = allowedTypes.includes(type) ? "checked" : "";
-    const label = document.createElement("label");
-    label.className = "checkbox-item";
-    label.innerHTML = `<input type="checkbox" value="${type}" ${isChecked}> ${type}`;
-    container.appendChild(label);
-  });
-  
+  container.innerHTML = Array.from(allTypes).map(t => `<label class="checkbox-item"><input type="checkbox" value="${t}" ${allowedTypes.includes(t)?'checked':''}> ${t}</label>`).join('');
   document.getElementById("settingsModal").style.display = "block";
 }
 
 async function saveSettings() {
-  // 1. 收集過濾設定
-  const checkboxes = document.querySelectorAll("#typeCheckboxes input");
-  const newAllowed = [];
-  checkboxes.forEach(cb => { if(cb.checked) newAllowed.push(cb.value); });
-  
-  // 2. 檢查批量修改
-  const batchFrom = document.getElementById("batchFrom").value;
-  const batchTo = document.getElementById("batchTo").value;
-  const batchUpdateQueue = [];
-  
-  // 如果有選擇不同狀態，則執行批量邏輯
-  if (batchFrom !== batchTo) {
-    if(confirm(`確定要將所有「${batchFrom}」商品轉換為「${batchTo}」嗎？此操作將直接寫入資料庫。`)) {
-       globalItems.forEach(item => {
-         if(item.status === batchFrom) {
-            batchUpdateQueue.push({ item_name: item.name, status: batchTo, price: item.price });
-            // 更新本地數據以即時顯示
-            item.status = batchTo;
-         }
-       });
-    }
-  }
+  const newAllowed = Array.from(document.querySelectorAll("#typeCheckboxes input:checked")).map(i => i.value);
+  const { error } = await sbClient.from('chiikawa_data').upsert({ item_name: CONFIG_KEY, status: newAllowed.join(","), price: "0" }, { onConflict: 'item_name' });
+  if(!error) { allowedTypes = newAllowed; closeModal("settingsModal"); renderApp(); }
+}
 
-  // 3. 執行儲存 (設定 + 批量修改)
-  const updates = [];
-  
-  // 加入設定更新
-  updates.push({ item_name: CONFIG_KEY, status: newAllowed.join(","), price: "0" });
-  
-  // 加入批量更新
-  batchUpdateQueue.forEach(u => updates.push(u));
+function stageChange(n, f, v) { 
+  if(!pendingChanges[n]) pendingChanges[n] = globalItems.find(i=>i.name===n);
+  pendingChanges[n][f] = v;
+}
 
-  if (updates.length > 0) {
+async function handleSave() {
+  const updates = Object.keys(pendingChanges).map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
+  if(updates.length && confirm("儲存？")) {
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if(error) {
-      alert("儲存設定失敗：" + error.message);
-    } else {
-      alert("設定已儲存並更新！");
-      allowedTypes = newAllowed;
-      closeModal("settingsModal");
-      renderApp(); // 重新渲染
-    }
-  } else {
-    closeModal("settingsModal");
+    if(!error) { pendingChanges = {}; alert("成功"); renderCards(); }
   }
 }
 
 function closeModal(id) { document.getElementById(id).style.display = "none"; }
-
-// --- 暫存修改 (Header Save) ---
-function stageChange(name, field, value) {
-  const item = globalItems.find(i => i.name === name);
-  if (item) {
-    item[field] = value;
-    if (!pendingChanges[name]) {
-      pendingChanges[name] = { ...item };
-    }
-    pendingChanges[name][field] = value;
-  }
-}
-
-async function handleSave() {
-  const keys = Object.keys(pendingChanges);
-  if (!keys.length) { alert("沒有任何修改需要儲存"); return; }
-  
-  if (confirm(`確定要儲存這 ${keys.length} 項修改嗎？`)) {
-    const updates = keys.map(k => ({ 
-      item_name: k, 
-      status: pendingChanges[k].status, 
-      price: pendingChanges[k].price
-    }));
-    
-    const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    
-    if (error) {
-      alert("儲存失敗：" + error.message);
-    } else {
-      alert("儲存成功！");
-      pendingChanges = {}; 
-      // 重新載入以確保同步
-      // await loadSheetData(); 
-      // 這裡簡單刷新即可
-      renderCards();
-    }
-  }
-}
-
-function handleCancel() { if(confirm("確定要取消修改嗎？")) location.reload(); }
+function handleCancel() { location.reload(); }
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
-// --- 啟動 ---
 loadSheetData();
 window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
-window.addEventListener('resize', sendHeight);
 </script>
 </body>
 </html>
