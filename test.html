@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   
   <title>Chiikawa 寶寶圖鑑</title>
   <meta property="og:title" content="Chiikawa 寶寶圖鑑">
@@ -23,6 +23,8 @@
       margin: 0; padding: 0; width: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; color: #333333; text-align: center;
+      /* 防止父頁面在彈窗時滾動抖動 */
+      overflow-x: hidden;
     }
     .logo-container { text-align: center; margin-top: 25px; }
     .logo-container img { width: 70px; height: auto; }
@@ -41,9 +43,8 @@
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; white-space: nowrap; }
 
-    /* Sticky Sub-Nav 樣式 */
     .sticky-sub-nav {
-      position: -webkit-sticky; /* Safari */
+      position: -webkit-sticky;
       position: sticky;
       top: 0;
       z-index: 999; 
@@ -184,18 +185,13 @@
   </div>
 
 <script>
-  // Supabase Config
   const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
   let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
   const roleConfigMap = {
-    "吉伊": "visible_categories_chii",
-    "小八": "visible_categories_hachi",
-    "兔兔": "visible_categories",
-    "栗子": "visible_categories_kuri",
-    "風獅": "visible_categories_shisa",
-    "其他角色": "visible_categories_others"
+    "吉伊": "visible_categories_chii", "小八": "visible_categories_hachi", "兔兔": "visible_categories",
+    "栗子": "visible_categories_kuri", "風獅": "visible_categories_shisa", "其他角色": "visible_categories_others"
   };
 
   const roles = [
@@ -220,38 +216,41 @@
   const subNavContainer = document.getElementById("sub-nav-container");
   const subNavContent = document.getElementById("sub-nav-content");
 
-  // 【關鍵修改】：監聽 iframe 載入事件，注入 CSS 隱藏子頁導航
   frame.onload = function() {
       try {
-          // 嘗試存取子頁面 DOM (因為是同源 Github Pages，所以允許)
           const doc = frame.contentDocument || frame.contentWindow.document;
           if (doc) {
+              // 1. 防止子頁面彈出輸入框時放大 (注入 Viewport Meta)
+              let meta = doc.querySelector('meta[name="viewport"]');
+              if (!meta) {
+                  meta = doc.createElement('meta');
+                  meta.name = "viewport";
+                  doc.head.appendChild(meta);
+              }
+              // 強制設置不可縮放
+              meta.content = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
+
+              // 2. 注入原有 CSS (隱藏導航等)
               const styleId = 'injected-parent-styles';
               if (!doc.getElementById(styleId)) {
                   const style = doc.createElement('style');
                   style.id = styleId;
-                  // 1. 隱藏 .nav-bar
-                  // 2. 調整 #card-container 的 padding-top (原110px -> 54px)，只留 Admin 行的高度
-                  // 3. 調整 admin-panel 的 margin-top，避免被遮擋
                   style.textContent = `
                       .nav-bar { display: none !important; }
                       #card-container { padding-top: 54px !important; }
                       .admin-panel { margin-top: 54px !important; }
-                      /* 調整錨點定位偏移量 */
                       .category-section { scroll-margin-top: 60px !important; }
+                      /* 額外修復：確保 Input 焦點不會觸發頁面偏移 */
+                      input, select, textarea { font-size: 16px !important; } 
                   `;
                   doc.head.appendChild(style);
                   
-                  // 觸發子頁面重新發送高度 (因 padding 改變，高度會變)
-                  // 子頁面有 resize 監聽器，所以我們觸發 resize
                   setTimeout(() => {
                       frame.contentWindow.dispatchEvent(new Event('resize'));
                   }, 100);
               }
           }
-      } catch (e) {
-          console.log("無法存取 iframe 內容 (可能是跨域限制或尚未載入)", e);
-      }
+      } catch (e) { console.log("Iframe injection blocked/failed", e); }
   };
 
   function initTabs() {
@@ -266,7 +265,6 @@
         activeRoleName = role.name;
         document.documentElement.style.setProperty('--tab-color', role.color);
         frame.src = role.url;
-        
         fetchSubCategories(role.name);
       };
       tabsContainer.appendChild(tab);
@@ -279,31 +277,16 @@
   async function fetchSubCategories(roleName) {
     subNavContainer.style.display = 'none'; 
     subNavContent.innerHTML = '';
-    
     let categories = ["吊娃", "娃"]; 
-
     const configKey = roleConfigMap[roleName];
-    
     if (sbClient && configKey) {
         try {
-            const { data: config } = await sbClient
-                .from('chiikawa_config')
-                .select('config_value')
-                .eq('config_key', configKey)
-                .single();
-            
-            if (config && config.config_value) {
-                categories = Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value);
-            }
-        } catch (e) {
-            console.error("Fetch Config Error:", e);
-        }
+            const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', configKey).single();
+            if (config && config.config_value) categories = Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value);
+        } catch (e) { console.error(e); }
     }
-
     if (categories.length > 0) {
-        subNavContent.innerHTML = categories.map(cat => 
-            `<div class="sub-nav-item" onclick="scrollToCategory('${cat}')">${cat}</div>`
-        ).join("");
+        subNavContent.innerHTML = categories.map(cat => `<div class="sub-nav-item" onclick="scrollToCategory('${cat}')">${cat}</div>`).join("");
         subNavContainer.style.display = 'block';
     }
   }
@@ -312,22 +295,13 @@
       try {
           const doc = frame.contentDocument || frame.contentWindow.document;
           const targetEl = doc.getElementById(`cat-${catName}`);
-          
           if (targetEl) {
               const iframeRect = frame.getBoundingClientRect();
               const elementRect = targetEl.getBoundingClientRect();
-              
-              // 調整後的偏移量
               const absoluteTop = window.scrollY + iframeRect.top + elementRect.top - 60;
-              
-              window.scrollTo({
-                  top: absoluteTop,
-                  behavior: 'smooth'
-              });
+              window.scrollTo({ top: absoluteTop, behavior: 'smooth' });
           }
-      } catch (e) {
-          console.error("Scroll Error:", e);
-      }
+      } catch (e) { console.error(e); }
   }
 
   window.addEventListener('message', function(e) {
