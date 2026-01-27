@@ -4,108 +4,67 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>出賣小八 - 管理系統</title>
-  
   <link rel="icon" href="https://i.postimg.cc/Ss5kqJ3L/icon002.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     :root { --tab-color: #6293b8; --header-height: 44px; --nav-height: 36px; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center; -webkit-font-smoothing: antialiased; padding-top: calc(var(--header-height) + var(--nav-height)); }
-    
-    .top-bar { background: var(--tab-color); color: #fff; height: var(--header-height); position: fixed; top: 0; left: 0; width: 100%; z-index: 999; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
-    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; opacity: 0.9; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center; padding-top: calc(var(--header-height) + var(--nav-height)); }
+    .top-bar { background: var(--tab-color); color: #fff; height: var(--header-height); position: fixed; top: 0; left: 0; width: 100%; z-index: 999; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
+    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
     .right-actions { display: flex; align-items: center; gap: 6px; }
-    .admin-actions { display: none; gap: 6px; align-items: center; }
-    .btn-header { padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.7); font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent; white-space: nowrap; }
-    .btn-save { background: rgba(255,255,255,0.3); border-color: #fff; }
-    .btn-settings { background: rgba(0,0,0,0.1); display: none; }
-    .btn-logout { background: rgba(0,0,0,0.1); }
-    
-    .nav-bar { position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--nav-height); background: #fff; z-index: 998; border-bottom: 1px solid #eee; display: flex; align-items: center; overflow-x: auto; white-space: nowrap; padding: 0 10px; box-sizing: border-box; }
-    .nav-bar::-webkit-scrollbar { display: none; }
-    .nav-item { display: inline-block; padding: 0 12px; font-size: 13px; color: #666; font-weight: 500; cursor: pointer; line-height: var(--nav-height); }
-
-    #card-container { padding: 10px; display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; min-height: 60vh; }
-    .category-section { width: 100%; margin-bottom: 10px; }
-    .category-title { text-align: left; margin: 10px 5px; font-size: 15px; font-weight: bold; color: var(--tab-color); border-left: 4px solid var(--tab-color); padding-left: 8px; scroll-margin-top: 90px; }
-    .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center; width: 100%; }
-
-    .card { 
-      width: 100%; max-width: 130px; height: 200px; 
-      border: 1px solid #eee; border-radius: 12px; background: #fff; 
-      position: relative; text-align: center; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; 
-      overflow: hidden; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; padding-bottom: 5px;
-    }
-    .card img { width: 100%; height: 95px; object-fit: contain; padding: 8px 8px 2px 8px; box-sizing: border-box; }
-    .status-badge { display: inline-block; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 600; margin: 2px 0; }
-    .card .name { 
-      margin: 2px 6px; font-size: 14px; font-weight: 700; line-height: 1.2; 
-      height: 34px; display: flex; align-items: center; justify-content: center; 
-      color: #333; overflow: hidden;
-    }
-    .card .price { font-size: 13px; color: #6293b8; font-weight: bold; margin-top: auto; padding-bottom: 5px; }
-
-    .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 10px; margin: 2px 0; width: 90%; background: #fff; }
-    .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; margin-top: auto; margin-bottom: 5px; }
-
+    .admin-actions { display: none; gap: 6px; }
+    .btn-header { padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.7); font-size: 12px; font-weight: bold; cursor: pointer; color: #fff; background: transparent; }
+    .btn-save { background: rgba(255,255,255,0.3); }
+    .nav-bar { position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--nav-height); background: #fff; z-index: 998; border-bottom: 1px solid #eee; display: flex; align-items: center; overflow-x: auto; padding: 0 10px; box-sizing: border-box; }
+    .nav-item { padding: 0 12px; font-size: 13px; color: #666; cursor: pointer; line-height: var(--nav-height); white-space: nowrap; }
+    #card-container { padding: 10px; display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; }
+    .category-section { width: 100%; }
+    .category-title { text-align: left; margin: 10px 5px; font-size: 15px; font-weight: bold; color: var(--tab-color); border-left: 4px solid var(--tab-color); padding-left: 8px; }
+    .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .card { width: 100%; max-width: 130px; height: 210px; border: 1px solid #eee; border-radius: 12px; background: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+    .card img { width: 100%; height: 100px; object-fit: contain; padding: 8px; box-sizing: border-box; }
+    .status-badge { border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 600; margin: 2px 0; }
+    .card .name { margin: 4px 6px; font-size: 13px; font-weight: 700; height: 32px; overflow: hidden; display: flex; align-items: center; }
+    .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 8px; }
+    .admin-select, .admin-price-input { width: 90%; font-size: 10px; margin-bottom: 5px; }
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
-    .modal-content { background: #fff; margin: 15% auto; padding: 24px; width: 85%; max-width: 350px; border-radius: 20px; position: relative; max-height: 80vh; overflow-y: auto; text-align: left; }
-    .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
-    .login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-    .login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-    #loading-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 100px; color: #999; font-weight: bold; gap: 15px; }
-    .loading-icon { width: 60px; height: auto; animation: bounce 0.8s infinite ease-in-out; }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .modal-content { background: #fff; margin: 15% auto; padding: 20px; width: 80%; max-width: 320px; border-radius: 20px; text-align: left; }
+    #loading-msg { padding-top: 100px; color: #999; }
   </style>
 </head>
 <body>
 
   <div class="top-bar">
-    <button id="settingsBtn" class="btn-header btn-settings" onclick="openSettingsModal()">設定</button>
-    <div id="spacer" style="flex:1"></div>
+    <button id="settingsBtn" class="btn-header" style="display:none; background: rgba(0,0,0,0.1);" onclick="openSettingsModal()">分類設定</button>
+    <div style="flex:1"></div>
     <div class="right-actions">
       <div id="adminActions" class="admin-actions">
-        <button class="btn-header" onclick="handleCancel()">取消</button>
+        <button class="btn-header" onclick="location.reload()">取消</button>
         <button class="btn-header btn-save" onclick="handleSave()">儲存變更</button>
       </div>
-      <div id="authArea">
-        <svg id="loginIcon" class="admin-icon" onclick="handleAuthClick()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        <button id="logoutBtn" class="btn-header btn-logout" style="display:none;" onclick="handleAuthClick()">登出</button>
-      </div>
+      <svg id="loginIcon" class="admin-icon" onclick="openModal('loginModal')" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <button id="logoutBtn" class="btn-header" style="display:none; background: rgba(0,0,0,0.1);" onclick="handleLogout()">登出</button>
     </div>
   </div>
 
   <div id="nav-bar" class="nav-bar"></div>
-
-  <div id="card-container">
-    <div id="loading-msg">
-      <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
-      <div>正在載入資料中...</div>
-    </div>
-  </div>
+  <div id="card-container"><div id="loading-msg">正在同步雲端資料...</div></div>
 
   <div id="loginModal" class="modal">
     <div class="modal-content" style="text-align:center;">
-      <span class="close-modal" onclick="closeModal('loginModal')">&times;</span>
-      <h3>管理員登入</h3>
-      <input type="text" id="adminId" class="login-input" placeholder="帳號">
-      <input type="password" id="adminPwd" class="login-input" placeholder="密碼">
-      <button class="login-btn" onclick="handleLogin()">登入</button>
+      <h3>管理員驗證</h3>
+      <input type="text" id="adminId" style="width:100%; padding:10px; margin:5px 0;" placeholder="帳號">
+      <input type="password" id="adminPwd" style="width:100%; padding:10px; margin:5px 0;" placeholder="密碼">
+      <button onclick="handleLogin()" style="width:100%; padding:10px; background:var(--tab-color); color:white; border:none; border-radius:8px; margin-top:10px;">登入</button>
     </div>
   </div>
 
   <div id="settingsModal" class="modal">
     <div class="modal-content">
-      <span class="close-modal" onclick="closeModal('settingsModal')">&times;</span>
       <h3 style="text-align:center;">展示分類設定</h3>
-      <p style="font-size:12px; color:#888; text-align:center;">只有被選中的分類會顯示在首頁</p>
-      <div id="typeCheckboxes" style="display:flex; flex-direction:column; gap:10px; margin: 15px 0;"></div>
-      <div style="display:flex; gap:10px;">
-        <button style="flex:1; padding:10px; background:#ddd; border:none; border-radius:8px; cursor:pointer;" onclick="closeModal('settingsModal')">取消</button>
-        <button style="flex:1; padding:10px; background:var(--tab-color); color:white; border:none; border-radius:8px; cursor:pointer;" onclick="saveSettings()">儲存至雲端</button>
-      </div>
+      <div id="typeCheckboxes"></div>
+      <button onclick="saveSettings()" style="width:100%; padding:10px; background:var(--tab-color); color:white; border:none; border-radius:8px; margin-top:15px;">儲存至雲端</button>
+      <button onclick="closeModal('settingsModal')" style="width:100%; padding:10px; background:#eee; border:none; border-radius:8px; margin-top:5px;">關閉</button>
     </div>
   </div>
 
@@ -116,131 +75,118 @@ const SHEET_ID  = "1vjly0jcLdSq1lwSgWkn9OljQ27gMQm_0";
 const sheetName = "小八"; 
 const CONFIG_KEY = "HACHI_CONFIG"; 
 
-let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {}, allTypes = new Set();
-let allowedTypes = []; // 預設空數組
-let hasConfigInDB = false; // 標記資料庫是否存在設定
+let sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {}, allTypes = new Set(), allowedTypes = [];
 
+// 核心邏輯：合併 Sheet 結構與 Supabase 狀態
 async function loadSheetData(){
   try {
-    // 1. 從 Supabase 讀取資料
-    if (sbClient) {
-      const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      if (data) {
-        supabaseOverrides = {};
-        hasConfigInDB = false;
-        data.forEach(row => { 
-          if(row.item_name === CONFIG_KEY) {
-              // 嚴格讀取設定列
-              const saved = row.status ? row.status.split(',').map(s => s.trim()).filter(s => s !== "") : [];
-              if (saved.length > 0) {
-                  allowedTypes = saved;
-                  hasConfigInDB = true;
-              }
-          } else {
-              supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
-          }
-        });
-      }
+    // 1. 同步抓取 Supabase 設定（價格、狀態、展示分類）
+    const { data: sbData } = await sbClient.from('chiikawa_data').select('item_name, status, price');
+    supabaseOverrides = {};
+    let dbAllowedTypes = null;
+
+    if (sbData) {
+      sbData.forEach(row => {
+        if(row.item_name === CONFIG_KEY) {
+          dbAllowedTypes = row.status ? row.status.split(',').filter(s => s) : null;
+        } else {
+          supabaseOverrides[row.item_name] = { status: row.status, price: row.price };
+        }
+      });
     }
 
-    // 2. 從 Google Sheet 讀取原始資料
+    // 2. 抓取 Google Sheet（抓取 分類、名稱、圖片）
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${encodeURIComponent(sheetName)}`).then(r => r.text());
-    const jsonText = sheetRes.substr(47).slice(0, -2);
-    const data = JSON.parse(jsonText);
+    const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = (data.table.rows || []).slice(1);
 
     globalItems = []; 
     allTypes.clear();
 
-    rows.forEach((row) => {
-      let rawType = row.c[0]?.v || "其他";
-      let rawName = row.c[1]?.v || "";
-      let imgUrl = row.c[3]?.v || "https://i.postimg.cc/bv5xRs04/image.png";
-      if (!rawName) return;
-      
-      let dbKey = `小八${rawName}`;
-      allTypes.add(rawType);
-      
-      let sbData = supabaseOverrides[dbKey];
+    rows.forEach(row => {
+      const type = row.c[0]?.v || "其他";
+      const name = row.c[1]?.v || "";
+      const img = row.c[3]?.v || "";
+      if (!name) return;
+
+      allTypes.add(type);
+      const dbKey = `小八${name}`;
+      const ovr = supabaseOverrides[dbKey] || {};
+
+      // 邏輯核心：結構來自 Sheet，狀態與價格優先使用 Supabase 的同步值
       globalItems.push({
-        dbName: dbKey, displayName: rawName, type: rawType,
-        price: sbData?.price || "", status: sbData?.status || "現貨", img: imgUrl
+        dbName: dbKey,
+        displayName: name,
+        type: type,
+        img: img,
+        status: ovr.status || "現貨", // Supabase 沒有則預設現貨
+        price: ovr.price || ""       // Supabase 沒有則預設空白
       });
     });
 
-    // 3. 邏輯判定：如果資料庫完全沒這筆設定，才自動顯示「全部」
-    if(!hasConfigInDB) {
-      allowedTypes = Array.from(allTypes);
-    }
+    // 3. 處理展示分類邏輯
+    allowedTypes = dbAllowedTypes || Array.from(allTypes);
 
     renderApp();
-  } catch (e) { 
-    console.error("載入失敗:", e);
-  }
+  } catch (e) { console.error("同步失敗", e); }
 }
 
-function renderApp() { 
-  renderNavBar(); 
-  renderCards(); 
+function renderApp() {
+  renderNavBar();
+  renderCards();
 }
 
 function renderNavBar() {
   const nav = document.getElementById("nav-bar");
   nav.innerHTML = "";
-  // 導覽列只顯示被勾選的分類
-  Array.from(allTypes)
-    .filter(t => allowedTypes.includes(t))
-    .forEach(type => {
-      const item = document.createElement("div");
-      item.className = "nav-item";
-      item.innerText = type;
-      item.onclick = () => {
-        const el = document.getElementById("cat-" + type);
-        if(el) window.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
-      };
-      nav.appendChild(item);
-    });
+  Array.from(allTypes).filter(t => allowedTypes.includes(t)).forEach(type => {
+    const div = document.createElement("div");
+    div.className = "nav-item";
+    div.innerText = type;
+    div.onclick = () => {
+      const el = document.getElementById("cat-" + type);
+      if(el) window.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
+    };
+    nav.appendChild(div);
+  });
 }
 
 function renderCards(){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   
-  // 過濾邏輯
-  const validItems = globalItems.filter(i => 
-    allowedTypes.includes(i.type) && (isAdmin || !i.status.includes("（不顯示）"))
-  );
-  
-  // 依據原始分類順序排列，但只渲染 allowedTypes 內的
+  const displayItems = globalItems.filter(i => allowedTypes.includes(i.type));
+
   Array.from(allTypes).forEach(t => {
     if (!allowedTypes.includes(t)) return;
+    const items = displayItems.filter(i => i.type === t && (isAdmin || !i.status.includes("（不顯示）")));
+    if (!items.length) return;
 
-    const items = validItems.filter(i => i.type === t);
-    if(items.length) {
-      const sec = document.createElement("div");
-      sec.className = "category-section";
-      sec.innerHTML = `<div id="cat-${t}" class="category-title">${t}</div>`;
-      const grid = document.createElement("div");
-      grid.className = "group-grid";
-      items.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-        const statusHtml = isAdmin 
-          ? `<select class="admin-select" onchange="stageChange('${item.dbName}','status',this.value)">${['現貨','需預訂','搭飛機中','補貨（不顯示）','Hold貨（不顯示）','已售出（不顯示）'].map(s=>`<option value="${s}" ${item.status===s?'selected':''}>${s}</option>`).join('')}</select>` 
-          : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
-        const priceDisplay = (item.status==='需預訂' || !item.price) ? 'WhatsApp查詢' : '$'+item.price;
-        const priceHtml = isAdmin 
-          ? `<input class="admin-price-input" type="text" value="${item.price}" placeholder="價格" onchange="stageChange('${item.dbName}','price',this.value)" />` 
-          : `<div class="price">${priceDisplay}</div>`;
-        card.innerHTML = `<img src="${item.img}">${statusHtml}<div class="name">${item.displayName}</div>${priceHtml}`;
-        grid.appendChild(card);
-      });
-      sec.appendChild(grid);
-      container.appendChild(sec);
-    }
+    const sec = document.createElement("div");
+    sec.className = "category-section";
+    sec.innerHTML = `<div id="cat-${t}" class="category-title">${t}</div>`;
+    const grid = document.createElement("div");
+    grid.className = "group-grid";
+
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+      
+      const statusHtml = isAdmin 
+        ? `<select class="admin-select" onchange="stageChange('${item.dbName}','status',this.value)">${['現貨','需預訂','搭飛機中','補貨（不顯示）','Hold貨（不顯示）','已售出（不顯示）'].map(s=>`<option value="${s}" ${item.status===s?'selected':''}>${s}</option>`).join('')}</select>` 
+        : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
+      
+      const priceHtml = isAdmin 
+        ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.dbName}','price',this.value)" />` 
+        : `<div class="price">${item.status==='需預訂'?'WhatsApp查詢':(item.price?'$'+item.price:'WhatsApp查詢')}</div>`;
+
+      card.innerHTML = `<img src="${item.img}">${statusHtml}<div class="name">${item.displayName}</div>${priceHtml}`;
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    container.appendChild(sec);
   });
-  sendHeight();
 }
 
 function getStatusBg(s) { 
@@ -250,80 +196,46 @@ function getStatusBg(s) {
   return "#eee";
 }
 
-function stageChange(dbName, field, value) { 
-  if(!pendingChanges[dbName]) {
-    const original = globalItems.find(i => i.dbName === dbName);
-    pendingChanges[dbName] = { ...original };
-  }
-  pendingChanges[dbName][field] = value;
+function stageChange(id, field, val) {
+  if(!pendingChanges[id]) pendingChanges[id] = { ...globalItems.find(i=>i.dbName===id) };
+  pendingChanges[id][field] = val;
 }
 
 async function handleSave() {
-  const updates = Object.keys(pendingChanges).map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
-  if(updates.length && confirm("確定儲存變更？")) {
-    const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if(!error) { alert("儲存成功"); pendingChanges = {}; loadSheetData(); }
-  }
+  const updates = Object.values(pendingChanges).map(i => ({ item_name: i.dbName, status: i.status, price: i.price }));
+  const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
+  if(!error) { alert("同步成功"); pendingChanges = {}; loadSheetData(); }
 }
 
-function handleAuthClick() {
-  if(isAdmin) { if(confirm("確定登出？")) location.reload(); }
-  else document.getElementById("loginModal").style.display = "block";
+function openSettingsModal() {
+  const box = document.getElementById("typeCheckboxes");
+  box.innerHTML = Array.from(allTypes).map(t => `<label style="display:block; margin:8px 0;"><input type="checkbox" value="${t}" ${allowedTypes.includes(t)?'checked':''}> ${t}</label>`).join('');
+  openModal('settingsModal');
+}
+
+async function saveSettings() {
+  const checked = Array.from(document.querySelectorAll("#typeCheckboxes input:checked")).map(i => i.value);
+  const { error } = await sbClient.from('chiikawa_data').upsert({ item_name: CONFIG_KEY, status: checked.join(','), price: "0" }, { onConflict: 'item_name' });
+  if(!error) { alert("設定已同步"); closeModal('settingsModal'); loadSheetData(); }
 }
 
 function handleLogin() {
-  if (document.getElementById("adminId").value === "1050267" && document.getElementById("adminPwd").value === "Penny01!") {
+  if(document.getElementById("adminId").value==="1050267" && document.getElementById("adminPwd").value==="Penny01!") {
     isAdmin = true;
-    closeModal("loginModal");
+    closeModal('loginModal');
     document.getElementById("adminActions").style.display = "flex";
     document.getElementById("settingsBtn").style.display = "block";
     document.getElementById("loginIcon").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
     renderCards();
-  } else alert("資料錯誤");
-}
-
-function openSettingsModal() {
-  const container = document.getElementById("typeCheckboxes");
-  // 渲染時嚴格對照目前記憶體中的 allowedTypes (這來自 Supabase)
-  container.innerHTML = Array.from(allTypes).map(t => `
-    <label style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f4f4f4; padding:10px; border-radius:10px; cursor:pointer;">
-      <input type="checkbox" class="type-cfg" value="${t}" ${allowedTypes.includes(t) ? 'checked' : ''}> 
-      <span>${t}</span>
-    </label>
-  `).join('');
-  document.getElementById("settingsModal").style.display = "block";
-}
-
-async function saveSettings() {
-  const checked = Array.from(document.querySelectorAll(".type-cfg:checked")).map(i => i.value);
-  if(checked.length === 0) { alert("請至少選擇一個分類"); return; }
-
-  // 上傳到 Supabase
-  const { error } = await sbClient.from('chiikawa_data').upsert({ 
-      item_name: CONFIG_KEY, 
-      status: checked.join(","), 
-      price: "0" 
-  }, { onConflict: 'item_name' });
-
-  if(!error) { 
-      // 成功後，立即更新本地變數並重新渲染
-      allowedTypes = checked; 
-      hasConfigInDB = true; 
-      alert("分類設定已同步至雲端並套用");
-      closeModal('settingsModal'); 
-      renderApp(); 
-  } else {
-      alert("儲存至 Supabase 失敗，請檢查網路或權限");
   }
 }
 
+function handleLogout() { location.reload(); }
+function openModal(id) { document.getElementById(id).style.display = "block"; }
 function closeModal(id) { document.getElementById(id).style.display = "none"; }
-function handleCancel() { if(confirm("捨棄未儲存的變更？")) location.reload(); }
-function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 loadSheetData();
-window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
 </script>
 </body>
 </html>
