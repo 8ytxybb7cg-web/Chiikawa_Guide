@@ -133,10 +133,12 @@ async function loadSheetData(){
     allTypes.clear();
 
     rows.forEach((row) => {
-      // Column A (0) = 分類, Column B (1) = 商品名稱, Column L (11) = 圖片連結
+      // Column A (0) = 分類
+      // Column B (1) = 商品名稱
+      // Column D (3) = 圖片連結
       let rawType = row.c[0]?.v || "其他";
       let rawName = row.c[1]?.v || "";
-      let imgUrl = row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png";
+      let imgUrl = row.c[3]?.v || "https://i.postimg.cc/bv5xRs04/image.png";
 
       if (!rawName) return;
 
@@ -158,7 +160,7 @@ async function loadSheetData(){
     renderApp();
   } catch (e) { 
     console.error("載入失敗:", e); 
-    document.getElementById("loading-msg").innerText = "載入失敗，請檢查網路或權限。";
+    document.getElementById("loading-msg").innerText = "載入失敗，請檢查權限或分頁名稱。";
   }
 }
 
@@ -267,7 +269,7 @@ function handleLogin() {
     document.getElementById("loginIcon").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
     renderCards();
-  } else alert("失敗");
+  } else alert("登入失敗");
 }
 
 function openSettingsModal() {
