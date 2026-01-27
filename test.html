@@ -8,82 +8,341 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-/* ================= 1. 基礎與變數 ================= */
-:root { --tab-color: #d77485; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
-  -webkit-font-smoothing: antialiased;
-}
+    /* ================= 1. 基礎設定 ================= */
+    :root {
+      --tab-color: #d77485;
+      --bg-color: #f9f9f9;
+      --text-color: #333;
+    }
 
-/* ================= 2. 頂部導航欄 ================= */
-.top-bar {
-  background: var(--tab-color); color: #fff; height: 44px; position: fixed;
-  top: 0; left: 0; width: 100%; z-index: 999;
-  display: flex; align-items: center; justify-content: space-between; 
-  padding: 0 16px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-}
-.left-group, .right-group { display: flex; align-items: center; gap: 8px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 0;
+      color: var(--text-color);
+      text-align: center;
+      -webkit-font-smoothing: antialiased;
+    }
 
-.admin-btn-oval {
-  background: transparent; border: 1px solid rgba(255,255,255,0.8); color: #fff;
-  padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
-  cursor: pointer; display: none;
-}
-.admin-btn-oval:active { background: rgba(255,255,255,0.2); }
-.admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; display: block; }
+    /* ================= 2. 頂部導航欄 ================= */
+    .top-bar {
+      background: var(--tab-color);
+      color: #fff;
+      height: 44px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-sizing: border-box;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    }
 
-.nav-scroll-bar {
-  background: #fff; border-bottom: 1px solid #eee; padding: 10px; position: fixed;
-  top: 44px; left: 0; width: 100%; z-index: 998; display: flex; 
-  overflow-x: auto; white-space: nowrap; box-sizing: border-box; font-size: 13px; gap: 15px;
-  -ms-overflow-style: none; scrollbar-width: none; 
-}
-.nav-scroll-bar::-webkit-scrollbar { display: none; }
-.nav-item { color: var(--tab-color); cursor: pointer; padding: 2px 4px; font-weight: bold; flex-shrink: 0; }
+    .left-group, .right-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-/* ================= 3. 商品卡片樣式 (200px) ================= */
-#card-container { padding: 95px 10px 20px 10px; max-width: 1200px; margin: 0 auto; min-height: 60vh; }
-.category-section { margin-bottom: 30px; width: 100%; scroll-margin-top: 105px; }
-.category-title { display: flex; align-items: center; justify-content: center; margin: 25px 0 15px 0; color: var(--tab-color); font-weight: bold; font-size: 15px; opacity: 0.8; }
-.category-title::before, .category-title::after { content: ""; flex: 1; height: 1px; background: #eee; margin: 0 15px; }
+    .admin-btn-oval {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none; /* 登入後顯示 */
+    }
 
-.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; justify-items: center; width: 100%; }
+    .admin-btn-oval:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
 
-.card {
-  width: 100%; max-width: 130px; height: 200px; 
-  border: 1px solid #eee; border-radius: 12px; background: #fff; 
-  position: relative; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
-  overflow: hidden; display: flex; flex-direction: column; align-items: center; cursor: pointer;
-}
-.card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; flex-shrink: 0; }
-.status-badge { display: inline-block; min-width: 50px; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 600; margin-bottom: 2px; }
-.size-tag { font-size: 9px; color: #999; margin: -2px 0 2px 0; height: 10px; flex-shrink: 0; }
-.card .name { 
-  margin: 2px 6px; font-size: 12px; font-weight: 700; line-height: 1.2; flex-grow: 1; 
-  display: flex; align-items: center; justify-content: center; overflow: hidden; 
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #222;
-}
-.card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
+    .admin-icon {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      fill: #fff;
+      display: block;
+    }
 
-.admin-select { border: 1px solid #eee; border-radius: 4px; padding: 2px; font-size: 10px; width: 95%; margin-bottom: 3px; background: #fafafa; }
-.admin-price-input { width: 85%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 11px; margin-bottom: 4px; padding: 1px 0; }
+    .nav-scroll-bar {
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      padding: 10px;
+      position: fixed;
+      top: 44px;
+      left: 0;
+      width: 100%;
+      z-index: 998;
+      display: flex;
+      overflow-x: auto;
+      white-space: nowrap;
+      box-sizing: border-box;
+      font-size: 13px;
+      gap: 15px;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
 
-/* ================= 4. Modal 樣式 ================= */
-.modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
-.modal-content { background: #fff; margin: 10% auto; padding: 32px 24px 24px 24px; width: 85%; max-width: 320px; border-radius: 20px; position: relative; text-align: left; }
-.close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
-.login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-.login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border-radius: 12px; font-weight: bold; cursor: pointer; border:none; margin-top: 5px; }
+    .nav-scroll-bar::-webkit-scrollbar {
+      display: none;
+    }
 
-.batch-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-.batch-control { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 14px; font-weight: bold; }
-.batch-row { display: flex; align-items: center; gap: 5px; margin-bottom: 8px; font-size: 13px; }
-.batch-select { flex: 1; padding: 8px; font-size: 13px; border-radius: 8px; border: 1px solid #ddd; }
+    .nav-item {
+      color: var(--tab-color);
+      cursor: pointer;
+      padding: 2px 4px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
 
-#loading-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 180px; left: 50%; transform: translateX(-50%); color: #999; font-weight: bold; gap: 15px; }
-.loading-icon { width: 80px; animation: bounce 0.8s infinite ease-in-out; }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    /* ================= 3. 商品卡片樣式 ================= */
+    #card-container {
+      padding: 95px 10px 20px 10px;
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: 60vh;
+    }
+
+    .category-section {
+      margin-bottom: 30px;
+      width: 100%;
+      scroll-margin-top: 105px;
+    }
+
+    .category-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 25px 0 15px 0;
+      color: var(--tab-color);
+      font-weight: bold;
+      font-size: 15px;
+      opacity: 0.8;
+    }
+
+    .category-title::before, .category-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #eee;
+      margin: 0 15px;
+    }
+
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+      justify-items: center;
+      width: 100%;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 130px;
+      height: 200px;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      background: #fff;
+      position: relative;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      padding: 8px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      display: inline-block;
+      min-width: 50px;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .size-tag {
+      font-size: 9px;
+      color: #999;
+      margin: -2px 0 2px 0;
+      height: 10px;
+      flex-shrink: 0;
+    }
+
+    .card .name {
+      margin: 2px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.2;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      color: #222;
+    }
+
+    .card .price {
+      font-size: 13px;
+      color: var(--tab-color);
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    /* Admin 專用樣式 */
+    .admin-select {
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 2px;
+      font-size: 10px;
+      width: 95%;
+      margin-bottom: 3px;
+      background: #fafafa;
+    }
+
+    .admin-price-input {
+      width: 85%;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 11px;
+      margin-bottom: 4px;
+      padding: 1px 0;
+    }
+
+    /* ================= 4. Modal 樣式 ================= */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 10% auto;
+      padding: 32px 24px 24px 24px;
+      width: 85%;
+      max-width: 320px;
+      border-radius: 20px;
+      position: relative;
+      text-align: left;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 24px;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--tab-color);
+      color: white;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      margin-top: 5px;
+    }
+
+    /* 批量設定區塊 */
+    .batch-section {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+
+    .batch-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .batch-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .batch-select {
+      flex: 1;
+      padding: 8px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    /* Loading 動畫 */
+    #loading-msg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #999;
+      font-weight: bold;
+      gap: 15px;
+    }
+
+    .loading-icon {
+      width: 80px;
+      animation: bounce 0.8s infinite ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
   </style>
 </head>
 <body>
@@ -96,12 +355,18 @@ body {
       <button id="saveBtn" class="admin-btn-oval" style="background: rgba(255,255,255,0.2);" onclick="handleSave()">儲存</button>
       <button id="cancelBtn" class="admin-btn-oval" onclick="handleCancel()">取消</button>
       <button id="logoutBtn" class="admin-btn-oval" onclick="handleLogout()">登出</button>
-      <svg id="adminIcon" class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <svg id="adminIcon" class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
     </div>
   </div>
 
   <div id="navScrollBar" class="nav-scroll-bar"></div>
-  <div id="loading-msg"><img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" class="loading-icon" /><div>正在載入Chii仔資料中...</div></div>
+  <div id="loading-msg">
+    <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" class="loading-icon" alt="loading" />
+    <div>正在載入Chii仔資料中...</div>
+  </div>
   <div id="card-container"></div>
 
   <div id="loginModal" class="modal">
@@ -150,31 +415,58 @@ body {
   </div>
 
 <script>
+/* ================= 1. 全域變數與配置 ================= */
 const SHEET_ID = "17gH9HZKvW_6fMCWYLyqnzMHj40rA7PiwWg6L0GvbFgQ"; 
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 
-// 統一狀態清單 (這部分將被用於所有地方)
 const STATUS_OPTIONS = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "Hold貨（不顯示）", "已售出（不顯示）"];
 
-const roleMap = { "吉伊":"吉伊","小八":"小八","兔兔":"兔兔","小桃":"小桃","師傅":"師傅","栗子":"栗子","獅薩":"獅薩","古本":"古本","其他角色":"其他角色" };
-const colors  = { "吉伊":"#d77485","小八":"#6293b8","兔兔":"#f9be3c","小桃":"#838BC2","師傅":"#CCAFA5","栗子":"#94C973","獅薩":"#FBAA60","古本":"#eb9e97","其他角色":"#45818e" };
+const roleMap = { 
+  "吉伊":"吉伊","小八":"小八","兔兔":"兔兔","小桃":"小桃",
+  "師傅":"師傅","栗子":"栗子","獅薩":"獅薩","古本":"古本","其他角色":"其他角色" 
+};
+const colors = { 
+  "吉伊":"#d77485","小八":"#6293b8","兔兔":"#f9be3c","小桃":"#838BC2",
+  "師傅":"#CCAFA5","栗子":"#94C973","獅薩":"#FBAA60","古本":"#eb9e97","其他角色":"#45818e" 
+};
 
+// 初始化 Supabase
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], currentRole = "吉伊", supabaseOverrides = {}, pendingChanges = {}, hiddenTypes = []; 
 
+// 狀態變數
+let isAdmin = false;
+let globalItems = [];
+let currentRole = "吉伊";
+let supabaseOverrides = {};
+let pendingChanges = {}; // 待儲存的變更
+let hiddenTypes = [];    // 隱藏的分類
+
+/* ================= 2. 資料加載 ================= */
 async function loadSheetData(){
   const p = new URLSearchParams(location.search).get("role");
   currentRole = roleMap[p] ? p : "吉伊";
-  document.documentElement.style.setProperty("--tab-color", colors[currentRole]||"#999");
+  
+  // 設定主題色
+  document.documentElement.style.setProperty("--tab-color", colors[currentRole] || "#999");
   document.getElementById("loading-msg").style.display = "flex";
 
   try {
+    // 1. 抓取 Supabase 的覆蓋數據 (價格/狀態)
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
-      if (data) data.forEach(row => { supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; });
+      if (data) {
+        data.forEach(row => { 
+          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+        });
+      }
     }
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(currentRole)}`).then(r => r.text());
+
+    // 2. 抓取 Google Sheet 商品列表
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(currentRole)}`)
+      .then(r => r.text());
+    
+    // 解析 Google Sheet JSONP 格式
     const data = JSON.parse(sheetRes.substr(47).slice(0, -2));
     const rows = data.table.rows || [];
 
@@ -183,66 +475,97 @@ async function loadSheetData(){
       const name = row.c[1]?.v || "";   
       const img  = row.c[3]?.v || "";   
       const size = row.c[5]?.v || "";   
+      
       if (!name || name === "名稱" || type === "類型") return null;
+      
       const fullName = `${currentRole}${name}`; 
       const sbData = supabaseOverrides[fullName];
       
-      // 確保初始狀態在標準清單內，若不在則預設為現貨
+      // 優先使用 Supabase 狀態，否則預設為現貨
       let initialStatus = sbData?.status || "現貨";
+      
       return { 
-        name: fullName, originalName: name, type, size, 
-        price: sbData?.price || "", status: initialStatus, 
+        name: fullName, 
+        originalName: name, 
+        type, 
+        size, 
+        price: sbData?.price || "", 
+        status: initialStatus, 
         img: img || "https://i.postimg.cc/bv5xRs04/image.png" 
       };
     }).filter(it => it !== null);
 
     renderUI();
     initBatchSelects();
-  } catch (error) { document.getElementById("loading-msg").innerHTML = "載入失敗"; }
+    
+  } catch (error) { 
+    console.error(error);
+    document.getElementById("loading-msg").innerHTML = "載入失敗，請稍後再試"; 
+  }
 }
 
+// 初始化批量更改的下拉選單
 function initBatchSelects() {
   const fromSelect = document.getElementById("batchFromStatus");
   const toSelect = document.getElementById("batchToStatus");
-  fromSelect.innerHTML = STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join("");
-  toSelect.innerHTML = STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join("");
+  const optionsHtml = STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join("");
+  fromSelect.innerHTML = optionsHtml;
+  toSelect.innerHTML = optionsHtml;
 }
 
+/* ================= 3. UI 渲染 ================= */
 function renderUI(){
   const container = document.getElementById("card-container");
   const nav = document.getElementById("navScrollBar");
-  container.innerHTML = ""; nav.innerHTML = "";
+  container.innerHTML = ""; 
+  nav.innerHTML = "";
 
   const groups = {};
   const activeTypes = new Set();
 
+  // 分組邏輯
   globalItems.forEach(item => {
+    // 過濾隱藏分類
     if (hiddenTypes.includes(item.type)) return;
+    // 非管理員時過濾不顯示的狀態
     if (!isAdmin) {
       if (item.status && item.status.includes("不顯示")) return;
     }
+    
     if (!groups[item.type]) groups[item.type] = [];
     groups[item.type].push(item);
     activeTypes.add(item.type);
   });
 
+  // 建立頂部導航分類按鈕
   Array.from(activeTypes).forEach(type => {
     const navItem = document.createElement("div");
-    navItem.className = "nav-item"; navItem.innerText = type;
-    navItem.onclick = () => { const el = document.getElementById("section-" + type); if(el) el.scrollIntoView({behavior:'smooth'}); };
+    navItem.className = "nav-item"; 
+    navItem.innerText = type;
+    navItem.onclick = () => { 
+      const el = document.getElementById("section-" + type); 
+      if(el) el.scrollIntoView({behavior:'smooth'}); 
+    };
     nav.appendChild(navItem);
   });
 
+  // 建立商品卡片
   Object.keys(groups).forEach(type => {
     const section = document.createElement("div");
-    section.className = "category-section"; section.id = "section-" + type;
+    section.className = "category-section"; 
+    section.id = "section-" + type;
     section.innerHTML = `<div class="category-title">${type}</div>`;
-    const gdiv = document.createElement("div"); gdiv.className = "group-grid";
+    
+    const gdiv = document.createElement("div"); 
+    gdiv.className = "group-grid";
     
     groups[type].forEach(item => {
-      const card = document.createElement("div"); card.className = "card";
+      const card = document.createElement("div"); 
+      card.className = "card";
+      
       const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp' : '$' + item.price;
 
+      // 狀態顯示 (Admin: Select / User: Badge)
       let statusHtml = "";
       if (isAdmin) {
         statusHtml = `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">`;
@@ -254,50 +577,81 @@ function renderUI(){
         statusHtml = `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
       }
 
+      // 價格顯示 (Admin: Input / User: Text)
       const priceHtml = isAdmin 
         ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" />`
         : `<div class="price">${displayPrice}</div>`;
 
-      card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="size-tag">${item.size || ''}</div><div class="name">${item.originalName}</div>${priceHtml}`;
-      card.onclick = (e) => { if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; window.parent.postMessage({ type: 'openModal', item: item }, '*'); };
+      card.innerHTML = `
+        <img src="${item.img}" loading="lazy">
+        ${statusHtml}
+        <div class="size-tag">${item.size || ''}</div>
+        <div class="name">${item.originalName}</div>
+        ${priceHtml}
+      `;
+      
+      // 點擊卡片開啟詳情 (如果是 Admin 點擊輸入框則不觸發)
+      card.onclick = (e) => { 
+        if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
+        window.parent.postMessage({ type: 'openModal', item: item }, '*'); 
+      };
+      
       gdiv.appendChild(card);
     });
-    section.appendChild(gdiv); container.appendChild(section);
+    section.appendChild(gdiv); 
+    container.appendChild(section);
   });
+
   document.getElementById("loading-msg").style.display = "none";
   sendHeight();
 }
 
+function getStatusBg(s) {
+  if(s==="現貨") return "#FFF4BD";
+  if(s==="需預訂") return "#D4BBDD";
+  if(s==="搭飛機中") return "#C1E1C1";
+  return "#E7F2F8";
+}
+
+/* ================= 4. 管理員功能與邏輯 ================= */
+
+// 登入
 function handleLogin() {
-  const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
+  const id = document.getElementById("adminId").value;
+  const pwd = document.getElementById("adminPwd").value;
+  
   if (id === "1050267" && pwd === "Penny01!") {
-    isAdmin = true; closeModal('loginModal');
+    isAdmin = true; 
+    closeModal('loginModal');
     document.getElementById("adminIcon").style.display = "none";
     document.getElementById("settingsBtn").style.display = "block";
     document.getElementById("saveBtn").style.display = "block";
     document.getElementById("cancelBtn").style.display = "block";
     document.getElementById("logoutBtn").style.display = "block";
+    
     updateTypeCheckboxes();
     renderUI();
-  } else alert("帳號或密碼錯誤");
+  } else {
+    alert("帳號或密碼錯誤");
+  }
 }
 
-function updateTypeCheckboxes() {
-  const allTypes = [...new Set(globalItems.map(i => i.type))];
-  document.getElementById("typeVisibilityGroup").innerHTML = allTypes.map(t => 
-    `<label style="font-size:14px; display:flex; align-items:center; gap:8px;">
-      <input type="checkbox" ${hiddenTypes.includes(t) ? '' : 'checked'} onchange="toggleTypeVisibility('${t}', this.checked)"> ${t}
-    </label>`
-  ).join("");
+// 暫存變更 (單一商品)
+function stageChange(name, field, value) {
+  if(!pendingChanges[name]) {
+    const it = globalItems.find(i => i.name === name);
+    // 初始化暫存物件
+    pendingChanges[name] = { status: it.status, price: it.price };
+  }
+  // 更新暫存
+  pendingChanges[name][field] = value;
+  
+  // 同步更新 UI 顯示用的 globalItems
+  const item = globalItems.find(i => i.name === name);
+  if(item) item[field] = value;
 }
 
-function toggleTypeVisibility(type, isVisible) {
-  if (isVisible) hiddenTypes = hiddenTypes.filter(t => t !== type);
-  else if (!hiddenTypes.includes(type)) hiddenTypes.push(type);
-}
-
-function confirmSettings() { renderUI(); closeModal('settingsModal'); }
-
+// 批量狀態變更邏輯
 function applyBatchStatus() {
   if (!document.getElementById("enableBatchChange").checked) {
     alert("請先勾選「啟用批量更改狀態」。");
@@ -311,56 +665,94 @@ function applyBatchStatus() {
     return;
   }
 
+  // 篩選當前頁面所有符合條件的商品
   const targets = globalItems.filter(item => item.status === fromStatus);
+  
   if (targets.length === 0) {
     alert(`當前分頁中沒有狀態為「${fromStatus}」的商品。`);
     return;
   }
 
   if(confirm(`確定將當前分頁中 ${targets.length} 個「${fromStatus}」商品全部改為「${toStatus}」？`)) {
+    // 執行批量修改，這會同時更新 pendingChanges 和 globalItems
     targets.forEach(item => stageChange(item.name, 'status', toStatus));
+    
+    // 重新渲染畫面以顯示變更
     renderUI();
-    alert("已完成批量替換，請記得點擊右上角的「儲存」。");
+    alert("已完成批量替換，請記得點擊右上角的「儲存」以生效。");
   }
 }
 
+// 儲存至 Supabase
 async function handleSave() {
   const keys = Object.keys(pendingChanges);
   if (!keys.length) return alert("無修改需要儲存");
+  
   if (confirm(`確定儲存變更？`)) {
-    const updates = keys.map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
+    const updates = keys.map(k => ({ 
+      item_name: k, 
+      status: pendingChanges[k].status, 
+      price: pendingChanges[k].price 
+    }));
+    
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-    if (error) alert("儲存失敗"); else { alert("儲存成功！"); pendingChanges = {}; loadSheetData(); }
+    
+    if (error) {
+      alert("儲存失敗");
+    } else {
+      alert("儲存成功！"); 
+      pendingChanges = {}; 
+      loadSheetData(); // 重新整理數據
+    }
   }
 }
 
+// 設定 Modal 相關邏輯
+function updateTypeCheckboxes() {
+  const allTypes = [...new Set(globalItems.map(i => i.type))];
+  const container = document.getElementById("typeVisibilityGroup");
+  
+  container.innerHTML = allTypes.map(t => 
+    `<label style="font-size:14px; display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" ${hiddenTypes.includes(t) ? '' : 'checked'} onchange="toggleTypeVisibility('${t}', this.checked)"> ${t}
+    </label>`
+  ).join("");
+}
+
+function toggleTypeVisibility(type, isVisible) {
+  if (isVisible) {
+    hiddenTypes = hiddenTypes.filter(t => t !== type);
+  } else if (!hiddenTypes.includes(type)) {
+    hiddenTypes.push(type);
+  }
+  // 注意：這裡不呼叫 renderUI，等使用者按「完成」才更新
+}
+
+function confirmSettings() { 
+  renderUI(); 
+  closeModal('settingsModal'); 
+}
+
+/* ================= 5. 其他輔助函數 ================= */
 function handleLogout() { if(confirm("確定登出管理員模式？")) location.reload(); }
 function handleCancel() { if(confirm("取消所有更改？")) location.reload(); }
 
-function stageChange(name, field, value) {
-  if(!pendingChanges[name]) {
-    const it = globalItems.find(i => i.name === name);
-    pendingChanges[name] = { status: it.status, price: it.price };
-  }
-  pendingChanges[name][field] = value;
-  const item = globalItems.find(i => i.name === name);
-  if(item) item[field] = value;
+function openSettingsModal() { 
+  updateTypeCheckboxes(); 
+  document.getElementById("settingsModal").style.display = "block"; 
 }
-
-function getStatusBg(s) {
-  if(s==="現貨") return "#FFF4BD";
-  if(s==="需預訂") return "#D4BBDD";
-  if(s==="搭飛機中") return "#C1E1C1";
-  return "#E7F2F8";
-}
-
-function openSettingsModal() { updateTypeCheckboxes(); document.getElementById("settingsModal").style.display = "block"; }
-function closeModal(id) { document.getElementById(id).style.display = "none"; }
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
-function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
+function closeModal(id) { document.getElementById(id).style.display = "none"; }
 
-loadSheetData();
+function sendHeight() { 
+  window.parent.postMessage({ height: document.body.scrollHeight }, '*'); 
+}
+
+// 點擊 Modal 外部關閉
 window.onclick = e => { if (e.target.className === "modal") e.target.style.display = "none"; };
+
+// 啟動
+loadSheetData();
 </script>
 </body>
 </html>
