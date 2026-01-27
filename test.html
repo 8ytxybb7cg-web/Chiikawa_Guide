@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣小八 - 管理系統</title>
-  <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
+  <title>出賣 Chii 仔 - 管理系統</title>
+  <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --tab-color: #6293b8; --nav-bg: #fff; }
+    :root { --tab-color: #d77485; --nav-bg: #fff; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
@@ -21,17 +21,20 @@
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     .header-wrapper {
-      position: fixed; top: 0; left: 0; width: 100%; z-index: 999;
+      position: fixed;
+      top: 0; left: 0; width: 100%; z-index: 999;
       background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     .top-bar {
       background: var(--tab-color); color: #fff; height: 44px;
-      display: flex; align-items: center; justify-content: flex-end; 
+      display: flex;
+      align-items: center; justify-content: flex-end; 
       padding: 0 16px; box-sizing: border-box; gap: 10px;
     }
     .nav-bar {
       display: flex; overflow-x: auto; white-space: nowrap;
-      padding: 10px; background: #fff; border-bottom: 1px solid #eee;
+      padding: 10px;
+      background: #fff; border-bottom: 1px solid #eee;
       scrollbar-width: none; gap: 15px; justify-content: center;
     }
     .nav-bar::-webkit-scrollbar { display: none; }
@@ -41,7 +44,8 @@
     }
 
     .admin-panel {
-      display: none; background: #fff; padding: 20px; margin-top: 90px;
+      display: none;
+      background: #fff; padding: 20px; margin-top: 90px;
       border-bottom: 2px dashed var(--tab-color); text-align: left;
     }
     .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
@@ -50,37 +54,40 @@
     .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
     .category-title { 
       font-size: 18px; font-weight: bold; margin-bottom: 15px; 
-      padding-left: 10px; border-left: 5px solid var(--tab-color); color: #444;
+      padding-left: 10px;
+      border-left: 5px solid var(--tab-color); color: #444;
     }
     .group-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       gap: 10px; justify-items: center; width: 100%;
     }
 
     .card {
-      width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
+      width: 100%; max-width: 130px; border: 1px solid #eee;
+      border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden;
+      cursor: pointer;
     }
     .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
-    .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+    .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex;
+      align-items: center; justify-content: center; }
     .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
     .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
     .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
     .btn-save, .btn-logout, .btn-cancel { 
-      padding: 4px 12px; border-radius: 12px; border: 1px solid #fff; 
+      padding: 4px 12px; border-radius: 12px;
+      border: 1px solid #fff; 
       font-size: 12px; cursor: pointer; color: #fff; background: transparent; 
     }
     .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
     
-    .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
+    .modal { display: none; position: fixed; z-index: 10000; left: 0;
+      top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
     .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    
-    .close-x {
-      position: absolute; top: 10px; right: 15px; font-size: 24px; 
-      color: #aaa; cursor: pointer; line-height: 1;
-    }
+    .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer; line-height: 1; }
 
     input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
     .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
@@ -110,8 +117,8 @@
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
-      <div>正在載入小八資料中...</div>
+      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Loading" class="loading-icon" />
+      <div>正在載入吉伊資料中...</div>
     </div>
   </div>
   
@@ -138,8 +145,8 @@ let supabaseOverrides = {}, pendingChanges = {};
 async function loadData() {
   try {
     if (sbClient) {
-      // 關鍵點：使用單獨的 Key 來存儲小八頁面的分類
-      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_hachi').single();
+      // 關鍵點：使用吉伊專屬的 Key 來存儲分類顯示設定
+      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_chii').single();
       visibleCategories = config ? (Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value)) : ["吊娃", "娃"];
       
       const { data: items } = await sbClient.from('chiikawa_data').select('*');
@@ -155,11 +162,13 @@ async function loadData() {
       const roleField = row.c[0]?.v || "";
       const type = row.c[1]?.v || "其他"; 
       const itemName = row.c[3]?.v || "";    
-      if (!itemName || !roleField.includes("八")) return null;
+      // 篩選包含「吉」字的角色
+      if (!itemName || !roleField.includes("吉")) return null;
       
       let dbKey = itemName;
       let sbData = null;
-      if (supabaseOverrides["小八" + itemName]) { dbKey = "小八" + itemName; sbData = supabaseOverrides[dbKey]; }
+      // 優先檢查是否有「吉伊」前綴的覆蓋資料
+      if (supabaseOverrides["吉伊" + itemName]) { dbKey = "吉伊" + itemName; sbData = supabaseOverrides[dbKey]; }
       else if (supabaseOverrides[itemName]) { dbKey = itemName; sbData = supabaseOverrides[dbKey]; }
 
       tempCats.add(type);
@@ -168,7 +177,6 @@ async function loadData() {
         status: sbData?.status || "現貨", img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
     }).filter(i => i !== null);
-
     allCategories = Array.from(tempCats);
     renderApp();
   } catch (e) {
@@ -208,7 +216,7 @@ function renderCards() {
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
-
+  
   catsToDisplay.forEach(cat => {
     const items = globalItems.filter(i => i.type === cat);
     const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("（不顯示）"));
@@ -232,7 +240,7 @@ function renderCards() {
         <div style="min-height:25px;">
           ${isAdmin ? renderAdminSelect(item) : `<span class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</span>`}
         </div>
-        <div class="name">${item.name.replace(/^小八/, "")}</div>
+        <div class="name">${item.name.replace(/^吉伊/, "")}</div>
         <div class="price">${isAdmin ? renderAdminPrice(item) : displayPrice}</div>
       `;
       card.onclick = (e) => { 
@@ -278,23 +286,20 @@ function stageChange(name, field, value) {
 async function handleSaveConfig() {
   if (!confirm("確定要儲存分類顯示設定與商品修改嗎？")) return;
   try {
-    // 1. 儲存分類設定到 chiikawa_config (確保欄位名正確)
+    // 儲存至吉伊專屬的 config key
     const { error: confErr } = await sbClient.from('chiikawa_config').upsert({ 
-      config_key: 'visible_categories_hachi', 
+      config_key: 'visible_categories_chii', 
       config_value: visibleCategories,
       updated_at: new Date().toISOString()
     }, { onConflict: 'config_key' });
-
     if (confErr) throw confErr;
 
-    // 2. 儲存商品修改到 chiikawa_data
     const updates = Object.keys(pendingChanges).map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
     }));
-    
     if (updates.length > 0) {
       const { error: itemErr } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
       if (itemErr) throw itemErr;
@@ -304,7 +309,7 @@ async function handleSaveConfig() {
     location.reload();
   } catch (e) { 
     console.error(e);
-    alert("儲存失敗，請檢查控制台錯誤訊息。"); 
+    alert("儲存失敗，請檢查控制台錯誤訊息。");
   }
 }
 
