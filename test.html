@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣古本 - 管理系統</title>
-  <link rel="icon" href="https://i.postimg.cc/2jsL76yB/icon008.png" type="image/png" />
+  <title>出賣 Chii 仔 - 管理系統</title>
+  <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --tab-color: #eb9e97; --nav-bg: #fff; }
+    :root { --tab-color: #d77485; --nav-bg: #fff; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
@@ -21,17 +21,21 @@
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     .header-wrapper {
-      position: fixed; top: 0; left: 0; width: 100%; z-index: 999;
+      position: fixed;
+      top: 0; left: 0; width: 100%; z-index: 999;
       background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     .top-bar {
       background: var(--tab-color); color: #fff; height: 44px;
-      display: flex; align-items: center; justify-content: flex-end; 
+      display: flex;
+      align-items: center; justify-content: flex-end; 
       padding: 0 16px; box-sizing: border-box; gap: 10px;
     }
     .nav-bar {
-      display: flex; overflow-x: auto; white-space: nowrap; padding: 10px;
-      background: #fff; border-bottom: 1px solid #eee; scrollbar-width: none; gap: 15px; justify-content: center;
+      display: flex; overflow-x: auto; white-space: nowrap;
+      padding: 10px;
+      background: #fff; border-bottom: 1px solid #eee;
+      scrollbar-width: none; gap: 15px; justify-content: center;
     }
     .nav-bar::-webkit-scrollbar { display: none; }
     .nav-item {
@@ -40,26 +44,44 @@
     }
 
     .admin-panel {
-      display: none; background: #fff; padding: 20px; margin-top: 90px;
+      display: none;
+      background: #fff; padding: 20px; margin-top: 90px;
       border-bottom: 2px dashed var(--tab-color); text-align: left;
     }
     .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
 
     #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
     .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
+    
+    /* 改良標題樣式 */
     .category-title { 
-      font-size: 18px; font-weight: bold; margin-bottom: 15px; padding-left: 10px;
+      font-size: 18px; font-weight: bold; margin-bottom: 15px; 
+      padding: 5px 10px;
       border-left: 5px solid var(--tab-color); color: #444;
+      display: flex; align-items: center; justify-content: space-between;
     }
+    .admin-mode .category-title { cursor: pointer; background: #fff5f6; border-radius: 0 8px 8px 0; }
+    .admin-mode .category-title:hover { background: #ffebee; }
+    .admin-mode .category-title::after { content: '▼'; font-size: 10px; color: #aaa; margin-left: 10px; transition: transform 0.3s; }
+    .admin-mode .collapsed .category-title::after { content: '▶'; transform: rotate(-90deg); }
+
     .group-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       gap: 10px; justify-items: center; width: 100%;
+      transition: max-height 0.3s ease-out, opacity 0.3s;
+      overflow: hidden;
     }
+    
+    /* 收起狀態 */
+    .collapsed .group-grid { max-height: 0; opacity: 0; margin: 0; }
 
     .card {
-      width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
+      width: 100%; max-width: 130px; border: 1px solid #eee;
+      border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden;
+      cursor: pointer;
     }
     .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
     .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
@@ -68,7 +90,8 @@
 
     .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
     .btn-save, .btn-logout, .btn-cancel { 
-      padding: 4px 12px; border-radius: 12px; border: 1px solid #fff; 
+      padding: 4px 12px; border-radius: 12px;
+      border: 1px solid #fff; 
       font-size: 12px; cursor: pointer; color: #fff; background: transparent; 
     }
     .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
@@ -105,8 +128,8 @@
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/2jsL76yB/icon008.png" alt="Loading" class="loading-icon" />
-      <div>正在載入古本資料中...</div>
+      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Loading" class="loading-icon" />
+      <div>正在載入吉伊資料中...</div>
     </div>
   </div>
   
@@ -133,10 +156,8 @@ let supabaseOverrides = {}, pendingChanges = {};
 async function loadData() {
   try {
     if (sbClient) {
-      // 獲取古本專屬的分類顯示設定
-      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_furumoto').single();
+      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_chii').single();
       visibleCategories = config ? (Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value)) : ["吊娃", "娃"];
-      
       const { data: items } = await sbClient.from('chiikawa_data').select('*');
       items?.forEach(row => { supabaseOverrides[row.item_name] = row; });
     }
@@ -147,17 +168,14 @@ async function loadData() {
 
     const tempCats = new Set();
     globalItems = rows.map(row => {
-      const roleField = (row.c[0]?.v || "").toString();
-      const type = (row.c[1]?.v || "其他").toString(); 
-      const itemName = (row.c[3]?.v || "").toString();    
-      
-      // 核心篩選：角色欄包含「古」
-      if (!itemName || !roleField.includes("古")) return null;
+      const roleField = row.c[0]?.v || "";
+      const type = row.c[1]?.v || "其他"; 
+      const itemName = row.c[3]?.v || "";    
+      if (!itemName || !roleField.includes("吉")) return null;
       
       let dbKey = itemName;
       let sbData = null;
-      // 優先匹配古本前綴
-      if (supabaseOverrides["古本" + itemName]) { dbKey = "古本" + itemName; sbData = supabaseOverrides[dbKey]; }
+      if (supabaseOverrides["吉伊" + itemName]) { dbKey = "吉伊" + itemName; sbData = supabaseOverrides[dbKey]; }
       else if (supabaseOverrides[itemName]) { dbKey = itemName; sbData = supabaseOverrides[dbKey]; }
 
       tempCats.add(type);
@@ -175,6 +193,11 @@ async function loadData() {
 }
 
 function renderApp() {
+  if (isAdmin) {
+    document.getElementById("card-container").classList.add("admin-mode");
+  } else {
+    document.getElementById("card-container").classList.remove("admin-mode");
+  }
   renderNavBar();
   renderAdminToggles();
   renderCards();
@@ -199,13 +222,22 @@ function renderAdminToggles() {
 function updateVisibleList(cat, isChecked) {
   if (isChecked) { if(!visibleCategories.includes(cat)) visibleCategories.push(cat); }
   else { visibleCategories = visibleCategories.filter(c => c !== cat); }
+  renderApp(); // 勾選時即時反應卡片容器狀態
+}
+
+function toggleCategoryCollapse(el) {
+    if (!isAdmin) return;
+    const parent = el.parentElement;
+    parent.classList.toggle('collapsed');
+    setTimeout(sendHeight, 350);
 }
 
 function renderCards() {
   const container = document.getElementById("card-container");
   container.innerHTML = "";
-  const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
   
+  const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
+
   catsToDisplay.forEach(cat => {
     const items = globalItems.filter(i => i.type === cat);
     const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("（不顯示）"));
@@ -213,8 +245,17 @@ function renderCards() {
 
     const section = document.createElement("div");
     section.id = `cat-${cat}`;
-    section.className = "category-section";
-    section.innerHTML = `<div class="category-title">${cat}</div>`;
+    
+    // 如果是 Admin 且該分類未勾選，則預設加上 collapsed class
+    const isHidden = !visibleCategories.includes(cat);
+    section.className = `category-section ${isAdmin && isHidden ? 'collapsed' : ''}`;
+    
+    section.innerHTML = `
+        <div class="category-title" onclick="toggleCategoryCollapse(this)">
+            <span>${cat}</span>
+            ${isAdmin && isHidden ? '<span style="font-size:10px; font-weight:normal; color:var(--tab-color); margin-left:10px;">(隱藏中)</span>' : ''}
+        </div>
+    `;
     
     const grid = document.createElement("div");
     grid.className = "group-grid";
@@ -229,7 +270,7 @@ function renderCards() {
         <div style="min-height:25px;">
           ${isAdmin ? renderAdminSelect(item) : `<span class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</span>`}
         </div>
-        <div class="name">${item.name.replace(/^古本/, "")}</div>
+        <div class="name">${item.name.replace(/^吉伊/, "")}</div>
         <div class="price">${isAdmin ? renderAdminPrice(item) : displayPrice}</div>
       `;
       card.onclick = (e) => { 
@@ -260,6 +301,7 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
+  if(s.includes("不顯示")) return "#EEEEEE";
   return "#E7F2F8";
 }
 
@@ -275,7 +317,7 @@ async function handleSaveConfig() {
   if (!confirm("確定要儲存分類顯示設定與商品修改嗎？")) return;
   try {
     const { error: confErr } = await sbClient.from('chiikawa_config').upsert({ 
-      config_key: 'visible_categories_furumoto', 
+      config_key: 'visible_categories_chii', 
       config_value: visibleCategories,
       updated_at: new Date().toISOString()
     }, { onConflict: 'config_key' });
@@ -296,13 +338,19 @@ async function handleSaveConfig() {
     location.reload();
   } catch (e) { 
     console.error(e);
-    alert("儲存失敗");
+    alert("儲存失敗，請檢查控制台錯誤訊息。");
   }
 }
 
 function scrollToCat(cat) {
   const el = document.getElementById(`cat-${cat}`);
-  if (el) window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
+  if (el) {
+      // 如果點擊導覽列，自動展開該類別
+      if (el.classList.contains('collapsed')) {
+          el.classList.remove('collapsed');
+      }
+      window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
+  }
 }
 
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
