@@ -16,7 +16,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ================= 2. 頂部導航欄 (修正按鈕位置與樣式) ================= */
+/* ================= 2. 頂部導航欄 ================= */
 .top-bar {
   background: var(--tab-color); color: #fff; height: 44px; position: fixed;
   top: 0; left: 0; width: 100%; z-index: 999;
@@ -26,15 +26,14 @@ body {
 
 .left-group, .right-group { display: flex; align-items: center; gap: 8px; }
 
-/* 管理員按鈕樣式 (橢圓框) */
+/* 統一橢圓框樣式 */
 .admin-btn-oval {
   background: transparent; border: 1px solid rgba(255,255,255,0.8); color: #fff;
   padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
-  cursor: pointer; display: none; /* 預設隱藏 */
+  cursor: pointer; display: none;
 }
 .admin-btn-oval:active { background: rgba(255,255,255,0.2); }
 
-/* 人像圖示 */
 .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; display: block; }
 
 /* 快速捲動導航條 */
@@ -47,7 +46,7 @@ body {
 .nav-scroll-bar::-webkit-scrollbar { display: none; }
 .nav-item { color: var(--tab-color); cursor: pointer; padding: 2px 4px; font-weight: bold; flex-shrink: 0; }
 
-/* ================= 3. 商品卡片樣式 (高度 200px & 名稱放大) ================= */
+/* ================= 3. 商品卡片樣式 (200px) ================= */
 #card-container { padding: 95px 10px 20px 10px; max-width: 1200px; margin: 0 auto; min-height: 60vh; }
 .category-section { margin-bottom: 30px; width: 100%; scroll-margin-top: 105px; }
 .category-title { display: flex; align-items: center; justify-content: center; margin: 25px 0 15px 0; color: var(--tab-color); font-weight: bold; font-size: 15px; opacity: 0.8; }
@@ -56,7 +55,7 @@ body {
 .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; justify-items: center; width: 100%; }
 
 .card {
-  width: 100%; max-width: 130px; height: 200px; /* 鎖定高度 200px */
+  width: 100%; max-width: 130px; height: 200px; 
   border: 1px solid #eee; border-radius: 12px; background: #fff; 
   position: relative; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
   overflow: hidden; display: flex; flex-direction: column; align-items: center; cursor: pointer;
@@ -64,8 +63,6 @@ body {
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; flex-shrink: 0; }
 .status-badge { display: inline-block; min-width: 50px; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 600; margin-bottom: 2px; }
 .size-tag { font-size: 9px; color: #999; margin: -2px 0 2px 0; height: 10px; flex-shrink: 0; }
-
-/* 商品名稱放大優化 */
 .card .name { 
   margin: 2px 6px; font-size: 12px; font-weight: 700; line-height: 1.2; flex-grow: 1; 
   display: flex; align-items: center; justify-content: center; overflow: hidden; 
@@ -78,12 +75,17 @@ body {
 .admin-select { border: 1px solid #eee; border-radius: 4px; padding: 1px; font-size: 10px; width: 92%; margin-bottom: 3px; background: #fafafa; }
 .admin-price-input { width: 85%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 11px; margin-bottom: 4px; padding: 1px 0; }
 
-/* ================= 4. Modal ================= */
+/* ================= 4. Modal 樣式優化 ================= */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
-.modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; text-align: left; }
+.modal-content { background: #fff; margin: 15% auto; padding: 32px 24px 24px 24px; width: 85%; max-width: 320px; border-radius: 20px; position: relative; text-align: left; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
 .login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-.login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border-radius: 12px; font-weight: bold; cursor: pointer; border:none; }
+.login-btn { width: 100%; padding: 12px; background: var(--tab-color); color: white; border-radius: 12px; font-weight: bold; cursor: pointer; border:none; margin-top: 5px; }
+
+/* 設定頁面特定優化 */
+.batch-control { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 14px; font-weight: bold; }
+.batch-control input { width: 18px; height: 18px; cursor: pointer; }
+.large-select { width: 100%; padding: 12px; font-size: 14px; line-height: 1.5; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; }
 
 #loading-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 180px; left: 50%; transform: translateX(-50%); color: #999; font-weight: bold; gap: 15px; }
 .loading-icon { width: 80px; animation: bounce 0.8s infinite ease-in-out; }
@@ -94,13 +96,12 @@ body {
 
   <div class="top-bar">
     <div class="left-group">
-      <button id="settingsBtn" class="admin-btn-oval" onclick="openSettingsModal()" style="border:none; padding-left:0;">設定</button>
+      <button id="settingsBtn" class="admin-btn-oval" onclick="openSettingsModal()">設定</button>
     </div>
     <div class="right-group">
       <button id="saveBtn" class="admin-btn-oval" style="background: rgba(255,255,255,0.2);" onclick="handleSave()">儲存</button>
       <button id="cancelBtn" class="admin-btn-oval" onclick="handleCancel()">取消</button>
       <button id="logoutBtn" class="admin-btn-oval" onclick="handleLogout()">登出</button>
-      
       <svg id="adminIcon" class="admin-icon" onclick="openLoginModal()" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
     </div>
   </div>
@@ -128,22 +129,31 @@ body {
     <div class="modal-content">
       <span class="close-modal" onclick="closeModal('settingsModal')">&times;</span>
       <h3 style="margin-top:0;">顯示設定</h3>
-      <div class="setting-item" style="margin-bottom:20px;">
+      
+      <div style="margin-bottom:20px;">
         <span style="font-weight:bold; display:block; margin-bottom:10px;">對客戶顯示哪些分類：</span>
-        <div id="typeVisibilityGroup" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div>
+        <div id="typeVisibilityGroup" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
       </div>
-      <div class="setting-item" style="margin-bottom:20px;">
-        <span style="font-weight:bold; display:block; margin-bottom:10px;">批量更改當前頁面狀態：</span>
-        <select id="batchStatusSelect" class="login-input">
+
+      <div style="margin-bottom:20px; padding-top:15px; border-top:1px solid #eee;">
+        <div class="batch-control">
+          <input type="checkbox" id="enableBatchChange">
+          <label for="enableBatchChange">啟用批量更改狀態</label>
+        </div>
+        <select id="batchStatusSelect" class="large-select">
           <option value="現貨">現貨</option>
           <option value="需預訂">需預訂</option>
           <option value="搭飛機中">搭飛機中</option>
           <option value="補貨（不顯示）">補貨（不顯示）</option>
           <option value="已售出（不顯示）">已售出（不顯示）</option>
         </select>
-        <button class="login-btn" style="background:#888;" onclick="applyBatchStatus()">套用</button>
+        <button class="login-btn" style="background:#888;" onclick="applyBatchStatus()">套用至當前分頁</button>
       </div>
-      <button class="login-btn" onclick="closeModal('settingsModal')">完成</button>
+
+      <div style="display:flex; gap:10px;">
+        <button class="login-btn" style="background:#aaa;" onclick="closeModal('settingsModal')">取消</button>
+        <button class="login-btn" onclick="confirmSettings()">完成</button>
+      </div>
     </div>
   </div>
 
@@ -201,15 +211,20 @@ function renderUI(){
   const activeTypes = new Set();
 
   globalItems.forEach(item => {
+    // 過濾：如果不顯示該類型，則跳過
+    if (hiddenTypes.includes(item.type)) return;
+    
+    // 如果不是管理員，則過濾隱藏狀態的商品
     if (!isAdmin) {
-      if (hiddenTypes.includes(item.type)) return;
       if (item.status && (item.status.includes("不顯示") || item.status.includes("已售出"))) return;
     }
+    
     if (!groups[item.type]) groups[item.type] = [];
     groups[item.type].push(item);
     activeTypes.add(item.type);
   });
 
+  // 生成導航條 (僅顯示未隱藏的類型)
   Array.from(activeTypes).forEach(type => {
     const navItem = document.createElement("div");
     navItem.className = "nav-item"; navItem.innerText = type;
@@ -217,6 +232,7 @@ function renderUI(){
     nav.appendChild(navItem);
   });
 
+  // 渲染卡片
   Object.keys(groups).forEach(type => {
     const section = document.createElement("div");
     section.className = "category-section"; section.id = "section-" + type;
@@ -257,31 +273,44 @@ function handleLogin() {
   const id = document.getElementById("adminId").value, pwd = document.getElementById("adminPwd").value;
   if (id === "1050267" && pwd === "Penny01!") {
     isAdmin = true; closeModal('loginModal');
-    // 切換按鈕與圖示
     document.getElementById("adminIcon").style.display = "none";
     document.getElementById("settingsBtn").style.display = "block";
     document.getElementById("saveBtn").style.display = "block";
     document.getElementById("cancelBtn").style.display = "block";
     document.getElementById("logoutBtn").style.display = "block";
     
-    const allTypes = [...new Set(globalItems.map(i => i.type))];
-    document.getElementById("typeVisibilityGroup").innerHTML = allTypes.map(t => `<label style="font-size:12px; display:flex; align-items:center; gap:5px;"><input type="checkbox" checked onchange="toggleTypeVisibility('${t}', this.checked)"> ${t}</label>`).join("");
+    // 初始化設定選單的分類勾選框
+    updateTypeCheckboxes();
     renderUI();
   } else alert("帳號或密碼錯誤");
 }
 
-function handleLogout() { if(confirm("確定登出管理員模式？")) location.reload(); }
-function handleCancel() { if(confirm("取消所有更改並重新載入？")) location.reload(); }
+function updateTypeCheckboxes() {
+  const allTypes = [...new Set(globalItems.map(i => i.type))];
+  document.getElementById("typeVisibilityGroup").innerHTML = allTypes.map(t => 
+    `<label style="font-size:14px; display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" ${hiddenTypes.includes(t) ? '' : 'checked'} onchange="toggleTypeVisibility('${t}', this.checked)"> ${t}
+    </label>`
+  ).join("");
+}
 
 function toggleTypeVisibility(type, isVisible) {
   if (isVisible) hiddenTypes = hiddenTypes.filter(t => t !== type);
   else if (!hiddenTypes.includes(type)) hiddenTypes.push(type);
+}
+
+function confirmSettings() {
   renderUI();
+  closeModal('settingsModal');
 }
 
 function applyBatchStatus() {
+  if (!document.getElementById("enableBatchChange").checked) {
+    alert("請先勾選「啟用批量更改狀態」方可執行操作。");
+    return;
+  }
   const newStatus = document.getElementById("batchStatusSelect").value;
-  if(confirm(`確定將目前分頁全部商品改為「${newStatus}」？`)) {
+  if(confirm(`確定將當前角色全部商品改為「${newStatus}」？`)) {
     globalItems.forEach(item => stageChange(item.name, 'status', newStatus));
     renderUI();
   }
@@ -289,13 +318,16 @@ function applyBatchStatus() {
 
 async function handleSave() {
   const keys = Object.keys(pendingChanges);
-  if (!keys.length) return alert("無修改");
+  if (!keys.length) return alert("無修改需要儲存");
   if (confirm(`確定儲存變更？`)) {
     const updates = keys.map(k => ({ item_name: k, status: pendingChanges[k].status, price: pendingChanges[k].price }));
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     if (error) alert("儲存失敗"); else { alert("儲存成功！"); pendingChanges = {}; loadSheetData(); }
   }
 }
+
+function handleLogout() { if(confirm("確定登出管理員模式？")) location.reload(); }
+function handleCancel() { if(confirm("取消所有更改並重新載入？")) location.reload(); }
 
 function stageChange(name, field, value) {
   if(!pendingChanges[name]) {
@@ -314,7 +346,10 @@ function getStatusBg(s) {
   return "#E7F2F8";
 }
 
-function openSettingsModal() { document.getElementById("settingsModal").style.display = "block"; }
+function openSettingsModal() { 
+  updateTypeCheckboxes();
+  document.getElementById("settingsModal").style.display = "block"; 
+}
 function closeModal(id) { document.getElementById(id).style.display = "none"; }
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
