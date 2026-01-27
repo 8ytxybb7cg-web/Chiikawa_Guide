@@ -184,24 +184,6 @@
   </div>
 
 <script>
-const frame = document.getElementById('content-frame');
-
-/* ✅ 關鍵：iframe 載入後隱藏子頁 nav-bar，但保留 top-bar */
-frame.addEventListener('load', () => {
-  try {
-    const doc = frame.contentDocument || frame.contentWindow.document;
-    if (!doc) return;
-
-    const style = doc.createElement('style');
-    style.textContent = `
-      .nav-bar { display: none !important; }
-    `;
-    doc.head.appendChild(style);
-  } catch (e) {
-    console.warn('iframe style inject failed:', e);
-  }
-});
-
   // [新增] Supabase Config
   const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi'; // 使用 Public Key
