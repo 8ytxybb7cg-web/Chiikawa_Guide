@@ -20,7 +20,6 @@
       margin: 0; padding: 0; width: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; color: #333333; text-align: center;
-      scroll-behavior: smooth;
     }
     .logo-container { text-align: center; margin-top: 25px; }
     .logo-container img { width: 70px; height: auto; }
@@ -39,32 +38,8 @@
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; white-space: nowrap; }
 
-    /* 子頁面容器：實現 Sticky 效果 */
-    #main-content { 
-      width: 100%; 
-      position: relative; 
-      min-height: 100vh;
-    }
-    
-    /* 核心邏輯：讓 iframe 的導航列 (44px + 45px 左右) 鎖定 */
-    #content-frame { 
-      width: 100%; 
-      border: none; 
-      display: block;
-      /* 初始狀態：不裁切，讓使用者看到子頁面頂部 */
-      margin-top: 0;
-      transition: transform 0.1s;
-    }
-
-    /* 懸浮導航鎖定樣式 */
-    .sticky-nav {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      height: 90px; /* 這裡對應子頁面頂部 Bar 的高度 */
-      overflow: hidden;
-      background: #fff;
-    }
+    #main-content { width: 100%; position: relative; }
+    #content-frame { width: 100%; border: none; margin-top: -44px; clip-path: inset(44px 0 0 0); display: block; }
 
     .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -81,7 +56,7 @@
     .btn-close { color: #aaa; font-size: 14px; margin-top: 15px; cursor: pointer; background: none; border: none; text-decoration: underline; }
 
     #cart-badge {
-      position: fixed; bottom: 35px; right: 20px; background: #d77485; color: white; width: 55px; height: 55px; 
+      position: fixed; bottom: 35px; right: 20px; background: #d77485; color: white; width: 60px; height: 60px; 
       border-radius: 50%; display: flex; justify-content: center; align-items: center;
       box-shadow: 0 4px 15px rgba(215, 116, 133, 0.4); cursor: pointer; z-index: 9999;
     }
@@ -98,35 +73,12 @@
     .cart-item-price { font-size: 13px; color: #d77485; font-weight: 500; }
     .remove-item { color: #ddd; cursor: pointer; font-size: 20px; padding: 0 5px; }
 
-    /* Footer 縮減高度與間距 */
-    .bottom-bar { 
-      padding: 15px 0; 
-      background-color: #dac7b7; 
-      color: #fff; 
-      margin-top: 30px; 
-      font-size: 11px;
-    }
-    .contact-icons { 
-      display: flex; 
-      justify-content: center; 
-      gap: 30px; 
-      margin-bottom: 8px; 
-    }
-    .contact-icons a { 
-      color: white; 
-      text-decoration: none; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      gap: 4px; 
-      font-size: 11px; 
-      font-weight: 500; 
-    }
-    .icon-img { 
-      width: 24px; 
-      height: 24px; 
-      object-fit: contain; 
-    }
+    /* 優化後的 Footer */
+    .bottom-bar { padding: 20px 0; background-color: #dac7b7; color: #fff; margin-top: 25px; font-size: 11px; }
+    .contact-icons { display: flex; justify-content: center; gap: 30px; margin-bottom: 12px; }
+    .contact-icons a { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; }
+    .icon-img { width: 28px; height: 28px; object-fit: contain; transition: transform 0.2s; }
+    .icon-img:hover { transform: scale(1.1); }
   </style>
 </head>
 <body>
@@ -135,7 +87,6 @@
     <img src="./IMG_7282.png" alt="Chiikawa Logo" />
   </div>
   <h1>Chiikawa 寶寶圖鑑</h1>
-  
   <div class="tabs" id="tabs"></div>
 
   <div id="main-content">
@@ -166,7 +117,7 @@
   </div>
 
   <div id="cart-badge" onclick="toggleCart()">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
     <div id="cart-count">0</div>
   </div>
 
@@ -217,7 +168,6 @@
         activeRoleName = role.name;
         document.documentElement.style.setProperty('--tab-color', role.color);
         frame.src = role.url;
-        window.scrollTo({top: frame.offsetTop, behavior: 'smooth'});
       };
       tabsContainer.appendChild(tab);
     });
@@ -225,27 +175,10 @@
     updateCartUI();
   }
 
-  // 子頁面 Sticky 鎖定邏輯
-  window.addEventListener('scroll', function() {
-    const frameTop = document.getElementById('main-content').offsetTop;
-    const scrollTop = window.pageYOffset;
-    
-    // 當捲動超過 iframe 起點時
-    if (scrollTop >= frameTop) {
-        // 透過裁切與負 margin 的組合，模擬頂部 Bar 被「吸住」的效果
-        frame.style.position = 'fixed';
-        frame.style.top = '0';
-        frame.style.clipPath = 'inset(0 0 0 0)';
-    } else {
-        frame.style.position = 'relative';
-        frame.style.top = 'auto';
-    }
-  });
-
   window.addEventListener('message', function(e) {
     if (e.data.height) frame.style.height = e.data.height + 'px';
     if (e.data.type === 'openModal') {
-      currentItem = { ...e.data.item }; // 不再重新附加 category
+      currentItem = { ...e.data.item, category: activeRoleName };
       document.getElementById("modalImg").src = currentItem.img;
       document.getElementById("modalName").textContent = currentItem.name;
       document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : '$' + currentItem.price;
@@ -280,8 +213,8 @@
       total += p * item.qty; itemsCount += item.qty;
       const div = document.createElement("div");
       div.className = "cart-item";
-      // 顯示名稱時移除 [角色名稱]，直接用 item.name
-      div.innerHTML = `<img src="${item.img}"><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">$${item.price} x ${item.qty}</div></div><div class="remove-item" onclick="removeItem(${idx})">&times;</div>`;
+      // 這裡購物車顯示依然保留類別，方便用戶確認
+      div.innerHTML = `<img src="${item.img}"><div class="cart-item-info"><div class="cart-item-name">[${item.category}] ${item.name}</div><div class="cart-item-price">$${item.price} x ${item.qty}</div></div><div class="remove-item" onclick="removeItem(${idx})">&times;</div>`;
       list.appendChild(div);
     });
     count.textContent = itemsCount;
@@ -300,7 +233,7 @@
       const p = parseFloat(item.price) || 0;
       const subtotal = p * item.qty;
       total += subtotal;
-      // 訊息內容直接使用 item.name
+      // 這裡修改為直接使用項目名稱，不加 [角色名稱]
       text += `【${idx + 1}】 ${item.name}\n數量：${item.qty}\n價格：${p === 0 ? '需預訂/查詢' : '$' + subtotal}\n\n`;
     });
     text += "------------------\n";
