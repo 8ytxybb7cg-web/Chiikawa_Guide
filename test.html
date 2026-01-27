@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣小八</title>
+  <title>出賣小八 - 管理系統</title>
   
   <link rel="icon" href="https://i.postimg.cc/Ss5kqJ3L/icon002.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -82,7 +82,7 @@
   <div id="card-container">
     <div id="loading-msg">
       <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
-      <div>正在載入小八資料中...</div>
+      <div>正在載入資料中...</div>
     </div>
   </div>
 
@@ -90,8 +90,8 @@
     <div class="modal-content" style="text-align:center;">
       <span class="close-modal" onclick="closeModal('loginModal')">&times;</span>
       <h3>管理員登入</h3>
-      <input type="text" id="adminId" class="login-input" placeholder="ID">
-      <input type="password" id="adminPwd" class="login-input" placeholder="Password">
+      <input type="text" id="adminId" class="login-input" placeholder="帳號">
+      <input type="password" id="adminPwd" class="login-input" placeholder="密碼">
       <button class="login-btn" onclick="handleLogin()">登入</button>
     </div>
   </div>
@@ -100,10 +100,11 @@
     <div class="modal-content">
       <span class="close-modal" onclick="closeModal('settingsModal')">&times;</span>
       <h3 style="text-align:center;">展示分類設定</h3>
-      <div id="typeCheckboxes" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;"></div>
+      <p style="font-size:12px; color:#888; text-align:center;">只有被選中的分類會顯示在首頁</p>
+      <div id="typeCheckboxes" style="display:flex; flex-direction:column; gap:10px; margin: 15px 0;"></div>
       <div style="display:flex; gap:10px;">
-        <button style="flex:1; padding:10px; background:#ddd; border:none; border-radius:8px;" onclick="closeModal('settingsModal')">取消</button>
-        <button style="flex:1; padding:10px; background:var(--tab-color); color:white; border:none; border-radius:8px;" onclick="saveSettings()">儲存</button>
+        <button style="flex:1; padding:10px; background:#ddd; border:none; border-radius:8px; cursor:pointer;" onclick="closeModal('settingsModal')">取消</button>
+        <button style="flex:1; padding:10px; background:var(--tab-color); color:white; border:none; border-radius:8px; cursor:pointer;" onclick="saveSettings()">儲存至雲端</button>
       </div>
     </div>
   </div>
@@ -116,18 +117,26 @@ const sheetName = "小八";
 const CONFIG_KEY = "HACHI_CONFIG"; 
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {}, allTypes = new Set(), allowedTypes = null;
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {}, allTypes = new Set();
+let allowedTypes = []; // 預設空數組
+let hasConfigInDB = false; // 標記資料庫是否存在設定
 
 async function loadSheetData(){
   try {
+    // 1. 從 Supabase 讀取資料
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
         supabaseOverrides = {};
+        hasConfigInDB = false;
         data.forEach(row => { 
           if(row.item_name === CONFIG_KEY) {
-              // 修正點：嚴格解析分類，避免空字串導致全部勾選
-              allowedTypes = row.status ? row.status.split(',').filter(s => s !== "") : null;
+              // 嚴格讀取設定列
+              const saved = row.status ? row.status.split(',').map(s => s.trim()).filter(s => s !== "") : [];
+              if (saved.length > 0) {
+                  allowedTypes = saved;
+                  hasConfigInDB = true;
+              }
           } else {
               supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
           }
@@ -135,6 +144,7 @@ async function loadSheetData(){
       }
     }
 
+    // 2. 從 Google Sheet 讀取原始資料
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${encodeURIComponent(sheetName)}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
@@ -148,8 +158,10 @@ async function loadSheetData(){
       let rawName = row.c[1]?.v || "";
       let imgUrl = row.c[3]?.v || "https://i.postimg.cc/bv5xRs04/image.png";
       if (!rawName) return;
+      
       let dbKey = `小八${rawName}`;
       allTypes.add(rawType);
+      
       let sbData = supabaseOverrides[dbKey];
       globalItems.push({
         dbName: dbKey, displayName: rawName, type: rawType,
@@ -157,39 +169,53 @@ async function loadSheetData(){
       });
     });
 
-    // 如果資料庫沒設定，才預設為全部
-    if(!allowedTypes) allowedTypes = Array.from(allTypes);
+    // 3. 邏輯判定：如果資料庫完全沒這筆設定，才自動顯示「全部」
+    if(!hasConfigInDB) {
+      allowedTypes = Array.from(allTypes);
+    }
+
     renderApp();
   } catch (e) { 
-    console.error(e);
+    console.error("載入失敗:", e);
   }
 }
 
-function renderApp() { renderNavBar(); renderCards(); }
+function renderApp() { 
+  renderNavBar(); 
+  renderCards(); 
+}
 
 function renderNavBar() {
   const nav = document.getElementById("nav-bar");
   nav.innerHTML = "";
-  Array.from(allTypes).filter(t => allowedTypes.includes(t)).forEach(type => {
-    const item = document.createElement("div");
-    item.className = "nav-item";
-    item.innerText = type;
-    item.onclick = () => {
-      const el = document.getElementById("cat-" + type);
-      if(el) window.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
-    };
-    nav.appendChild(item);
-  });
+  // 導覽列只顯示被勾選的分類
+  Array.from(allTypes)
+    .filter(t => allowedTypes.includes(t))
+    .forEach(type => {
+      const item = document.createElement("div");
+      item.className = "nav-item";
+      item.innerText = type;
+      item.onclick = () => {
+        const el = document.getElementById("cat-" + type);
+        if(el) window.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
+      };
+      nav.appendChild(item);
+    });
 }
 
 function renderCards(){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   
-  const validItems = globalItems.filter(i => allowedTypes.includes(i.type) && (isAdmin || !i.status.includes("（不顯示）")));
+  // 過濾邏輯
+  const validItems = globalItems.filter(i => 
+    allowedTypes.includes(i.type) && (isAdmin || !i.status.includes("（不顯示）"))
+  );
   
-  // 依照 allowedTypes 的順序顯示
-  allowedTypes.forEach(t => {
+  // 依據原始分類順序排列，但只渲染 allowedTypes 內的
+  Array.from(allTypes).forEach(t => {
+    if (!allowedTypes.includes(t)) return;
+
     const items = validItems.filter(i => i.type === t);
     if(items.length) {
       const sec = document.createElement("div");
@@ -254,42 +280,46 @@ function handleLogin() {
     document.getElementById("loginIcon").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
     renderCards();
-  } else alert("錯誤");
+  } else alert("資料錯誤");
 }
 
 function openSettingsModal() {
   const container = document.getElementById("typeCheckboxes");
-  // 修正點：確保彈窗內的 checkbox 狀態精準反映 allowedTypes
+  // 渲染時嚴格對照目前記憶體中的 allowedTypes (這來自 Supabase)
   container.innerHTML = Array.from(allTypes).map(t => `
-    <label style="font-size:12px; background:#f4f4f4; padding:4px 8px; border-radius:12px; cursor:pointer;">
-      <input type="checkbox" value="${t}" ${allowedTypes.includes(t)?'checked':''}> ${t}
+    <label style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f4f4f4; padding:10px; border-radius:10px; cursor:pointer;">
+      <input type="checkbox" class="type-cfg" value="${t}" ${allowedTypes.includes(t) ? 'checked' : ''}> 
+      <span>${t}</span>
     </label>
   `).join('');
   document.getElementById("settingsModal").style.display = "block";
 }
 
 async function saveSettings() {
-  const newAllowed = Array.from(document.querySelectorAll("#typeCheckboxes input:checked")).map(i => i.value);
-  if(newAllowed.length === 0) { alert("請至少選擇一個分類"); return; }
+  const checked = Array.from(document.querySelectorAll(".type-cfg:checked")).map(i => i.value);
+  if(checked.length === 0) { alert("請至少選擇一個分類"); return; }
 
+  // 上傳到 Supabase
   const { error } = await sbClient.from('chiikawa_data').upsert({ 
       item_name: CONFIG_KEY, 
-      status: newAllowed.join(","), 
+      status: checked.join(","), 
       price: "0" 
   }, { onConflict: 'item_name' });
 
   if(!error) { 
-      allowedTypes = newAllowed; // 同步記憶體
-      alert("分類設定已儲存");
-      closeModal("settingsModal"); 
+      // 成功後，立即更新本地變數並重新渲染
+      allowedTypes = checked; 
+      hasConfigInDB = true; 
+      alert("分類設定已同步至雲端並套用");
+      closeModal('settingsModal'); 
       renderApp(); 
   } else {
-      alert("儲存失敗，請檢查權限");
+      alert("儲存至 Supabase 失敗，請檢查網路或權限");
   }
 }
 
 function closeModal(id) { document.getElementById(id).style.display = "none"; }
-function handleCancel() { location.reload(); }
+function handleCancel() { if(confirm("捨棄未儲存的變更？")) location.reload(); }
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 loadSheetData();
