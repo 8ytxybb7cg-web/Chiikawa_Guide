@@ -9,7 +9,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* 保持原有的 CSS 樣式不變 */
     :root { --tab-color: #6293b8; --header-height: 44px; --nav-height: 36px; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center; -webkit-font-smoothing: antialiased; padding-top: calc(var(--header-height) + var(--nav-height)); }
     .top-bar { background: var(--tab-color); color: #fff; height: var(--header-height); position: fixed; top: 0; left: 0; width: 100%; z-index: 999; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
@@ -103,17 +102,15 @@
 <script>
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
-// 更新為新的 Google Sheet ID
 const SHEET_ID  = "1vjly0jcLdSq1lwSgWkn9OljQ27gMQm_0";
-const sheetName = "小八"; // 指定分頁名稱
-const CONFIG_KEY = "HACHI_CONFIG"; // 小八專用的設定 Key
+const sheetName = "小八"; 
+const CONFIG_KEY = "HACHI_CONFIG"; 
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {}, allTypes = new Set(), allowedTypes = [];
 
 async function loadSheetData(){
   try {
-    // 1. 先抓取 Supabase 的覆蓋資料
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
@@ -125,31 +122,31 @@ async function loadSheetData(){
       }
     }
 
-    // 2. 抓取 Google 試算表資料
     const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${encodeURIComponent(sheetName)}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
-    const rows = data.table.rows || [];
+    
+    // 跳過 Row 1 (標題列)
+    const rows = (data.table.rows || []).slice(1);
 
     globalItems = []; 
     allTypes.clear();
 
     rows.forEach((row) => {
-      // 根據新表格：B欄(index 1)是類型, D欄(index 3)是商品名稱, L欄(index 11)是圖片
-      let rawName = row.c[3]?.v || "";
-      let rawType = row.c[1]?.v || "其他";
+      // Column A (0) = 分類, Column B (1) = 商品名稱, Column L (11) = 圖片連結
+      let rawType = row.c[0]?.v || "其他";
+      let rawName = row.c[1]?.v || "";
       let imgUrl = row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png";
 
       if (!rawName) return;
 
-      // 強制加上「角色前綴」作為資料庫唯一 ID
       let dbKey = `小八${rawName}`;
       allTypes.add(rawType);
 
       let sbData = supabaseOverrides[dbKey];
       globalItems.push({
-        dbName: dbKey,        // 資料庫用的完整名稱
-        displayName: rawName,  // 介面顯示的簡短名稱
+        dbName: dbKey,
+        displayName: rawName,
         type: rawType,
         price: sbData?.price || "",
         status: sbData?.status || "現貨",
@@ -159,7 +156,10 @@ async function loadSheetData(){
 
     if(allowedTypes.length === 0) allowedTypes = Array.from(allTypes);
     renderApp();
-  } catch (e) { console.error("載入失敗:", e); }
+  } catch (e) { 
+    console.error("載入失敗:", e); 
+    document.getElementById("loading-msg").innerText = "載入失敗，請檢查網路或權限。";
+  }
 }
 
 function renderApp() { renderNavBar(); renderCards(); }
@@ -183,7 +183,6 @@ function renderCards(){
   const container = document.getElementById("card-container");
   container.innerHTML = "";
   
-  // 過濾邏輯：只顯示在允許清單內的，且非管理員不顯示「（不顯示）」狀態
   const validItems = globalItems.filter(i => allowedTypes.includes(i.type) && (isAdmin || !i.status.includes("（不顯示）")));
   
   allowedTypes.forEach(t => {
@@ -250,13 +249,10 @@ async function handleSave() {
       alert("儲存成功！"); 
       pendingChanges = {}; 
       loadSheetData(); 
-    } else {
-      alert("儲存失敗，請檢查權限。");
-    }
+    } else { alert("儲存失敗。"); }
   }
 }
 
-// 登入與基礎功能
 function handleAuthClick() {
   if(isAdmin) { if(confirm("確定要登出嗎？")) location.reload(); }
   else document.getElementById("loginModal").style.display = "block";
@@ -271,7 +267,7 @@ function handleLogin() {
     document.getElementById("loginIcon").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
     renderCards();
-  } else alert("登入失敗");
+  } else alert("失敗");
 }
 
 function openSettingsModal() {
