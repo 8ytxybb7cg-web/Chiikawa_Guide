@@ -16,11 +16,13 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
     }
+
     .loading-icon {
       width: 20%; max-width: 100px; height: auto; margin-bottom: 10px;
       animation: bounce 0.8s infinite ease-in-out;
     }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
     .header-wrapper {
       position: fixed; top: 0; left: 0; width: 100%; z-index: 999;
       background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -40,13 +42,16 @@
       font-size: 14px; color: #666; text-decoration: none; font-weight: 600;
       cursor: pointer; padding: 4px 10px; border-radius: 15px;
     }
+
     .admin-panel {
       display: none; background: #fff; padding: 20px; margin-top: 90px;
       border-bottom: 2px dashed var(--tab-color); text-align: left;
     }
     .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
+
     #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
     .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
+    
     .category-title { 
       font-size: 18px; font-weight: bold; margin-bottom: 15px; 
       padding: 5px 10px; border-left: 5px solid var(--tab-color); color: #444;
@@ -56,11 +61,13 @@
     .admin-mode .category-title:hover { background: #f5eeeb; }
     .admin-mode .category-title::after { content: '▼'; font-size: 10px; color: #aaa; margin-left: 10px; transition: transform 0.3s; }
     .admin-mode .collapsed .category-title::after { content: '▶'; transform: rotate(-90deg); }
+
     .group-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       gap: 10px; justify-items: center; width: 100%; transition: max-height 0.3s ease-out, opacity 0.3s; overflow: hidden;
     }
     .collapsed .group-grid { max-height: 0; opacity: 0; margin: 0; }
+
     .card {
       width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
@@ -70,17 +77,21 @@
     .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
     .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
     .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+
     .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
     .btn-save, .btn-logout, .btn-cancel { 
       padding: 4px 12px; border-radius: 12px; border: 1px solid #fff; 
       font-size: 12px; cursor: pointer; color: #fff; background: transparent; 
     }
     .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
+    
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
     .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
     .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer; line-height: 1; }
+
     input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
     .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
     .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 11px; margin-bottom: 5px; width: 90%; }
     .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; margin-bottom: 4px; }
   </style>
@@ -100,7 +111,7 @@
   </div>
 
   <div id="adminPanel" class="admin-panel">
-    <h4 style="margin:0 0 10px 0; color: var(--tab-color);">管理員權限：勾選開放顯示的師傅種類</h4>
+    <h4 style="margin:0 0 10px 0; color: var(--tab-color);">管理員權限：勾選開放顯示的種類</h4>
     <div id="category-toggles"></div>
   </div>
 
@@ -127,23 +138,16 @@ const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
 
-let sbClient = null;
-if (typeof supabase !== 'undefined') {
-  sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
-
+let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], allCategories = [], visibleCategories = [];
 let supabaseOverrides = {}, pendingChanges = {};
 
 async function loadData() {
   try {
     if (sbClient) {
+      // 師傅專屬的 Config Key
       const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_shifu').single();
-      if (config) {
-        visibleCategories = typeof config.config_value === 'string' ? JSON.parse(config.config_value) : config.config_value;
-      } else {
-        visibleCategories = ["吊娃", "娃"];
-      }
+      visibleCategories = config ? (Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value)) : ["吊娃", "娃"];
       
       const { data: items } = await sbClient.from('chiikawa_data').select('*');
       items?.forEach(row => { supabaseOverrides[row.item_name] = row; });
@@ -159,13 +163,20 @@ async function loadData() {
       const type = row.c[1]?.v || "其他"; 
       const itemName = row.c[3]?.v || "";    
       
+      // 過濾條件換成「獺」
       if (!itemName || !roleField.includes("獺")) return null;
       
       let dbKey = itemName;
       let sbData = null;
       
-      if (supabaseOverrides["師傅" + itemName]) { dbKey = "師傅" + itemName; sbData = supabaseOverrides[dbKey]; }
-      else if (supabaseOverrides[itemName]) { dbKey = itemName; sbData = supabaseOverrides[dbKey]; }
+      // 優先尋找帶有「師傅」前綴的覆寫資料
+      if (supabaseOverrides["師傅" + itemName]) { 
+        dbKey = "師傅" + itemName; 
+        sbData = supabaseOverrides[dbKey]; 
+      } else if (supabaseOverrides[itemName]) { 
+        dbKey = itemName; 
+        sbData = supabaseOverrides[dbKey]; 
+      }
 
       tempCats.add(type);
       return {
@@ -178,13 +189,16 @@ async function loadData() {
     renderApp();
   } catch (e) {
     console.error(e);
-    document.getElementById("loading-msg").innerText = "載入失敗: " + e.message;
+    document.getElementById("loading-msg").innerText = "載入失敗";
   }
 }
 
 function renderApp() {
-  const container = document.getElementById("card-container");
-  isAdmin ? container.classList.add("admin-mode") : container.classList.remove("admin-mode");
+  if (isAdmin) {
+    document.getElementById("card-container").classList.add("admin-mode");
+  } else {
+    document.getElementById("card-container").classList.remove("admin-mode");
+  }
   renderNavBar();
   renderAdminToggles();
   renderCards();
@@ -214,13 +228,15 @@ function updateVisibleList(cat, isChecked) {
 
 function toggleCategoryCollapse(el) {
     if (!isAdmin) return;
-    el.parentElement.classList.toggle('collapsed');
+    const parent = el.parentElement;
+    parent.classList.toggle('collapsed');
     setTimeout(sendHeight, 350);
 }
 
 function renderCards() {
   const container = document.getElementById("card-container");
   container.innerHTML = "";
+  
   const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
 
   catsToDisplay.forEach(cat => {
@@ -230,6 +246,7 @@ function renderCards() {
 
     const section = document.createElement("div");
     section.id = `cat-${cat}`;
+    
     const isHidden = !visibleCategories.includes(cat);
     section.className = `category-section ${isAdmin && isHidden ? 'collapsed' : ''}`;
     
@@ -280,8 +297,11 @@ function renderAdminPrice(item) {
 }
 
 function getStatusBg(s) {
-  const colors = {"現貨": "#FFF4BD", "需預訂": "#D4BBDD", "搭飛機中": "#C1E1C1"};
-  return colors[s] || (s.includes("不顯示") ? "#EEEEEE" : "#E7F2F8");
+  if(s==="現貨") return "#FFF4BD";
+  if(s==="需預訂") return "#D4BBDD";
+  if(s==="搭飛機中") return "#C1E1C1";
+  if(s.includes("不顯示")) return "#EEEEEE";
+  return "#E7F2F8";
 }
 
 function stageChange(name, field, value) {
@@ -292,45 +312,41 @@ function stageChange(name, field, value) {
   pendingChanges[name][field] = value;
 }
 
-// 修正後的儲存函數
 async function handleSaveConfig() {
   if (!confirm("確定要儲存分類顯示設定與商品修改嗎？")) return;
-  
   try {
-    // 1. 儲存分類 (使用 stringify 確保格式相容)
     const { error: confErr } = await sbClient.from('chiikawa_config').upsert({ 
       config_key: 'visible_categories_shifu', 
-      config_value: JSON.stringify(visibleCategories), 
+      config_value: visibleCategories,
       updated_at: new Date().toISOString()
     }, { onConflict: 'config_key' });
-    
-    if (confErr) throw new Error("分類儲存失敗: " + confErr.message);
+    if (confErr) throw confErr;
 
-    // 2. 儲存商品變更
     const updates = Object.keys(pendingChanges).map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
     }));
-
     if (updates.length > 0) {
       const { error: itemErr } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
-      if (itemErr) throw new Error("商品資料儲存失敗: " + itemErr.message);
+      if (itemErr) throw itemErr;
     }
 
     alert("儲存成功！");
     location.reload();
   } catch (e) { 
     console.error(e);
-    alert(e.message);
+    alert("儲存失敗，請檢查控制台錯誤訊息。");
   }
 }
 
 function scrollToCat(cat) {
   const el = document.getElementById(`cat-${cat}`);
   if (el) {
-      el.classList.remove('collapsed');
+      if (el.classList.contains('collapsed')) {
+          el.classList.remove('collapsed');
+      }
       window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
   }
 }
