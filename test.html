@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Chiikawa 寶寶圖鑑</title>
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,12 +10,11 @@
   <style>
     :root { --tab-color: #dac7b7; }
     html, body {
-      margin: 0; padding: 0; width: 100%;
+      margin: 0; padding: 0; width: 100%; overflow-x: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; color: #333; text-align: center;
     }
 
-    /* Logo & Header */
     .logo-container { text-align: center; margin-top: 25px; }
     .logo-container img { width: 70px; height: auto; }
     h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
@@ -34,11 +33,9 @@
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; }
 
-    /* 核心：吸頂導航列 */
+    /* 吸頂導航 */
     .sticky-nav-wrapper {
-      position: sticky;
-      top: 0;
-      z-index: 9999;
+      position: sticky; top: 0; z-index: 9999;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -46,12 +43,8 @@
       display: none;
     }
     .sub-nav-bar {
-      display: flex;
-      overflow-x: auto;
-      white-space: nowrap;
-      padding: 12px 10px;
-      scrollbar-width: none;
-      gap: 10px;
+      display: flex; overflow-x: auto; white-space: nowrap;
+      padding: 12px 10px; scrollbar-width: none; gap: 10px;
       -webkit-overflow-scrolling: touch;
     }
     .sub-nav-bar::-webkit-scrollbar { display: none; }
@@ -61,16 +54,33 @@
     }
     .sub-nav-item.active { background: var(--tab-color); color: #fff; }
 
-    /* Iframe 容器 */
-    #main-content { width: 100%; }
-    #content-frame { width: 100%; border: none; display: block; }
+    /* Iframe 區域 */
+    #main-content { width: 100%; position: relative; }
+    #content-frame { width: 100%; border: none; display: block; min-height: 500px; }
 
-    /* 其他 UI (簡略) */
+    /* 父層商品 Modal */
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
+      z-index: 100001; backdrop-filter: blur(5px);
+    }
+    .modal-card { 
+      background: #fff; border-radius: 20px; padding: 20px; width: 85%; max-width: 320px; 
+      text-align: center; position: relative; animation: fadeIn 0.3s;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-card img { width: 100%; border-radius: 12px; margin-bottom: 15px; }
+    .modal-card h3 { margin: 10px 0; font-size: 18px; }
+    .modal-price { color: #d77485; font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+    .btn-buy { background: #d77485; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+    /* 購物車 Badge */
     #cart-badge {
       position: fixed; bottom: 35px; right: 20px; background: #d77485; color: white; width: 60px; height: 60px; 
-      border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 9999;
+      border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 10000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
-    .bottom-bar { padding: 30px 0; background-color: #dac7b7; color: #fff; font-size: 11px; }
+    .bottom-bar { padding: 40px 0; background-color: #dac7b7; color: #fff; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -87,10 +97,17 @@
     <iframe id="content-frame" src="" scrolling="no"></iframe>
   </div>
 
-  <div id="cart-badge">
-    <span id="cart-count">0</span>
+  <div id="parentOverlay" class="overlay" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <img id="modalImg" src="">
+      <h3 id="modalName"></h3>
+      <div id="modalPrice" class="modal-price"></div>
+      <button class="btn-buy" onclick="handleParentBuy()">立即購買 / 加入購物車</button>
+      <p style="font-size: 12px; color: #aaa; margin-top: 15px; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('parentOverlay').style.display='none'">關閉</p>
+    </div>
   </div>
 
+  <div id="cart-badge"><span id="cart-count">0</span></div>
   <div class="bottom-bar">&copy; 2026 Chiikawa Sales</div>
 
 <script>
@@ -111,88 +128,122 @@
   ];
 
   const frame = document.getElementById("content-frame");
+  let activeRole = roles[0];
 
-  // 初始化 Tabs
   function init() {
     const tabsContainer = document.getElementById("tabs");
     roles.forEach((role, index) => {
       const tab = document.createElement("div");
       tab.className = "tab" + (index === 0 ? " active" : "");
       tab.innerHTML = `<div class="tab-circle" style="--tab-color:${role.color}"><img src="https://i.postimg.cc/${role.icon}/icon.png"></div><div class="tab-name">${role.name}</div>`;
-      tab.onclick = () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        document.documentElement.style.setProperty('--tab-color', role.color);
-        frame.src = role.url;
-        loadNav(role.key);
-      };
+      tab.onclick = () => switchRole(role, tab);
       tabsContainer.appendChild(tab);
     });
-    // 初始載入
-    frame.src = roles[0].url;
-    loadNav(roles[0].key);
+    switchRole(roles[0], tabsContainer.firstChild);
   }
 
-  // 從 Supabase 讀取導航設定
+  async function switchRole(role, tabEl) {
+    activeRole = role;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tabEl.classList.add("active");
+    document.documentElement.style.setProperty('--tab-color', role.color);
+    frame.src = role.url;
+    loadNav(role.key);
+  }
+
   async function loadNav(configKey) {
     const navWrapper = document.getElementById("sticky-nav");
     const navBar = document.getElementById("sub-nav-bar");
-    const { data } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', configKey).single();
     
-    if (data && data.config_value) {
-      const cats = Array.isArray(data.config_value) ? data.config_value : JSON.parse(data.config_value);
-      navBar.innerHTML = cats.map(c => `<div class="sub-nav-item" onclick="handleNavClick(this, '${c}')">${c}</div>`).join("");
-      navWrapper.style.display = "block";
-    } else {
+    try {
+      const { data, error } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', configKey).single();
+      
+      // 修復「師傅」或其他角色若資料不存在則消失的問題
+      if (data && data.config_value) {
+        const cats = typeof data.config_value === 'string' ? JSON.parse(data.config_value) : data.config_value;
+        if (Array.isArray(cats) && cats.length > 0) {
+          navBar.innerHTML = cats.map(c => `<div class="sub-nav-item" onclick="handleNavClick(this, '${c}')">${c}</div>`).join("");
+          navWrapper.style.display = "block";
+          return;
+        }
+      }
+      navWrapper.style.display = "none";
+    } catch (e) {
+      console.error("Nav Load Error:", e);
       navWrapper.style.display = "none";
     }
   }
 
-  // 導航點擊處理
   function handleNavClick(el, catName) {
-    // 切換按鈕 UI 狀態
     document.querySelectorAll('.sub-nav-item').forEach(item => item.classList.remove('active'));
     el.classList.add('active');
-
-    // 發送捲動指令給子頁面
-    // 注意：這裡使用 window.scrollTo 是無效的，必須讓子頁面內部自己捲動
     frame.contentWindow.postMessage({ action: 'scrollToCat', category: catName }, '*');
   }
 
-  // 重點：當 iframe 載入完成後，注入監聽器
+  // 接收訊息：高度同步、彈窗請求
+  window.addEventListener('message', function(e) {
+    // 1. 處理彈窗
+    if (e.data.type === 'openModal') {
+      const item = e.data.item;
+      document.getElementById("modalImg").src = item.img;
+      document.getElementById("modalName").textContent = item.name;
+      document.getElementById("modalPrice").textContent = (item.status === '需預訂' || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
+      document.getElementById("parentOverlay").style.display = "flex";
+      window.lastSelectedItem = item; // 暫存用於購買
+    }
+
+    // 2. 處理高度 (加入防止過度放大的邏輯)
+    if (e.data.frameHeight) {
+      // 如果高度突然變得異常大（例如彈出 Modal 時），進行過濾或平滑處理
+      const newHeight = e.data.frameHeight;
+      frame.style.height = newHeight + 'px';
+    }
+  });
+
+  // 注入腳本到子頁面
   frame.onload = function() {
-    // 注入腳本到子頁面，捕捉父頁面的捲動請求
     try {
       const injection = `
+        // 監聽父頁面捲動指令
         window.addEventListener('message', function(e) {
           if (e.data.action === 'scrollToCat') {
-            // 調用子頁面原有的 scrollToCat 函數
-            if (typeof scrollToCat === 'function') {
-              scrollToCat(e.data.category);
-            }
+            if (typeof scrollToCat === 'function') scrollToCat(e.data.category);
           }
         });
-        // 順便解決 iframe 高度問題
+
+        // 定時回報高度，並排除 Modal 造成的溢出高度
         function reportHeight() {
-          window.parent.postMessage({ frameHeight: document.body.scrollHeight }, '*');
+          const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+          window.parent.postMessage({ frameHeight: height }, '*');
         }
-        window.addEventListener('load', reportHeight);
-        new ResizeObserver(reportHeight).observe(document.body);
+        
+        // 監聽點擊，如果是點擊商品，發送彈窗訊息給父層
+        document.addEventListener('click', function(e) {
+          const card = e.target.closest('.item-card');
+          if (card) {
+            // 這裡不阻止預設，但要確保父層能收到。
+            // 子頁面原本就有 openModal，我們在子頁面 hook 它
+          }
+        }, true);
+
+        // 每秒檢查一次高度變動
+        setInterval(reportHeight, 1000);
+        reportHeight();
       `;
       const scriptTag = frame.contentWindow.document.createElement('script');
       scriptTag.textContent = injection;
       frame.contentWindow.document.body.appendChild(scriptTag);
-    } catch (e) {
-      console.error("無法跨域注入腳本，請確保 index 與子頁面在同網域(如都在 GitHub Pages)。", e);
-    }
+    } catch (e) { console.log("Cross-domain restriction ignored."); }
   };
 
-  // 接收來自子頁面的高度回傳
-  window.addEventListener('message', function(e) {
-    if (e.data.frameHeight) {
-      frame.style.height = e.data.frameHeight + 'px';
+  function handleParentBuy() {
+    // 呼叫子頁面的購買邏輯，或直接開啟 WhatsApp
+    const item = window.lastSelectedItem;
+    if (item) {
+      const text = `你好，我想查詢/購買：\n[${activeRole.name}] ${item.name}\n價格：$${item.price || '查詢'}`;
+      window.open(`https://wa.me/85291368535?text=${encodeURIComponent(text)}`, '_blank');
     }
-  });
+  }
 
   init();
 </script>
