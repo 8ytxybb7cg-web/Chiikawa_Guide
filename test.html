@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣Chii仔 - 角色分頁</title>
+  <title>出賣Chii仔</title>
   
   <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -75,11 +75,10 @@ body {
   background: #fff; position: relative; text-align: center; padding-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
 }
-.card:not(.admin-mode):active { transform: scale(0.98); }
-
+.card:active { transform: scale(0.98); }
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
-.card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
+.card .price { font-size: 13px; color: #6293b8; font-weight: bold; margin-bottom: 6px; }
 
 .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
@@ -87,7 +86,7 @@ body {
 .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 3px 5px; font-size: 11px; margin-bottom: 6px; width: 90%; background: #fff; }
 .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 0; margin-bottom: 4px; }
 
-/* ================= 5. Modal ================= */
+/* ================= 5. Modal 與登入 ================= */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
 .modal-content { background: #fff; margin: 20% auto; padding: 32px 24px 24px 24px; width: 80%; max-width: 320px; border-radius: 20px; position: relative; }
 .close-modal { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #aaa; cursor: pointer; }
@@ -108,8 +107,8 @@ body {
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" id="loader-img" alt="Loading" class="loading-icon" />
-      <div id="loader-text">正在載入Chii仔資料中...</div>
+      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Loading" class="loading-icon" />
+      <div>正在載入吉伊資料中...</div>
     </div>
   </div>
 
@@ -124,71 +123,70 @@ body {
   </div>
 
 <script>
-// --- 配置資訊 (對齊小八總表) ---
+// --- 配置資訊 ---
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
-const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY"; // 總表 ID
+const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
 
-// 角色與關鍵字映射 (A 欄過濾用)
-const roleKeywords = { "吉伊":"吉", "小八":"八", "兔兔":"兔", "小桃":"桃", "師傅":"師", "栗子":"栗", "獅薩":"薩", "古本":"古" };
-const roleColors   = { "吉伊":"#d77485", "小八":"#6293b8", "兔兔":"#f9be3c", "小桃":"#838BC2", "師傅":"#CCAFA5", "栗子":"#94C973", "獅薩":"#FBAA60", "古本":"#eb9e97" };
-const roleIcons    = { "吉伊":"https://i.postimg.cc/ncqjRJ9S/icon001.png", "小八":"https://i.postimg.cc/Ss5kqJ3L/icon002.png" };
+const roleMap = { "吉伊":"吉" };
+const colors  = { "吉伊":"#6293b8" };
 
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let isAdmin = false, globalItems = [], currentRole = "吉伊", supabaseOverrides = {}, pendingChanges = {};
+let isAdmin = false, globalItems = [], supabaseOverrides = {}, pendingChanges = {};
 
 // --- 初始化與載入 ---
 async function loadSheetData(){
-  const urlParams = new URLSearchParams(location.search);
-  const r = urlParams.get("role");
-  if(r && roleKeywords[r]) currentRole = r;
-
-  // 設定主題色與標題
-  document.documentElement.style.setProperty("--tab-color", roleColors[currentRole] || "#999");
-  document.getElementById("loader-text").innerText = `正在載入${currentRole}資料中...`;
-  if(roleIcons[currentRole]) document.getElementById("loader-img").src = roleIcons[currentRole];
-
+  document.documentElement.style.setProperty("--tab-color", colors["吉伊"]);
+  
   try {
-    // 1. 抓取 Supabase
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
         supabaseOverrides = {};
         data.forEach(row => { 
-          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+          // 修正：如果資料庫裡是舊的 "點貨中"，載入時自動修正為 "點貨中（不顯示）"
+          let fixedStatus = row.status === "點貨中" ? "點貨中（不顯示）" : row.status;
+          supabaseOverrides[row.item_name] = { status: fixedStatus, price: row.price }; 
         });
       }
     }
 
-    // 2. 抓取 Google Sheets 總表 (對齊小八邏輯)
-    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`).then(r => r.text());
+    const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${sheetName}`).then(r => r.text());
     const jsonText = sheetRes.substr(47).slice(0, -2);
     const data = JSON.parse(jsonText);
     const rows = data.table.rows || [];
-    const keyword = roleKeywords[currentRole];
+    const keyword = roleMap["吉伊"];
 
     globalItems = rows.map((row) => {
-      const roleField = row.c[0]?.v || ""; // A 欄：角色
-      const rawType   = row.c[1]?.v || ""; // B 欄：類型
-      const itemName  = row.c[3]?.v || ""; // D 欄：名稱
-      const imgUrl    = row.c[11]?.v || ""; // L 欄：圖片
+      let itemName = row.c[3]?.v || "";
+      const rawType = row.c[1]?.v || "";
+      const style = row.c[2]?.v || "";
+      const roleField = row.c[0]?.v || "";
 
-      // 過濾：名稱必須存在，且 A 欄包含該角色關鍵字
       if (!itemName || !roleField.includes(keyword)) return null;
+      if (rawType !== "吊娃" && rawType !== "娃" && style !== "吊娃" && style !== "娃") return null;
       
-      // 匹配 Supabase Key (嘗試 "角色+名稱" 或 "名稱")
-      let dbKey = currentRole + itemName;
-      let sbData = supabaseOverrides[dbKey] || supabaseOverrides[itemName];
-      if (supabaseOverrides[itemName] && !supabaseOverrides[dbKey]) dbKey = itemName;
+      let dbKey = itemName;
+      let sbData = null;
+
+      if (supabaseOverrides["吉伊" + itemName]) {
+        dbKey = "吉伊" + itemName;
+        sbData = supabaseOverrides[dbKey];
+      } else if (supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
+      } else if (itemName.startsWith("吉伊") && supabaseOverrides[itemName]) {
+        dbKey = itemName;
+        sbData = supabaseOverrides[dbKey];
+      }
 
       return {
         name: dbKey,
-        displayName: itemName,
-        type: rawType,
         price: sbData?.price || "", 
         status: sbData?.status || "現貨", 
-        img: imgUrl || "https://i.postimg.cc/bv5xRs04/image.png"
+        img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png",
+        role: roleField
       };
     }).filter(it => it !== null);
 
@@ -209,21 +207,22 @@ function renderCards(items){
   gdiv.className = "group-grid";
   
   items.forEach(item => {
-    // 過濾邏輯：非管理員不顯示包含「（不顯示）」的狀態
-    if (!isAdmin && item.status && item.status.includes("（不顯示）")) return;
+    // 修正：統一過濾掉不顯示的狀態
+    if (!isAdmin && (item.status === "補貨（不顯示）" || item.status === "點貨中（不顯示）")) return;
 
     const card = document.createElement("div");
-    card.className = "card" + (isAdmin ? " admin-mode" : "");
+    card.className = "card";
     
-    // 管理員下拉選單對齊小八頁
+    const clientDisplayName = item.name.replace(/^吉伊/, "");
+
+    // 修正：管理員選項中移除舊的 "點貨中"，統一使用 "點貨中（不顯示）"
     const statusHtml = isAdmin 
       ? `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
           <option value="現貨" ${item.status==="現貨"?"selected":""}>現貨</option>
           <option value="需預訂" ${item.status==="需預訂"?"selected":""}>需預訂</option>
           <option value="搭飛機中" ${item.status==="搭飛機中"?"selected":""}>搭飛機中</option>
           <option value="補貨（不顯示）" ${item.status==="補貨（不顯示）"?"selected":""}>補貨（不顯示）</option>
-          <option value="Hold貨（不顯示）" ${item.status==="Hold貨（不顯示）"?"selected":""}>Hold貨（不顯示）</option>
-          <option value="已售出（不顯示）" ${item.status.includes("已售出")?"selected":""}>已售出（不顯示）</option>
+          <option value="點貨中（不顯示）" ${item.status==="點貨中（不顯示）"?"selected":""}>點貨中（不顯示）</option>
          </select>`
       : `<div class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</div>`;
 
@@ -232,15 +231,15 @@ function renderCards(items){
       ? `<input class="admin-price-input" type="text" value="${item.price}" onchange="stageChange('${item.name}', 'price', this.value)" placeholder="價錢" />`
       : `<div class="price">${displayPrice}</div>`;
 
-    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${item.displayName}</div>${priceHtml}`;
+    card.innerHTML = `<img src="${item.img}" loading="lazy">${statusHtml}<div class="name">${clientDisplayName}</div>${priceHtml}`;
     
     card.onclick = (e) => { 
-      if(isAdmin || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; 
-      window.parent.postMessage({ type: 'openModal', item: item }, '*');
+      if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        window.parent.postMessage({ type: 'openModal', item: item }, '*');
+      }
     };
     gdiv.appendChild(card);
   });
-  
   container.appendChild(gdiv);
   setTimeout(sendHeight, 300);
 }
@@ -249,6 +248,7 @@ function getStatusBg(s) {
   if(s==="現貨") return "#FFF4BD";
   if(s==="需預訂") return "#D4BBDD";
   if(s==="搭飛機中") return "#C1E1C1";
+  if(s==="點貨中（不顯示）") return "#FFE4E1";
   return "#E7F2F8";
 }
 
@@ -285,15 +285,17 @@ async function handleSave() {
     const updates = keys.map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
-      price: pendingChanges[k].price
+      price: pendingChanges[k].price,
+      updated_at: new Date().toISOString()
     }));
     
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     
     if (error) {
+      console.error("Supabase Error:", error);
       alert("儲存失敗：" + error.message);
     } else {
-      alert("儲存成功！");
+      alert("儲存成功！已統一狀態格式。");
       pendingChanges = {}; 
       await loadSheetData(); 
     }
