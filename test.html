@@ -419,6 +419,7 @@
 const SHEET_ID = "17gH9HZKvW_6fMCWYLyqnzMHj40rA7PiwWg6L0GvbFgQ"; 
 const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
+const CONFIG_KEY_HIDDEN_TYPES = "CONFIG_HIDDEN_TYPES"; // 用來在資料庫儲存設定的特殊 Key
 
 const STATUS_OPTIONS = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "Hold貨（不顯示）", "已售出（不顯示）"];
 
@@ -441,6 +442,7 @@ let currentRole = "吉伊";
 let supabaseOverrides = {};
 let pendingChanges = {}; // 待儲存的變更
 let hiddenTypes = [];    // 隱藏的分類
+let settingsChanged = false; // 追蹤設定是否有變更
 
 /* ================= 2. 資料加載 ================= */
 async function loadSheetData(){
@@ -452,12 +454,23 @@ async function loadSheetData(){
   document.getElementById("loading-msg").style.display = "flex";
 
   try {
-    // 1. 抓取 Supabase 的覆蓋數據 (價格/狀態)
+    // 1. 抓取 Supabase 的覆蓋數據 (價格/狀態/設定)
     if (sbClient) {
       const { data } = await sbClient.from('chiikawa_data').select('item_name, status, price');
       if (data) {
         data.forEach(row => { 
-          supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+          // 檢查是否為全域設定資料
+          if (row.item_name === CONFIG_KEY_HIDDEN_TYPES) {
+            try {
+              hiddenTypes = JSON.parse(row.status);
+            } catch (e) {
+              console.error("解析設定失敗", e);
+              hiddenTypes = [];
+            }
+          } else {
+            // 普通商品資料
+            supabaseOverrides[row.item_name] = { status: row.status, price: row.price }; 
+          }
         });
       }
     }
@@ -525,8 +538,11 @@ function renderUI(){
 
   // 分組邏輯
   globalItems.forEach(item => {
-    // 過濾隱藏分類
+    // 過濾隱藏分類 (對所有人生效)
+    // 注意：如果是 Admin 想要在編輯模式下看見被隱藏的分類，可以把下方這行註解掉，
+    // 但根據需求，目前邏輯是連 Admin 都先隱藏，方便預覽客戶效果。
     if (hiddenTypes.includes(item.type)) return;
+    
     // 非管理員時過濾不顯示的狀態
     if (!isAdmin) {
       if (item.status && item.status.includes("不顯示")) return;
@@ -683,25 +699,41 @@ function applyBatchStatus() {
   }
 }
 
-// 儲存至 Supabase
+// 儲存至 Supabase (含設定檔)
 async function handleSave() {
-  const keys = Object.keys(pendingChanges);
-  if (!keys.length) return alert("無修改需要儲存");
+  const itemKeys = Object.keys(pendingChanges);
   
-  if (confirm(`確定儲存變更？`)) {
-    const updates = keys.map(k => ({ 
+  // 檢查是否有任何變更 (商品變更 或 設定變更)
+  if (!itemKeys.length && !settingsChanged) return alert("無修改需要儲存");
+  
+  if (confirm(`確定儲存變更？(包含商品狀態與顯示設定)`)) {
+    
+    // 1. 準備商品更新資料
+    const updates = itemKeys.map(k => ({ 
       item_name: k, 
       status: pendingChanges[k].status, 
       price: pendingChanges[k].price 
     }));
+
+    // 2. 如果設定有變更，加入設定資料到更新陣列
+    // 我們將隱藏列表轉成 JSON 字串存在 status 欄位，price 設為 0
+    if (settingsChanged) {
+      updates.push({
+        item_name: CONFIG_KEY_HIDDEN_TYPES,
+        status: JSON.stringify(hiddenTypes),
+        price: "0"
+      });
+    }
     
     const { error } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
     
     if (error) {
+      console.error(error);
       alert("儲存失敗");
     } else {
       alert("儲存成功！"); 
       pendingChanges = {}; 
+      settingsChanged = false; // 重置設定變更標記
       loadSheetData(); // 重新整理數據
     }
   }
@@ -720,12 +752,17 @@ function updateTypeCheckboxes() {
 }
 
 function toggleTypeVisibility(type, isVisible) {
+  // 標記設定已被修改
+  settingsChanged = true;
+  
   if (isVisible) {
+    // 如果勾選 (Visible)，從隱藏清單移除
     hiddenTypes = hiddenTypes.filter(t => t !== type);
   } else if (!hiddenTypes.includes(type)) {
+    // 如果取消勾選 (Hidden)，加入隱藏清單
     hiddenTypes.push(type);
   }
-  // 注意：這裡不呼叫 renderUI，等使用者按「完成」才更新
+  // 注意：這裡不呼叫 renderUI，等使用者按「完成」才更新預覽
 }
 
 function confirmSettings() { 
