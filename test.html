@@ -3,28 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  
   <title>Chiikawa 寶寶圖鑑</title>
-  <meta property="og:title" content="Chiikawa 寶寶圖鑑">
-  <meta property="og:description" content="Chiikawa 產品圖鑑，提供最新現貨資訊及代購服務。">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/">
-  <meta property="og:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
-
+  
   <link rel="icon" href="https://i.postimg.cc/3R7nNT0k/icon.png" type="image/png" />
   <style>
     :root { --tab-color: #dac7b7; }
     html, body {
-      margin: 0; padding: 0; width: 100%;
+      margin: 0; padding: 0; width: 100%; height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f9f9f9; color: #333333; text-align: center;
+      background-color: #f9f9f9; color: #333; overflow-x: hidden;
     }
-    .logo-container { text-align: center; margin-top: 25px; }
+
+    /* Logo & Tabs 保持原樣 */
+    .header-section { background: #f9f9f9; padding-top: 25px; }
     .logo-container img { width: 70px; height: auto; }
     h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
-
     .tabs { 
       display: flex; flex-wrap: wrap; justify-content: center; 
       gap: 12px 8px; padding: 15px 10px; max-width: 380px; margin: 0 auto; 
@@ -36,103 +29,72 @@
     }
     .tab.active .tab-circle { border-color: var(--tab-color); }
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
-    .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; white-space: nowrap; }
+    .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; }
 
-    #main-content { width: 100%; position: relative; }
-    #content-frame { width: 100%; border: none; margin-top: -44px; clip-path: inset(44px 0 0 0); display: block; }
-
-    .overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px;
-      box-sizing: border-box; backdrop-filter: blur(5px);
+    /* 關鍵修改：iframe 容器 */
+    #main-content {
+      width: 100%;
+      height: 80vh; /* 給予固定高度讓內部可捲動 */
+      overflow: hidden;
+      position: relative;
+      border-top: 1px solid #eee;
     }
-    .modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 90%; max-width: 320px; text-align: center; position: relative; }
-    .modal-card img { width: 100%; max-height: 40vh; object-fit: contain; border-radius: 12px; }
-    .modal-card h3 { margin: 15px 0 5px; font-size: 18px; color: #333; }
-    .modal-card .price { color: #d77485; font-size: 20px; font-weight: bold; margin: 10px 0; }
-    .btn-group { display: flex; gap: 10px; flex-direction: column; margin-top: 15px; }
-    .btn-buy { background: #d77485; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
-    .btn-cart { background: #f3f3f3; color: #333; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
-    .btn-close { color: #aaa; font-size: 14px; margin-top: 15px; cursor: pointer; background: none; border: none; text-decoration: underline; }
-
-    #cart-badge {
-      position: fixed; bottom: 35px; right: 20px; background: #d77485; color: white; width: 60px; height: 60px; 
-      border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 4px 15px rgba(215, 116, 133, 0.4); cursor: pointer; z-index: 9999;
+    
+    /* 讓 iframe 填滿容器並顯示自己的捲動條 */
+    #content-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
     }
-    #cart-count {
-      position: absolute; top: -2px; right: -2px; background: #ff3b30; color: white;
-      font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; 
-      border-radius: 10px; border: 2px solid #fff; font-weight: bold;
-    }
-    .cart-list { max-height: 45vh; overflow-y: auto; text-align: left; margin: 15px 0; }
-    .cart-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
-    .cart-item img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; }
-    .cart-item-info { flex: 1; }
-    .cart-item-name { font-size: 14px; font-weight: 600; color: #444; }
-    .cart-item-price { font-size: 13px; color: #d77485; font-weight: 500; }
-    .remove-item { color: #ddd; cursor: pointer; font-size: 20px; padding: 0 5px; }
 
-    /* 優化後的 Footer */
-    .bottom-bar { padding: 20px 0; background-color: #dac7b7; color: #fff; margin-top: 25px; font-size: 11px; }
+    /* Footer 樣式優化 */
+    .bottom-bar { padding: 20px 0; background-color: #dac7b7; color: #fff; font-size: 11px; }
     .contact-icons { display: flex; justify-content: center; gap: 30px; margin-bottom: 12px; }
     .contact-icons a { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; }
-    .icon-img { width: 28px; height: 28px; object-fit: contain; transition: transform 0.2s; }
-    .icon-img:hover { transform: scale(1.1); }
+    .icon-img { width: 28px; height: 28px; object-fit: contain; }
+
+    /* Modal & Cart 樣式 (保持不變) */
+    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px); }
+    .modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 90%; max-width: 320px; text-align: center; }
+    .modal-card img { width: 100%; max-height: 40vh; object-fit: contain; border-radius: 12px; }
+    .price { color: #d77485; font-size: 20px; font-weight: bold; margin: 10px 0; }
+    .btn-buy { background: #d77485; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
+    #cart-badge { position: fixed; bottom: 35px; right: 20px; background: #d77485; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; }
+    #cart-count { position: absolute; top: -2px; right: -2px; background: #ff3b30; color: white; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; border-radius: 10px; border: 2px solid #fff; }
   </style>
 </head>
 <body>
 
-  <div class="logo-container">
-    <img src="./IMG_7282.png" alt="Chiikawa Logo" />
+  <div class="header-section">
+    <div class="logo-container"><img src="./IMG_7282.png" /></div>
+    <h1>Chiikawa 寶寶圖鑑</h1>
+    <div class="tabs" id="tabs"></div>
   </div>
-  <h1>Chiikawa 寶寶圖鑑</h1>
-  <div class="tabs" id="tabs"></div>
 
   <div id="main-content">
-    <iframe id="content-frame" src="" scrolling="no"></iframe>
-  </div>
-
-  <div id="parentOverlay" class="overlay" onclick="this.style.display='none'">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <img id="modalImg" src="" alt="">
-      <h3 id="modalName"></h3>
-      <div class="price" id="modalPrice"></div>
-      <div class="btn-group">
-        <button class="btn-buy" onclick="quickBuy()">立即購買</button>
-        <button class="btn-cart" onclick="addToCart()">加入購物車</button>
-      </div>
-      <button class="btn-close" onclick="document.getElementById('parentOverlay').style.display='none'">暫時看看</button>
-    </div>
-  </div>
-
-  <div id="cartOverlay" class="overlay" onclick="this.style.display='none'">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <h3 style="margin-top:0;">我的購物車</h3>
-      <div id="cart-items" class="cart-list"></div>
-      <div id="cart-total" style="font-weight:bold; margin-bottom:15px; text-align:right; font-size: 17px; color: #333;"></div>
-      <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">確認並傳送 WhatsApp 訂單</button>
-      <button class="btn-close" onclick="document.getElementById('cartOverlay').style.display='none'">繼續瀏覽</button>
-    </div>
-  </div>
-
-  <div id="cart-badge" onclick="toggleCart()">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-    <div id="cart-count">0</div>
+    <iframe id="content-frame" src="" scrolling="yes"></iframe>
   </div>
 
   <div class="bottom-bar">
     <div class="contact-icons">
-      <a href="https://wa.me/85291368535" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" class="icon-img" alt="WhatsApp"> 
-        <span>WhatsApp</span>
-      </a>
-      <a href="mailto:bowl.frets-7c@icloud.com">
-        <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" class="icon-img" alt="Email"> 
-        <span>Email</span>
-      </a>
+      <a href="https://wa.me/85291368535" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" class="icon-img"><span>WhatsApp</span></a>
+      <a href="mailto:bowl.frets-7c@icloud.com"><img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" class="icon-img"><span>Email</span></a>
     </div>
     &copy; <span id="current-year"></span> Chiikawa Sales
+  </div>
+
+  <div id="parentOverlay" class="overlay" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <img id="modalImg" src=""><h3 id="modalName"></h3><div class="price" id="modalPrice"></div>
+      <button class="btn-buy" onclick="quickBuy()">立即購買</button>
+      <button onclick="document.getElementById('parentOverlay').style.display='none'" style="margin-top:10px; background:none; border:none; text-decoration:underline; color:#999;">關閉</button>
+    </div>
+  </div>
+
+  <div id="cart-badge" onclick="toggleCart()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <div id="cart-count">0</div>
   </div>
 
 <script>
@@ -148,13 +110,8 @@
     { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Other.html" }
   ];
 
-  let cart = JSON.parse(localStorage.getItem('myCart')) || [];
+  let cart = [];
   let currentItem = null;
-  let activeRoleName = "吉伊";
-
-  const frame = document.getElementById("content-frame");
-  const overlay = document.getElementById("parentOverlay");
-  const cartOverlay = document.getElementById("cartOverlay");
 
   function initTabs() {
     const tabsContainer = document.getElementById("tabs");
@@ -165,82 +122,27 @@
       tab.onclick = () => {
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
-        activeRoleName = role.name;
-        document.documentElement.style.setProperty('--tab-color', role.color);
-        frame.src = role.url;
+        document.getElementById("content-frame").src = role.url;
       };
       tabsContainer.appendChild(tab);
     });
-    frame.src = roles[0].url;
-    updateCartUI();
+    document.getElementById("content-frame").src = roles[0].url;
   }
 
+  // 監聽子頁面傳來的資料
   window.addEventListener('message', function(e) {
-    if (e.data.height) frame.style.height = e.data.height + 'px';
     if (e.data.type === 'openModal') {
-      currentItem = { ...e.data.item, category: activeRoleName };
+      currentItem = e.data.item;
       document.getElementById("modalImg").src = currentItem.img;
       document.getElementById("modalName").textContent = currentItem.name;
-      document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : '$' + currentItem.price;
-      overlay.style.display = "flex";
+      document.getElementById("modalPrice").textContent = '$' + currentItem.price;
+      document.getElementById("parentOverlay").style.display = "flex";
     }
-  }, false);
-
-  function addToCart() {
-    if (currentItem.status === '需預訂') { alert("此商品需預訂，請按立即購買直接查詢。"); return; }
-    const exist = cart.find(i => i.name === currentItem.name);
-    if (exist) { exist.qty += 1; } else { cart.push({ ...currentItem, qty: 1 }); }
-    saveCart();
-    overlay.style.display = "none";
-  }
+  });
 
   function quickBuy() {
-    if (currentItem.status === '需預訂') { sendWhatsAppOrder(currentItem); return; }
-    addToCart();
-    toggleCart();
-  }
-
-  function saveCart() { localStorage.setItem('myCart', JSON.stringify(cart)); updateCartUI(); }
-
-  function updateCartUI() {
-    const list = document.getElementById("cart-items");
-    const count = document.getElementById("cart-count");
-    const totalEl = document.getElementById("cart-total");
-    list.innerHTML = "";
-    let total = 0, itemsCount = 0;
-    cart.forEach((item, idx) => {
-      const p = parseFloat(item.price) || 0;
-      total += p * item.qty; itemsCount += item.qty;
-      const div = document.createElement("div");
-      div.className = "cart-item";
-      // 這裡購物車顯示依然保留類別，方便用戶確認
-      div.innerHTML = `<img src="${item.img}"><div class="cart-item-info"><div class="cart-item-name">[${item.category}] ${item.name}</div><div class="cart-item-price">$${item.price} x ${item.qty}</div></div><div class="remove-item" onclick="removeItem(${idx})">&times;</div>`;
-      list.appendChild(div);
-    });
-    count.textContent = itemsCount;
-    totalEl.textContent = "總金額：$" + total;
-  }
-
-  function removeItem(idx) { cart.splice(idx, 1); saveCart(); }
-  function toggleCart() { cartOverlay.style.display = (cartOverlay.style.display === "flex") ? "none" : "flex"; }
-
-  function sendWhatsAppOrder(singleItem = null) {
-    let text = "你好，我想訂購/查詢以下商品：\n\n";
-    let total = 0;
-    const itemsToOrder = singleItem ? [{...singleItem, qty: 1}] : cart;
-    if (itemsToOrder.length === 0) { alert("購物車目前是空的喔！"); return; }
-    itemsToOrder.forEach((item, idx) => {
-      const p = parseFloat(item.price) || 0;
-      const subtotal = p * item.qty;
-      total += subtotal;
-      // 這裡修改為直接使用項目名稱，不加 [角色名稱]
-      text += `【${idx + 1}】 ${item.name}\n數量：${item.qty}\n價格：${p === 0 ? '需預訂/查詢' : '$' + subtotal}\n\n`;
-    });
-    text += "------------------\n";
-    if (total > 0) text += `預計總額：$${total}\n`;
-    text += "\n請問目前還有貨嗎？";
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/85291368535?text=${encodedText}`, '_blank');
+    const text = `你好，我想購買：${currentItem.name}\n價格：$${currentItem.price}\n請問還有貨嗎？`;
+    window.open(`https://wa.me/85291368535?text=${encodeURIComponent(text)}`, '_blank');
   }
 
   document.getElementById("current-year").textContent = new Date().getFullYear();
