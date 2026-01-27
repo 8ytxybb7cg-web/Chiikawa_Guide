@@ -41,24 +41,24 @@
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; white-space: nowrap; }
 
-    /* [新增] Sticky Sub-Nav 樣式 */
+    /* Sticky Sub-Nav 樣式 */
     .sticky-sub-nav {
       position: -webkit-sticky; /* Safari */
       position: sticky;
       top: 0;
-      z-index: 999; /* 確保在 Iframe 之上 */
+      z-index: 999; 
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(5px);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       padding: 10px 0;
       margin-bottom: 10px;
-      display: none; /* 預設隱藏，載入資料後顯示 */
+      display: none; 
       white-space: nowrap;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none; /* Firefox */
+      scrollbar-width: none; 
     }
-    .sticky-sub-nav::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+    .sticky-sub-nav::-webkit-scrollbar { display: none; }
     
     .sub-nav-content {
       display: inline-flex;
@@ -84,7 +84,7 @@
     }
 
     #main-content { width: 100%; position: relative; min-height: 80vh; }
-    #content-frame { width: 100%; border: none; margin-top: -44px; clip-path: inset(44px 0 0 0); display: block; }
+    #content-frame { width: 100%; border: none; margin-top: -10px; display: block; }
 
     .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -184,20 +184,18 @@
   </div>
 
 <script>
-  // [新增] Supabase Config
+  // Supabase Config
   const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi'; // 使用 Public Key
+  const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
   let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-  // [新增] 角色名稱對應 Supabase config_key Map (參考 SQL 檔案)
   const roleConfigMap = {
     "吉伊": "visible_categories_chii",
     "小八": "visible_categories_hachi",
-    "兔兔": "visible_categories", // 假設 ID 1 是兔兔或 Default
+    "兔兔": "visible_categories",
     "栗子": "visible_categories_kuri",
     "風獅": "visible_categories_shisa",
     "其他角色": "visible_categories_others"
-    // 小桃, 師傅, 古本 若資料庫無對應 key，將使用預設顯示
   };
 
   const roles = [
@@ -222,6 +220,40 @@
   const subNavContainer = document.getElementById("sub-nav-container");
   const subNavContent = document.getElementById("sub-nav-content");
 
+  // 【關鍵修改】：監聽 iframe 載入事件，注入 CSS 隱藏子頁導航
+  frame.onload = function() {
+      try {
+          // 嘗試存取子頁面 DOM (因為是同源 Github Pages，所以允許)
+          const doc = frame.contentDocument || frame.contentWindow.document;
+          if (doc) {
+              const styleId = 'injected-parent-styles';
+              if (!doc.getElementById(styleId)) {
+                  const style = doc.createElement('style');
+                  style.id = styleId;
+                  // 1. 隱藏 .nav-bar
+                  // 2. 調整 #card-container 的 padding-top (原110px -> 54px)，只留 Admin 行的高度
+                  // 3. 調整 admin-panel 的 margin-top，避免被遮擋
+                  style.textContent = `
+                      .nav-bar { display: none !important; }
+                      #card-container { padding-top: 54px !important; }
+                      .admin-panel { margin-top: 54px !important; }
+                      /* 調整錨點定位偏移量 */
+                      .category-section { scroll-margin-top: 60px !important; }
+                  `;
+                  doc.head.appendChild(style);
+                  
+                  // 觸發子頁面重新發送高度 (因 padding 改變，高度會變)
+                  // 子頁面有 resize 監聽器，所以我們觸發 resize
+                  setTimeout(() => {
+                      frame.contentWindow.dispatchEvent(new Event('resize'));
+                  }, 100);
+              }
+          }
+      } catch (e) {
+          console.log("無法存取 iframe 內容 (可能是跨域限制或尚未載入)", e);
+      }
+  };
+
   function initTabs() {
     const tabsContainer = document.getElementById("tabs");
     roles.forEach((role, index) => {
@@ -235,23 +267,19 @@
         document.documentElement.style.setProperty('--tab-color', role.color);
         frame.src = role.url;
         
-        // [新增] 切換角色時，更新子導航列
         fetchSubCategories(role.name);
       };
       tabsContainer.appendChild(tab);
     });
     frame.src = roles[0].url;
-    // [新增] 初始加載第一個角色的導航
     fetchSubCategories(roles[0].name);
     updateCartUI();
   }
 
-  // [新增] 從 Supabase 抓取分類並渲染 Sticky Nav
   async function fetchSubCategories(roleName) {
-    subNavContainer.style.display = 'none'; // 先隱藏
+    subNavContainer.style.display = 'none'; 
     subNavContent.innerHTML = '';
     
-    // 預設分類 (如果 DB 沒資料)
     let categories = ["吊娃", "娃"]; 
 
     const configKey = roleConfigMap[roleName];
@@ -280,30 +308,22 @@
     }
   }
 
-  // [新增] 滾動邏輯
   function scrollToCategory(catName) {
-      // 因為 iframe src 和 index 是同源 (Github Pages)，我們可以存取 contentDocument
       try {
           const doc = frame.contentDocument || frame.contentWindow.document;
-          // 子頁面的 ID 格式是 "cat-分類名" (參考 Chiikawa.html)
           const targetEl = doc.getElementById(`cat-${catName}`);
           
           if (targetEl) {
-              // 計算座標：
-              // 父層目前的 ScrollY + Iframe 頂部位置 + 元素在 Iframe 內的頂部位置
               const iframeRect = frame.getBoundingClientRect();
               const elementRect = targetEl.getBoundingClientRect();
               
-              // 50 是 Sticky Nav 的高度 buffer
+              // 調整後的偏移量
               const absoluteTop = window.scrollY + iframeRect.top + elementRect.top - 60;
               
               window.scrollTo({
                   top: absoluteTop,
                   behavior: 'smooth'
               });
-          } else {
-              // 如果 iframe 還沒載入完，可能會找不到元素
-              console.log("Element not found in iframe yet.");
           }
       } catch (e) {
           console.error("Scroll Error:", e);
