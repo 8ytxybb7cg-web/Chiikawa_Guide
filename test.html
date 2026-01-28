@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣小八 - 管理系統</title>
-  <link rel="icon" href="https://i.postimg.cc/Ss5kqJ3L/icon002.png" type="image/png" />
+  <title>出賣栗子 - 管理系統</title>
+  <link rel="icon" href="https://i.postimg.cc/mD0kjXLG/icon006.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --tab-color: #6293b8; --nav-bg: #fff; }
+    :root { 
+      --tab-color: #94C973; /* 栗子綠色 */
+      --nav-bg: #fff; 
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
@@ -21,17 +24,20 @@
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     .header-wrapper {
-      position: fixed; top: 0; left: 0; width: 100%; z-index: 999;
+      position: fixed;
+      top: 0; left: 0; width: 100%; z-index: 999;
       background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     .top-bar {
       background: var(--tab-color); color: #fff; height: 44px;
-      display: flex; align-items: center; justify-content: flex-end; 
+      display: flex;
+      align-items: center; justify-content: flex-end; 
       padding: 0 16px; box-sizing: border-box; gap: 10px;
     }
     .nav-bar {
       display: flex; overflow-x: auto; white-space: nowrap;
-      padding: 10px; background: #fff; border-bottom: 1px solid #eee;
+      padding: 10px;
+      background: #fff; border-bottom: 1px solid #eee;
       scrollbar-width: none; gap: 15px; justify-content: center;
     }
     .nav-bar::-webkit-scrollbar { display: none; }
@@ -41,7 +47,8 @@
     }
 
     .admin-panel {
-      display: none; background: #fff; padding: 20px; margin-top: 90px;
+      display: none;
+      background: #fff; padding: 20px; margin-top: 90px;
       border-bottom: 2px dashed var(--tab-color); text-align: left;
     }
     .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
@@ -50,25 +57,39 @@
     .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
     
     .category-title { 
-      font-size: 18px; font-weight: bold; margin-bottom: 15px; 
-      padding: 5px 10px; border-left: 5px solid var(--tab-color); color: #444;
-      display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+      font-size: 18px;
+      font-weight: bold; margin-bottom: 15px; 
+      padding: 5px 10px;
+      border-left: 5px solid var(--tab-color); color: #444;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
     }
-    .admin-mode .category-title { cursor: pointer; background: #f0f7ff; border-radius: 0 8px 8px 0; }
-    .admin-mode .category-title:hover { background: #e1f0ff; }
-    .admin-mode .category-title::after { content: '▼'; font-size: 10px; color: #aaa; margin-left: 10px; transition: transform 0.3s; }
-    .admin-mode .collapsed .category-title::after { content: '▶'; transform: rotate(-90deg); }
+    .admin-mode .category-title { cursor: pointer; background: #f4f9f0; border-radius: 0 8px 8px 0; }
+    .admin-mode .category-title:hover { background: #ecf4e6; }
+
+    /* 批量修改選單樣式 */
+    .bulk-select-wrapper { font-size: 12px; font-weight: normal; color: #666; margin-left: auto; display: inline-flex; align-items: center; gap: 5px; }
+    .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #333; }
 
     .group-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 10px; justify-items: center; width: 100%; transition: max-height 0.3s ease-out, opacity 0.3s; overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      justify-items: center; width: 100%;
+      transition: max-height 0.3s ease-out, opacity 0.3s;
+      overflow: hidden;
     }
+    
     .collapsed .group-grid { max-height: 0; opacity: 0; margin: 0; }
 
     .card {
-      width: 100%; max-width: 130px; border: 1px solid #eee; border-radius: 12px;
+      width: 100%; max-width: 130px;
+      border: 1px solid #eee;
+      border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s; overflow: hidden;
+      cursor: pointer;
     }
     .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
     .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
@@ -91,10 +112,6 @@
 
     .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 11px; margin-bottom: 5px; width: 90%; }
     .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; margin-bottom: 4px; }
-
-    /* 批量下拉選單樣式 */
-    .bulk-select-wrapper { font-size: 12px; font-weight: normal; color: #666; margin-left: auto; margin-right: 10px; }
-    .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #333; }
   </style>
 </head>
 <body>
@@ -112,14 +129,14 @@
   </div>
 
   <div id="adminPanel" class="admin-panel">
-    <h4 style="margin:0 0 10px 0; color: var(--tab-color);">管理員權限：勾選開放顯示的種類 (小八)</h4>
+    <h4 style="margin:0 0 10px 0; color: var(--tab-color);">管理員權限：勾選開放顯示的種類</h4>
     <div id="category-toggles"></div>
   </div>
 
   <div id="card-container">
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/Ss5kqJ3L/icon002.png" alt="Loading" class="loading-icon" />
-      <div>正在載入小八資料中...</div>
+      <img src="https://i.postimg.cc/mD0kjXLG/icon006.png" alt="Loading" class="loading-icon" />
+      <div>正在載入栗子資料中...</div>
     </div>
   </div>
   
@@ -145,9 +162,9 @@ let supabaseOverrides = {}, pendingChanges = {};
 
 async function loadData() {
   try {
-    supabaseOverrides = {}; // 清空舊的覆蓋數據
+    supabaseOverrides = {}; 
     if (sbClient) {
-      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_hachi').single();
+      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_kuri').single();
       visibleCategories = config ? (Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value)) : ["吊娃", "娃"];
       const { data: items } = await sbClient.from('chiikawa_data').select('*');
       items?.forEach(row => { supabaseOverrides[row.item_name] = row; });
@@ -162,11 +179,11 @@ async function loadData() {
       const roleField = row.c[0]?.v || "";
       const type = row.c[1]?.v || "其他"; 
       const itemName = row.c[3]?.v || "";    
-      if (!itemName || !roleField.includes("八")) return null;
+      if (!itemName || !roleField.includes("栗")) return null;
       
       let dbKey = itemName;
       let sbData = null;
-      if (supabaseOverrides["小八" + itemName]) { dbKey = "小八" + itemName; sbData = supabaseOverrides[dbKey]; }
+      if (supabaseOverrides["栗子" + itemName]) { dbKey = "栗子" + itemName; sbData = supabaseOverrides[dbKey]; }
       else if (supabaseOverrides[itemName]) { dbKey = itemName; sbData = supabaseOverrides[dbKey]; }
 
       tempCats.add(type);
@@ -175,7 +192,6 @@ async function loadData() {
         status: sbData?.status || "現貨", img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
     }).filter(i => i !== null);
-
     allCategories = Array.from(tempCats);
     renderApp();
   } catch (e) {
@@ -185,11 +201,9 @@ async function loadData() {
 }
 
 function renderApp() {
-  if (isAdmin) {
-    document.getElementById("card-container").classList.add("admin-mode");
-  } else {
-    document.getElementById("card-container").classList.remove("admin-mode");
-  }
+  const container = document.getElementById("card-container");
+  if (isAdmin) { container.classList.add("admin-mode"); } 
+  else { container.classList.remove("admin-mode"); }
   renderNavBar();
   renderAdminToggles();
   renderCards();
@@ -217,32 +231,26 @@ function updateVisibleList(cat, isChecked) {
   renderApp();
 }
 
-function toggleCategoryCollapse(el, event) {
-    if (!isAdmin) return;
-    // 如果點擊的是下拉選單，則不進行收合
-    if (event.target.tagName === 'SELECT' || event.target.closest('.bulk-select-wrapper')) return;
-    el.parentElement.classList.toggle('collapsed');
+function toggleCategoryCollapse(el) {
+    if (!isAdmin || el.tagName === 'SELECT') return;
+    el.closest('.category-section').classList.toggle('collapsed');
     setTimeout(sendHeight, 350);
 }
 
-// 處理批量修改邏輯
+// 新增：處理批量修改邏輯
 function handleBulkUpdate(cat, newStatus) {
     if (!newStatus) return;
-    if (!confirm(`確定將「${cat}」分類下的所有商品狀態修改為「${newStatus}」嗎？\n(注意：需點擊上方「儲存」按鈕才會寫入系統)`)) {
-        renderCards(); // 重置選單顯示
-        return;
-    }
-
     const itemsInCat = globalItems.filter(i => i.type === cat);
     itemsInCat.forEach(item => {
         stageChange(item.name, 'status', newStatus);
     });
-    renderCards(); // 重新渲染以反映暫存修改
+    renderCards(); // 修改後立即重新渲染以反映狀態
 }
 
 function renderCards() {
   const container = document.getElementById("card-container");
   container.innerHTML = "";
+  
   const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
 
   catsToDisplay.forEach(cat => {
@@ -250,19 +258,19 @@ function renderCards() {
     const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("（不顯示）"));
     if (filteredItems.length === 0) return;
 
-    // 批量修改 HTML
+    // 批量修改選單 HTML
     let bulkSelectHTML = "";
     if (isAdmin) {
-        const options = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）"];
-        bulkSelectHTML = `
-            <span class="bulk-select-wrapper" onclick="event.stopPropagation()">
-                批量改: 
-                <select class="bulk-select" onchange="handleBulkUpdate('${cat}', this.value)">
-                    <option value="">選擇狀態...</option>
-                    ${options.map(opt => `<option value="${opt}">${opt}</option>`).join("")}
-                </select>
-            </span>
-        `;
+      const statusOptions = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）", "Hold貨（不顯示）"];
+      bulkSelectHTML = `
+        <span class="bulk-select-wrapper" onclick="event.stopPropagation()">
+          批量改: 
+          <select class="bulk-select" onchange="handleBulkUpdate('${cat}', this.value)">
+            <option value="">選擇...</option>
+            ${statusOptions.map(opt => `<option value="${opt}">${opt}</option>`).join("")}
+          </select>
+        </span>
+      `;
     }
 
     const section = document.createElement("div");
@@ -271,10 +279,10 @@ function renderCards() {
     section.className = `category-section ${isAdmin && isHidden ? 'collapsed' : ''}`;
     
     section.innerHTML = `
-        <div class="category-title" onclick="toggleCategoryCollapse(this, event)">
+        <div class="category-title" onclick="toggleCategoryCollapse(this)">
             <span>${cat}</span>
-            ${isAdmin && isHidden ? '<span style="font-size:10px; font-weight:normal; color:var(--tab-color); margin-left:10px;">(隱藏中)</span>' : ''}
             ${bulkSelectHTML}
+            ${isAdmin && isHidden ? '<span style="font-size:10px; font-weight:normal; color:var(--tab-color); margin-left:10px;">(隱藏中)</span>' : ''}
         </div>
     `;
     
@@ -282,7 +290,7 @@ function renderCards() {
     grid.className = "group-grid";
 
     filteredItems.forEach(item => {
-      // 即時反映暫存中的修改 (pendingChanges)
+      // 即時反映 pendingChanges 中的修改
       let displayItem = { ...item };
       if (pendingChanges[item.name]) {
           if (pendingChanges[item.name].status) displayItem.status = pendingChanges[item.name].status;
@@ -292,13 +300,12 @@ function renderCards() {
       const card = document.createElement("div");
       card.className = "card";
       const displayPrice = (displayItem.status === "需預訂" || !displayItem.price) ? 'WhatsApp 查詢' : 'HK$' + displayItem.price;
-      
       card.innerHTML = `
         <img src="${displayItem.img}" loading="lazy">
         <div style="min-height:25px;">
           ${isAdmin ? renderAdminSelect(displayItem) : `<span class="status-badge" style="background:${getStatusBg(displayItem.status)}">${displayItem.status}</span>`}
         </div>
-        <div class="name">${displayItem.name.replace(/^小八/, "")}</div>
+        <div class="name">${displayItem.name.replace(/^栗子/, "")}</div>
         <div class="price">${isAdmin ? renderAdminPrice(displayItem) : displayPrice}</div>
       `;
       card.onclick = (e) => { 
@@ -315,7 +322,7 @@ function renderCards() {
 }
 
 function renderAdminSelect(item) {
-  const options = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）"];
+  const options = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）", "Hold貨（不顯示）"];
   return `<select class="admin-select" onchange="stageChange('${item.name}', 'status', this.value)">
     ${options.map(opt => `<option value="${opt}" ${item.status === opt ? "selected" : ""}>${opt}</option>`).join("")}
   </select>`;
@@ -345,7 +352,7 @@ async function handleSaveConfig() {
   if (!confirm("確定要儲存分類顯示設定與商品修改嗎？")) return;
   try {
     const { error: confErr } = await sbClient.from('chiikawa_config').upsert({ 
-      config_key: 'visible_categories_hachi', 
+      config_key: 'visible_categories_kuri', 
       config_value: visibleCategories,
       updated_at: new Date().toISOString()
     }, { onConflict: 'config_key' });
@@ -367,14 +374,14 @@ async function handleSaveConfig() {
     await loadData(); 
   } catch (e) {  
     console.error(e);
-    alert("儲存失敗，請檢查控制台。");
+    alert("儲存失敗，請檢查控制台錯誤訊息。");
   }
 }
 
 function scrollToCat(cat) {
   const el = document.getElementById(`cat-${cat}`);
   if (el) {
-      if (el.classList.contains('collapsed')) el.classList.remove('collapsed');
+      if (el.classList.contains('collapsed')) { el.classList.remove('collapsed'); }
       window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
   }
 }
