@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>出賣 Chii 仔 - 管理系統</title>
-  <link rel="icon" href="https://i.postimg.cc/ncqjRJ9S/icon001.png" type="image/png" />
+  <title>出賣古本 - 管理系統</title>
+  <link rel="icon" href="https://i.postimg.cc/2jsL76yB/icon008.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --tab-color: #d77485;
-      --nav-bg: #fff; }
+    :root { 
+      --tab-color: #eb9e97; 
+      --nav-bg: #fff; 
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
@@ -19,8 +21,7 @@
       width: 20%; max-width: 100px; height: auto; margin-bottom: 10px;
       animation: bounce 0.8s infinite ease-in-out;
     }
-    @keyframes bounce { 0%, 100% { transform: translateY(0);
-    } 50% { transform: translateY(-10px); } }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     .header-wrapper {
       position: fixed;
@@ -39,8 +40,7 @@
       background: #fff; border-bottom: 1px solid #eee;
       scrollbar-width: none; gap: 15px; justify-content: center;
     }
-    .nav-bar::-webkit-scrollbar { display: none;
-    }
+    .nav-bar::-webkit-scrollbar { display: none; }
     .nav-item {
       font-size: 14px; color: #666; text-decoration: none; font-weight: 600;
       cursor: pointer; padding: 4px 10px; border-radius: 15px;
@@ -51,80 +51,74 @@
       background: #fff; padding: 20px; margin-top: 90px;
       border-bottom: 2px dashed var(--tab-color); text-align: left;
     }
-    .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer;
-    }
+    .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
 
-    #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh;
-    }
-    .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px;
-    }
+    #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
+    .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
+    
     .category-title { 
-      font-size: 18px; font-weight: bold; margin-bottom: 15px; 
-      padding-left: 10px;
+      font-size: 18px;
+      font-weight: bold; margin-bottom: 15px; 
+      padding: 5px 10px;
       border-left: 5px solid var(--tab-color); color: #444;
       display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
     }
+    .admin-mode .category-title { cursor: pointer; background: #fffcfc; border-radius: 0 8px 8px 0; }
+    .admin-mode .category-title:hover { background: #fff5f5; }
+
+    /* 批量修改樣式 */
+    .bulk-select-wrapper { font-size: 12px; font-weight: normal; color: #666; margin-left: auto; margin-right: 10px; }
+    .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #333; }
+
     .group-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 10px; justify-items: center; width: 100%;
+      gap: 10px;
+      justify-items: center; width: 100%;
+      transition: max-height 0.3s ease-out, opacity 0.3s;
+      overflow: hidden;
     }
+    
+    .collapsed .group-grid { max-height: 0; opacity: 0; margin: 0; }
 
     .card {
-      width: 100%; max-width: 130px; border: 1px solid #eee;
+      width: 100%; max-width: 130px;
+      border: 1px solid #eee;
       border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s; overflow: hidden;
       cursor: pointer;
     }
-    .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box;
-    }
-    .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex;
-      align-items: center; justify-content: center; }
-    .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px;
-    }
-    .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px;
-    }
+    .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
+    .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+    .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
+    .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
-    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff;
-    }
+    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
     .btn-save, .btn-logout, .btn-cancel { 
       padding: 4px 12px; border-radius: 12px;
       border: 1px solid #fff; 
       font-size: 12px; cursor: pointer; color: #fff; background: transparent; 
     }
-    .btn-save { background: rgba(255,255,255,0.3);
-      font-weight: bold; }
+    .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
     
-    .modal { display: none; position: fixed; z-index: 10000; left: 0;
-      top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
-    .modal-content { background: #fff;
-      margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer; line-height: 1;
-    }
+    .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
+    .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer; line-height: 1; }
 
-    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px;
-      box-sizing: border-box; }
-    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px;
-      cursor: pointer; font-weight: bold; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-    .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px;
-      font-size: 11px; margin-bottom: 5px; width: 90%; }
-    .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px;
-      text-align: center; font-size: 12px; padding: 2px 0; margin-bottom: 4px; }
-      
-    /* 新增批量下拉選單樣式 */
-    .bulk-select-wrapper { font-size: 12px; font-weight: normal; color: #666; margin-left: auto; margin-right: 10px; }
-    .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #333; }
+    .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 11px; margin-bottom: 5px; width: 90%; }
+    .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; margin-bottom: 4px; }
   </style>
 </head>
 <body>
 
   <div class="header-wrapper">
     <div class="top-bar">
-      <button id="logoutBtn" class="btn-logout" style="display:none;"
-      onclick="handleLogout()">登出</button>
+      <button id="logoutBtn" class="btn-logout" style="display:none;" onclick="handleLogout()">登出</button>
       <div id="adminActions" style="display:none; gap: 8px;">
         <button class="btn-cancel" onclick="handleCancelEdit()">取消</button>
         <button class="btn-save" onclick="handleSaveConfig()">儲存</button>
@@ -135,15 +129,14 @@
   </div>
 
   <div id="adminPanel" class="admin-panel">
-    <h4 style="margin:0 0 10px 0; color: var(--tab-color);">管理員權限：勾選開放顯示的種類</h4>
+    <h4 style="margin:0 0 10px 0; color: var(--tab-color);">管理員權限：勾選開放顯示的種類 (古本)</h4>
     <div id="category-toggles"></div>
   </div>
 
   <div id="card-container">
-  
     <div id="loading-msg">
-      <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Loading" class="loading-icon" />
-      <div>正在載入吉伊資料中...</div>
+      <img src="https://i.postimg.cc/2jsL76yB/icon008.png" alt="Loading" class="loading-icon" />
+      <div>正在載入古本資料中...</div>
     </div>
   </div>
   
@@ -163,18 +156,15 @@ const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
 
-let sbClient = (window.supabase) ?
-  window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], allCategories = [], visibleCategories = [];
 let supabaseOverrides = {}, pendingChanges = {};
 
 async function loadData() {
   try {
-    supabaseOverrides = {};
-    // 清空舊的覆蓋數據
+    supabaseOverrides = {}; 
     if (sbClient) {
-      // 關鍵點：使用吉伊專屬的 Key 來存儲分類顯示設定
-      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_chii').single();
+      const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_kobumoto').single();
       visibleCategories = config ? (Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value)) : ["吊娃", "娃"];
       
       const { data: items } = await sbClient.from('chiikawa_data').select('*');
@@ -190,13 +180,11 @@ async function loadData() {
       const roleField = row.c[0]?.v || "";
       const type = row.c[1]?.v || "其他"; 
       const itemName = row.c[3]?.v || "";    
-      // 篩選包含「吉」字的角色
-      if (!itemName || !roleField.includes("吉")) return null;
+      if (!itemName || !roleField.includes("古")) return null;
       
       let dbKey = itemName;
       let sbData = null;
-      // 優先檢查是否有「吉伊」前綴的覆蓋資料
-      if (supabaseOverrides["吉伊" + itemName]) { dbKey = "吉伊" + itemName; sbData = supabaseOverrides[dbKey]; }
+      if (supabaseOverrides["古本" + itemName]) { dbKey = "古本" + itemName; sbData = supabaseOverrides[dbKey]; }
       else if (supabaseOverrides[itemName]) { dbKey = itemName; sbData = supabaseOverrides[dbKey]; }
 
       tempCats.add(type);
@@ -205,6 +193,7 @@ async function loadData() {
         status: sbData?.status || "現貨", img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
       };
     }).filter(i => i !== null);
+
     allCategories = Array.from(tempCats);
     renderApp();
   } catch (e) {
@@ -214,6 +203,9 @@ async function loadData() {
 }
 
 function renderApp() {
+  const container = document.getElementById("card-container");
+  if (isAdmin) { container.classList.add("admin-mode"); } 
+  else { container.classList.remove("admin-mode"); }
   renderNavBar();
   renderAdminToggles();
   renderCards();
@@ -236,22 +228,37 @@ function renderAdminToggles() {
 }
 
 function updateVisibleList(cat, isChecked) {
-  if (isChecked) { if(!visibleCategories.includes(cat)) visibleCategories.push(cat);
-  }
+  if (isChecked) { if(!visibleCategories.includes(cat)) visibleCategories.push(cat); }
   else { visibleCategories = visibleCategories.filter(c => c !== cat); }
+  renderApp();
+}
+
+// 批量修改功能
+function handleBulkUpdate(cat, newStatus) {
+    if (!newStatus) return;
+    if (!confirm(`確定將「${cat}」分類下的所有商品狀態修改為「${newStatus}」嗎？\n(注意：需點擊上方「儲存」按鈕才會寫入系統)`)) {
+        renderCards();
+        return;
+    }
+    const itemsInCat = globalItems.filter(i => i.type === cat);
+    itemsInCat.forEach(item => {
+        stageChange(item.name, 'status', newStatus);
+    });
+    renderCards();
 }
 
 function renderCards() {
   const container = document.getElementById("card-container");
   container.innerHTML = "";
-  const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
   
+  const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
+
   catsToDisplay.forEach(cat => {
     const items = globalItems.filter(i => i.type === cat);
     const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("（不顯示）"));
     if (filteredItems.length === 0) return;
 
-    // 準備批量修改的 HTML
+    // 準備批量修改 HTML
     let bulkSelectHTML = "";
     if (isAdmin) {
         const options = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）"];
@@ -269,13 +276,19 @@ function renderCards() {
     const section = document.createElement("div");
     section.id = `cat-${cat}`;
     section.className = "category-section";
-    section.innerHTML = `<div class="category-title">${cat} ${bulkSelectHTML}</div>`;
+    
+    section.innerHTML = `
+        <div class="category-title">
+            <span>${cat}</span>
+            ${bulkSelectHTML}
+        </div>
+    `;
     
     const grid = document.createElement("div");
     grid.className = "group-grid";
 
     filteredItems.forEach(item => {
-      // 在渲染前，先檢查是否有 pendingChanges，若有則覆蓋顯示內容，這樣批量修改後介面才會即時更新
+      // 即時反映暫存修改
       let displayItem = { ...item };
       if (pendingChanges[item.name]) {
           if (pendingChanges[item.name].status) displayItem.status = pendingChanges[item.name].status;
@@ -285,15 +298,13 @@ function renderCards() {
       const card = document.createElement("div");
       card.className = "card";
       const displayPrice = (displayItem.status === "需預訂" || !displayItem.price) ? 'WhatsApp 查詢' : 'HK$' + displayItem.price;
-
       card.innerHTML = `
         <img src="${displayItem.img}" loading="lazy">
         <div style="min-height:25px;">
           ${isAdmin ? renderAdminSelect(displayItem) : `<span class="status-badge" style="background:${getStatusBg(displayItem.status)}">${displayItem.status}</span>`}
         </div>
-        <div class="name">${displayItem.name.replace(/^吉伊/, "")}</div>
-        <div class="price">${isAdmin ?
-          renderAdminPrice(displayItem) : displayPrice}</div>
+        <div class="name">${displayItem.name.replace(/^古本/, "")}</div>
+        <div class="price">${isAdmin ? renderAdminPrice(displayItem) : displayPrice}</div>
       `;
       card.onclick = (e) => { 
         if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
@@ -306,26 +317,6 @@ function renderCards() {
     container.appendChild(section);
   });
   setTimeout(sendHeight, 300);
-}
-
-// 新增：處理批量修改邏輯
-function handleBulkUpdate(cat, newStatus) {
-    if (!newStatus) return;
-    if (!confirm(`確定將「${cat}」分類下的所有商品狀態修改為「${newStatus}」嗎？\n(注意：需點擊上方「儲存」按鈕才會寫入系統)`)) {
-        renderCards(); // 取消則重繪以重置選單
-        return;
-    }
-
-    // 找出該分類所有商品
-    const itemsInCat = globalItems.filter(i => i.type === cat);
-    
-    // 遍歷並執行修改
-    itemsInCat.forEach(item => {
-        stageChange(item.name, 'status', newStatus);
-    });
-
-    // 重新渲染以顯示修改後的狀態
-    renderCards();
 }
 
 function renderAdminSelect(item) {
@@ -356,11 +347,10 @@ function stageChange(name, field, value) {
 }
 
 async function handleSaveConfig() {
-  if (!confirm("確定要儲存分類顯示設定與商品修改嗎？")) return;
+  if (!confirm("確定要儲存古本頁面的設定嗎？")) return;
   try {
-    // 儲存至吉伊專屬的 config key
     const { error: confErr } = await sbClient.from('chiikawa_config').upsert({ 
-      config_key: 'visible_categories_chii', 
+      config_key: 'visible_categories_kobumoto', 
       config_value: visibleCategories,
       updated_at: new Date().toISOString()
     }, { onConflict: 'config_key' });
@@ -378,12 +368,11 @@ async function handleSaveConfig() {
     }
 
     alert("儲存成功！");
-    // 不再使用 reload，改為清除暫存並重新載入數據
     pendingChanges = {}; 
-    await loadData();
-    } catch (e) {  
+    await loadData(); 
+  } catch (e) {  
     console.error(e);
-    alert("儲存失敗，請檢查控制台錯誤訊息。");
+    alert("儲存失敗。");
   }
 }
 
@@ -392,11 +381,9 @@ function scrollToCat(cat) {
   if (el) window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
 }
 
-function openLoginModal() { document.getElementById("loginModal").style.display = "block";
-}
+function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
 function closeLoginModal() { document.getElementById("loginModal").style.display = "none"; }
-function handleCancelEdit() { if(confirm("確定要取消修改並重新載入嗎？")) location.reload();
-}
+function handleCancelEdit() { if(confirm("確定要取消修改嗎？")) location.reload(); }
 
 function handleLogin() {
   if (document.getElementById("adminId").value === "1050267" && document.getElementById("adminPwd").value === "Penny01!") {
@@ -409,8 +396,7 @@ function handleLogin() {
   } else { alert("身份驗證失敗"); }
 }
 
-function handleLogout() { if(confirm("確定要登出嗎？")) location.reload();
-}
+function handleLogout() { if(confirm("確定要登出嗎？")) location.reload(); }
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 loadData();
