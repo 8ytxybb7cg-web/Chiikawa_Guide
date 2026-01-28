@@ -61,12 +61,14 @@
       font-weight: bold; margin-bottom: 15px; 
       padding: 5px 10px;
       border-left: 5px solid var(--tab-color); color: #444;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
     }
     .admin-mode .category-title { cursor: pointer; background: #fffcfc; border-radius: 0 8px 8px 0; }
     .admin-mode .category-title:hover { background: #fff5f5; }
-    .admin-mode .category-title::after { content: '▼'; font-size: 10px; color: #aaa; margin-left: 10px; transition: transform 0.3s; }
-    .admin-mode .collapsed .category-title::after { content: '▶'; transform: rotate(-90deg); }
+
+    /* 批量修改樣式 */
+    .bulk-select-wrapper { font-size: 12px; font-weight: normal; color: #666; margin-left: auto; margin-right: 10px; }
+    .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #333; }
 
     .group-grid {
       display: grid;
@@ -160,9 +162,8 @@ let supabaseOverrides = {}, pendingChanges = {};
 
 async function loadData() {
   try {
-    supabaseOverrides = {}; // 清空舊的覆蓋數據
+    supabaseOverrides = {}; 
     if (sbClient) {
-      // 古本專用的 Config Key
       const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_kobumoto').single();
       visibleCategories = config ? (Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value)) : ["吊娃", "娃"];
       
@@ -179,22 +180,12 @@ async function loadData() {
       const roleField = row.c[0]?.v || "";
       const type = row.c[1]?.v || "其他"; 
       const itemName = row.c[3]?.v || "";    
-      
-      // 關鍵字更換為「古」
       if (!itemName || !roleField.includes("古")) return null;
       
       let dbKey = itemName;
       let sbData = null;
-      
-      // 優先匹配帶有「古本」前綴的 Key
-      if (supabaseOverrides["古本" + itemName]) { 
-        dbKey = "古本" + itemName; 
-        sbData = supabaseOverrides[dbKey]; 
-      }
-      else if (supabaseOverrides[itemName]) { 
-        dbKey = itemName; 
-        sbData = supabaseOverrides[dbKey]; 
-      }
+      if (supabaseOverrides["古本" + itemName]) { dbKey = "古本" + itemName; sbData = supabaseOverrides[dbKey]; }
+      else if (supabaseOverrides[itemName]) { dbKey = itemName; sbData = supabaseOverrides[dbKey]; }
 
       tempCats.add(type);
       return {
@@ -242,11 +233,18 @@ function updateVisibleList(cat, isChecked) {
   renderApp();
 }
 
-function toggleCategoryCollapse(el) {
-    if (!isAdmin) return;
-    const parent = el.parentElement;
-    parent.classList.toggle('collapsed');
-    setTimeout(sendHeight, 350);
+// 批量修改功能
+function handleBulkUpdate(cat, newStatus) {
+    if (!newStatus) return;
+    if (!confirm(`確定將「${cat}」分類下的所有商品狀態修改為「${newStatus}」嗎？\n(注意：需點擊上方「儲存」按鈕才會寫入系統)`)) {
+        renderCards();
+        return;
+    }
+    const itemsInCat = globalItems.filter(i => i.type === cat);
+    itemsInCat.forEach(item => {
+        stageChange(item.name, 'status', newStatus);
+    });
+    renderCards();
 }
 
 function renderCards() {
@@ -260,15 +258,29 @@ function renderCards() {
     const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("（不顯示）"));
     if (filteredItems.length === 0) return;
 
+    // 準備批量修改 HTML
+    let bulkSelectHTML = "";
+    if (isAdmin) {
+        const options = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）"];
+        bulkSelectHTML = `
+            <span class="bulk-select-wrapper">
+                批量改: 
+                <select class="bulk-select" onchange="handleBulkUpdate('${cat}', this.value)">
+                    <option value="">選擇狀態...</option>
+                    ${options.map(opt => `<option value="${opt}">${opt}</option>`).join("")}
+                </select>
+            </span>
+        `;
+    }
+
     const section = document.createElement("div");
     section.id = `cat-${cat}`;
-    const isHidden = !visibleCategories.includes(cat);
-    section.className = `category-section ${isAdmin && isHidden ? 'collapsed' : ''}`;
+    section.className = "category-section";
     
     section.innerHTML = `
-        <div class="category-title" onclick="toggleCategoryCollapse(this)">
+        <div class="category-title">
             <span>${cat}</span>
-            ${isAdmin && isHidden ? '<span style="font-size:10px; font-weight:normal; color:var(--tab-color); margin-left:10px;">(隱藏中)</span>' : ''}
+            ${bulkSelectHTML}
         </div>
     `;
     
@@ -276,20 +288,27 @@ function renderCards() {
     grid.className = "group-grid";
 
     filteredItems.forEach(item => {
+      // 即時反映暫存修改
+      let displayItem = { ...item };
+      if (pendingChanges[item.name]) {
+          if (pendingChanges[item.name].status) displayItem.status = pendingChanges[item.name].status;
+          if (pendingChanges[item.name].price) displayItem.price = pendingChanges[item.name].price;
+      }
+
       const card = document.createElement("div");
       card.className = "card";
-      const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : 'HK$' + item.price;
+      const displayPrice = (displayItem.status === "需預訂" || !displayItem.price) ? 'WhatsApp 查詢' : 'HK$' + displayItem.price;
       card.innerHTML = `
-        <img src="${item.img}" loading="lazy">
+        <img src="${displayItem.img}" loading="lazy">
         <div style="min-height:25px;">
-          ${isAdmin ? renderAdminSelect(item) : `<span class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</span>`}
+          ${isAdmin ? renderAdminSelect(displayItem) : `<span class="status-badge" style="background:${getStatusBg(displayItem.status)}">${displayItem.status}</span>`}
         </div>
-        <div class="name">${item.name.replace(/^古本/, "")}</div>
-        <div class="price">${isAdmin ? renderAdminPrice(item) : displayPrice}</div>
+        <div class="name">${displayItem.name.replace(/^古本/, "")}</div>
+        <div class="price">${isAdmin ? renderAdminPrice(displayItem) : displayPrice}</div>
       `;
       card.onclick = (e) => { 
         if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-          window.parent.postMessage({ type: 'openModal', item: item }, '*');
+          window.parent.postMessage({ type: 'openModal', item: displayItem }, '*');
         }
       };
       grid.appendChild(card);
@@ -348,8 +367,7 @@ async function handleSaveConfig() {
       if (itemErr) throw itemErr;
     }
 
-        alert("儲存成功！");
-    // 不再使用 reload，改為清除暫存並重新載入數據
+    alert("儲存成功！");
     pendingChanges = {}; 
     await loadData(); 
   } catch (e) {  
@@ -360,10 +378,7 @@ async function handleSaveConfig() {
 
 function scrollToCat(cat) {
   const el = document.getElementById(`cat-${cat}`);
-  if (el) {
-      if (el.classList.contains('collapsed')) { el.classList.remove('collapsed'); }
-      window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
-  }
+  if (el) window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
 }
 
 function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
