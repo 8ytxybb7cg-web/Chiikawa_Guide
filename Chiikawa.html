@@ -8,7 +8,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --tab-color: #d77485; --nav-bg: #fff; }
+    :root { --tab-color: #d77485;
+      --nav-bg: #fff; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; margin: 0; padding: 0; color: #333; text-align: center;
@@ -18,7 +19,8 @@
       width: 20%; max-width: 100px; height: auto; margin-bottom: 10px;
       animation: bounce 0.8s infinite ease-in-out;
     }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes bounce { 0%, 100% { transform: translateY(0);
+    } 50% { transform: translateY(-10px); } }
 
     .header-wrapper {
       position: fixed;
@@ -37,7 +39,8 @@
       background: #fff; border-bottom: 1px solid #eee;
       scrollbar-width: none; gap: 15px; justify-content: center;
     }
-    .nav-bar::-webkit-scrollbar { display: none; }
+    .nav-bar::-webkit-scrollbar { display: none;
+    }
     .nav-item {
       font-size: 14px; color: #666; text-decoration: none; font-weight: 600;
       cursor: pointer; padding: 4px 10px; border-radius: 15px;
@@ -48,14 +51,18 @@
       background: #fff; padding: 20px; margin-top: 90px;
       border-bottom: 2px dashed var(--tab-color); text-align: left;
     }
-    .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
+    .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer;
+    }
 
-    #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
-    .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px; }
+    #card-container { padding: 110px 10px 40px 10px; max-width: 1200px; margin: 0 auto; min-height: 80vh;
+    }
+    .category-section { margin-top: 30px; text-align: left; scroll-margin-top: 100px;
+    }
     .category-title { 
       font-size: 18px; font-weight: bold; margin-bottom: 15px; 
       padding-left: 10px;
       border-left: 5px solid var(--tab-color); color: #444;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
     }
     .group-grid {
       display: grid;
@@ -70,37 +77,54 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; overflow: hidden;
       cursor: pointer;
     }
-    .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
+    .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box;
+    }
     .card .name { margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4; min-height: 32px; display: flex;
       align-items: center; justify-content: center; }
-    .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
-    .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+    .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px;
+    }
+    .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px;
+    }
 
-    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff; }
+    .admin-icon { width: 24px; height: 24px; cursor: pointer; fill: #fff;
+    }
     .btn-save, .btn-logout, .btn-cancel { 
       padding: 4px 12px; border-radius: 12px;
       border: 1px solid #fff; 
       font-size: 12px; cursor: pointer; color: #fff; background: transparent; 
     }
-    .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
+    .btn-save { background: rgba(255,255,255,0.3);
+      font-weight: bold; }
     
     .modal { display: none; position: fixed; z-index: 10000; left: 0;
       top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
-    .modal-content { background: #fff; margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer; line-height: 1; }
+    .modal-content { background: #fff;
+      margin: 20% auto; padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #aaa; cursor: pointer; line-height: 1;
+    }
 
-    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px;
+      box-sizing: border-box; }
+    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: bold; }
 
-    .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 11px; margin-bottom: 5px; width: 90%; }
-    .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; margin-bottom: 4px; }
+    .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px;
+      font-size: 11px; margin-bottom: 5px; width: 90%; }
+    .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px;
+      text-align: center; font-size: 12px; padding: 2px 0; margin-bottom: 4px; }
+      
+    /* 新增批量下拉選單樣式 */
+    .bulk-select-wrapper { font-size: 12px; font-weight: normal; color: #666; margin-left: auto; margin-right: 10px; }
+    .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #333; }
   </style>
 </head>
 <body>
 
   <div class="header-wrapper">
     <div class="top-bar">
-      <button id="logoutBtn" class="btn-logout" style="display:none;" onclick="handleLogout()">登出</button>
+      <button id="logoutBtn" class="btn-logout" style="display:none;"
+      onclick="handleLogout()">登出</button>
       <div id="adminActions" style="display:none; gap: 8px;">
         <button class="btn-cancel" onclick="handleCancelEdit()">取消</button>
         <button class="btn-save" onclick="handleSaveConfig()">儲存</button>
@@ -116,6 +140,7 @@
   </div>
 
   <div id="card-container">
+  
     <div id="loading-msg">
       <img src="https://i.postimg.cc/ncqjRJ9S/icon001.png" alt="Loading" class="loading-icon" />
       <div>正在載入吉伊資料中...</div>
@@ -138,13 +163,15 @@ const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
 const SHEET_ID  = "1iCEqgnGGa_TVVbx90xNWxDzwKtz94VfqF8IsXRvpKMY";
 const sheetName = "ちいかわ";
 
-let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let sbClient = (window.supabase) ?
+  window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let isAdmin = false, globalItems = [], allCategories = [], visibleCategories = [];
 let supabaseOverrides = {}, pendingChanges = {};
 
 async function loadData() {
   try {
-    supabaseOverrides = {}; // 清空舊的覆蓋數據
+    supabaseOverrides = {};
+    // 清空舊的覆蓋數據
     if (sbClient) {
       // 關鍵點：使用吉伊專屬的 Key 來存儲分類顯示設定
       const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', 'visible_categories_chii').single();
@@ -209,7 +236,8 @@ function renderAdminToggles() {
 }
 
 function updateVisibleList(cat, isChecked) {
-  if (isChecked) { if(!visibleCategories.includes(cat)) visibleCategories.push(cat); }
+  if (isChecked) { if(!visibleCategories.includes(cat)) visibleCategories.push(cat);
+  }
   else { visibleCategories = visibleCategories.filter(c => c !== cat); }
 }
 
@@ -223,30 +251,53 @@ function renderCards() {
     const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("（不顯示）"));
     if (filteredItems.length === 0) return;
 
+    // 準備批量修改的 HTML
+    let bulkSelectHTML = "";
+    if (isAdmin) {
+        const options = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）"];
+        bulkSelectHTML = `
+            <span class="bulk-select-wrapper">
+                批量改: 
+                <select class="bulk-select" onchange="handleBulkUpdate('${cat}', this.value)">
+                    <option value="">選擇狀態...</option>
+                    ${options.map(opt => `<option value="${opt}">${opt}</option>`).join("")}
+                </select>
+            </span>
+        `;
+    }
+
     const section = document.createElement("div");
     section.id = `cat-${cat}`;
     section.className = "category-section";
-    section.innerHTML = `<div class="category-title">${cat}</div>`;
+    section.innerHTML = `<div class="category-title">${cat} ${bulkSelectHTML}</div>`;
     
     const grid = document.createElement("div");
     grid.className = "group-grid";
 
     filteredItems.forEach(item => {
+      // 在渲染前，先檢查是否有 pendingChanges，若有則覆蓋顯示內容，這樣批量修改後介面才會即時更新
+      let displayItem = { ...item };
+      if (pendingChanges[item.name]) {
+          if (pendingChanges[item.name].status) displayItem.status = pendingChanges[item.name].status;
+          if (pendingChanges[item.name].price) displayItem.price = pendingChanges[item.name].price;
+      }
+
       const card = document.createElement("div");
       card.className = "card";
-      const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : 'HK$' + item.price;
+      const displayPrice = (displayItem.status === "需預訂" || !displayItem.price) ? 'WhatsApp 查詢' : 'HK$' + displayItem.price;
 
       card.innerHTML = `
-        <img src="${item.img}" loading="lazy">
+        <img src="${displayItem.img}" loading="lazy">
         <div style="min-height:25px;">
-          ${isAdmin ? renderAdminSelect(item) : `<span class="status-badge" style="background:${getStatusBg(item.status)}">${item.status}</span>`}
+          ${isAdmin ? renderAdminSelect(displayItem) : `<span class="status-badge" style="background:${getStatusBg(displayItem.status)}">${displayItem.status}</span>`}
         </div>
-        <div class="name">${item.name.replace(/^吉伊/, "")}</div>
-        <div class="price">${isAdmin ? renderAdminPrice(item) : displayPrice}</div>
+        <div class="name">${displayItem.name.replace(/^吉伊/, "")}</div>
+        <div class="price">${isAdmin ?
+          renderAdminPrice(displayItem) : displayPrice}</div>
       `;
       card.onclick = (e) => { 
         if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-          window.parent.postMessage({ type: 'openModal', item: item }, '*');
+          window.parent.postMessage({ type: 'openModal', item: displayItem }, '*');
         }
       };
       grid.appendChild(card);
@@ -255,6 +306,26 @@ function renderCards() {
     container.appendChild(section);
   });
   setTimeout(sendHeight, 300);
+}
+
+// 新增：處理批量修改邏輯
+function handleBulkUpdate(cat, newStatus) {
+    if (!newStatus) return;
+    if (!confirm(`確定將「${cat}」分類下的所有商品狀態修改為「${newStatus}」嗎？\n(注意：需點擊上方「儲存」按鈕才會寫入系統)`)) {
+        renderCards(); // 取消則重繪以重置選單
+        return;
+    }
+
+    // 找出該分類所有商品
+    const itemsInCat = globalItems.filter(i => i.type === cat);
+    
+    // 遍歷並執行修改
+    itemsInCat.forEach(item => {
+        stageChange(item.name, 'status', newStatus);
+    });
+
+    // 重新渲染以顯示修改後的狀態
+    renderCards();
 }
 
 function renderAdminSelect(item) {
@@ -306,11 +377,11 @@ async function handleSaveConfig() {
       if (itemErr) throw itemErr;
     }
 
-        alert("儲存成功！");
+    alert("儲存成功！");
     // 不再使用 reload，改為清除暫存並重新載入數據
     pendingChanges = {}; 
-    await loadData(); 
-  } catch (e) {  
+    await loadData();
+    } catch (e) {  
     console.error(e);
     alert("儲存失敗，請檢查控制台錯誤訊息。");
   }
@@ -321,9 +392,11 @@ function scrollToCat(cat) {
   if (el) window.scrollTo({ top: el.offsetTop - 105, behavior: 'smooth' });
 }
 
-function openLoginModal() { document.getElementById("loginModal").style.display = "block"; }
+function openLoginModal() { document.getElementById("loginModal").style.display = "block";
+}
 function closeLoginModal() { document.getElementById("loginModal").style.display = "none"; }
-function handleCancelEdit() { if(confirm("確定要取消修改並重新載入嗎？")) location.reload(); }
+function handleCancelEdit() { if(confirm("確定要取消修改並重新載入嗎？")) location.reload();
+}
 
 function handleLogin() {
   if (document.getElementById("adminId").value === "1050267" && document.getElementById("adminPwd").value === "Penny01!") {
@@ -336,7 +409,8 @@ function handleLogin() {
   } else { alert("身份驗證失敗"); }
 }
 
-function handleLogout() { if(confirm("確定要登出嗎？")) location.reload(); }
+function handleLogout() { if(confirm("確定要登出嗎？")) location.reload();
+}
 function sendHeight() { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); }
 
 loadData();
