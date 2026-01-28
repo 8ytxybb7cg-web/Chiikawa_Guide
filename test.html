@@ -4,14 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   
-  <title>Chiikawa 寶寶圖鑑</title>
-  <meta property="og:title" content="Chiikawa 寶寶圖鑑">
-  <meta property="og:description" content="Chiikawa 產品圖鑑，提供最新現貨資訊及代購服務。">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/">
-  <meta property="og:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
+  <title>Chiikawa 寶寶圖鑑｜正版周邊・現貨代購</title>
+
+<meta name="description" content="收錄 Chiikawa 寶寶圖鑑，同時提供正版 Chiikawa 周邊、公仔、現貨及代購服務。">
+
+<meta property="og:title" content="Chiikawa 寶寶圖鑑｜正版周邊・現貨代購">
+<meta property="og:description" content="收錄 Chiikawa 產品圖鑑，同時提供正版周邊現貨及代購資訊。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/">
+<meta property="og:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Chiikawa 寶寶圖鑑｜正版周邊・現貨代購">
+<meta name="twitter:description" content="Chiikawa 產品圖鑑，提供正版周邊現貨及代購服務。">
+<meta name="twitter:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
 
   <link rel="icon" href="./IMG_7282.png" type="image/png" />
   
@@ -216,34 +222,10 @@
   const subNavContainer = document.getElementById("sub-nav-container");
   const subNavContent = document.getElementById("sub-nav-content");
 
-// 在父層定義登入邏輯
-function adminLogin() {
-    const id = prompt("管理員 ID:");
-    const pwd = prompt("密碼:");
-    
-    // 使用你子頁面原本的帳密邏輯
-    if (id === "1050267" && pwd === "Penny01!") {
-        sessionStorage.setItem('isAdmin', 'true');
-        alert("管理員登入成功！頁面即將同步。");
-        syncAdminStateToIframe();
-    } else {
-        alert("驗證失敗");
-    }
-}
-
-function adminLogout() {
-    sessionStorage.removeItem('isAdmin');
-    location.reload();
-}
-
-  // 修改原本的 frame.onload
-frame.onload = function() {
-    try {
-        const doc = frame.contentDocument || frame.contentWindow.document;
-        const win = frame.contentWindow;
-
-        if (doc && win) {
-            // --- 保留你原本的 CSS 注入邏輯 ---
+  frame.onload = function() {
+      try {
+          const doc = frame.contentDocument || frame.contentWindow.document;
+          if (doc) {
               // 1. 防止子頁面彈出輸入框時放大 (注入 Viewport Meta)
               let meta = doc.querySelector('meta[name="viewport"]');
               if (!meta) {
@@ -268,36 +250,7 @@ frame.onload = function() {
                       input, select, textarea { font-size: 16px !important; } 
                   `;
                   doc.head.appendChild(style);
-                
-                // --- 新增：管理員狀態同步 ---
-            syncAdminStateToIframe();
-        }
-    } catch (e) { console.log("Iframe injection blocked/failed", e); }
-};
-
-// 執行狀態同步的函數
-function syncAdminStateToIframe() {
-    const win = frame.contentWindow;
-    const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-
-    if (isAdmin && win.loadData) {
-        // 直接修改子頁面的變數並觸發渲染
-        win.isAdmin = true;
-        
-        // 操控子頁面的 UI 顯示
-        const adminPanel = win.document.getElementById("adminPanel");
-        const adminActions = win.document.getElementById("adminActions");
-        const logoutBtn = win.document.getElementById("logoutBtn");
-        
-        if (adminPanel) adminPanel.style.display = "block";
-        if (adminActions) adminActions.style.display = "flex";
-        if (logoutBtn) logoutBtn.style.display = "block";
-        
-        // 重新執行子頁面的渲染邏輯以顯示管理員功能（如：勾選框、修改價格等）
-        win.renderApp(); 
-    }
-}
-
+                  
                   setTimeout(() => {
                       frame.contentWindow.dispatchEvent(new Event('resize'));
                   }, 100);
