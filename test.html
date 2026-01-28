@@ -320,7 +320,7 @@
       currentItem = { ...e.data.item, category: activeRoleName };
       document.getElementById("modalImg").src = currentItem.img;
       document.getElementById("modalName").textContent = currentItem.name;
-      document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : '$' + currentItem.price;
+      document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : HK'$' + currentItem.price;
       overlay.style.display = "flex";
     }
   }, false);
