@@ -269,7 +269,7 @@ function renderCards() {
     filteredItems.forEach(item => {
       const card = document.createElement("div");
       card.className = "card";
-      const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : '$' + item.price;
+      const displayPrice = (item.status === "需預訂" || !item.price) ? 'WhatsApp 查詢' : 'HK$' + item.price;
       const cleanName = item.name.replace(/^(風獅|獅薩)/, "");
       
       card.innerHTML = `
