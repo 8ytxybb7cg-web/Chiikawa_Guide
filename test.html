@@ -26,14 +26,14 @@
       padding-top: 50px; 
     }
 
-    /* --- 新增：頂部導航列 (移植自舊子頁) --- */
+    /* --- Top Header --- */
     .top-header {
       position: fixed;
       top: 0; left: 0; width: 100%; z-index: 5000;
       background: var(--tab-color); /* 跟隨角色變色 */
       color: #fff; height: 44px;
       display: flex;
-      align-items: center; justify-content: space-between; /* 左右分佈 */
+      align-items: center; justify-content: space-between;
       padding: 0 16px; box-sizing: border-box;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       transition: background 0.3s;
@@ -101,7 +101,7 @@
     #main-content { width: 100%; position: relative; min-height: 80vh; }
     #content-frame { width: 100%; border: none; margin-top: -10px; display: block; min-height: 600px; transition: opacity 0.2s; }
 
-    /* Modals (Cart, Admin, Product Preview) */
+    /* Modals */
     .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
@@ -131,6 +131,11 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 9999;
       transition: background 0.3s;
     }
+    /* 當 body 有 admin-active class 時，隱藏購物車按鈕 (Issue 1) */
+    body.admin-active #cart-badge {
+        display: none !important;
+    }
+
     #cart-count {
       position: absolute; top: -2px; right: -2px; background: #ff3b30; color: white;
       font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; 
@@ -165,9 +170,9 @@
     
     <div class="admin-controls">
       <div id="admin-actions" style="display:none; gap: 8px;">
+        <button class="btn-logout" onclick="handleLogout()">登出</button>
         <button class="btn-cancel" onclick="triggerChildCancel()">取消</button>
         <button class="btn-save" onclick="triggerChildSave()">儲存</button>
-        <button class="btn-logout" onclick="handleLogout()">登出</button>
       </div>
       
       <div id="login-icon-wrapper" onclick="openLoginModal()">
@@ -190,7 +195,7 @@
   </div>
 
   <div id="main-content">
-    <iframe id="content-frame" src="" scrolling="no"></iframe>
+    <iframe id="content-frame" src="" scrolling="no" onload="onIframeLoad()"></iframe>
   </div>
 
   <div id="productOverlay" class="overlay" onclick="closeProductModal()">
@@ -246,7 +251,7 @@
   </div>
 
 <script>
-  // --- 核心角色設定資料 (Source of Truth) ---
+  // --- Config ---
   const ROLE_CONFIG = {
     "chii": { name: "吉伊", color: "#d77485", icon: "https://i.postimg.cc/vZDs4YNZ/icon.png" },
     "hachi": { name: "小八", color: "#6293b8", icon: "https://i.postimg.cc/sDTzfQKL/icon.png" },
@@ -259,7 +264,7 @@
     "others": { name: "其他", color: "#45818e", icon: "https://i.postimg.cc/63xJbd58/icon.png" }
   };
 
-  // --- 全域變數 ---
+  // --- Globals ---
   let cart = JSON.parse(localStorage.getItem('myCart')) || [];
   let currentItem = null;
   let activeRole = "chii"; 
@@ -268,21 +273,21 @@
   const subNavContainer = document.getElementById("sub-nav-container");
   const subNavContent = document.getElementById("sub-nav-content");
 
-  // --- 初始化 ---
+  // --- Init ---
   function init() {
     renderTabs();
     switchRole("chii"); 
     updateCartUI();
     document.getElementById("current-year").textContent = new Date().getFullYear();
     
-    // 檢查 Session 是否有 Admin 狀態
+    // Check Session
     if (sessionStorage.getItem("adminLogged") === "true") {
         isAdmin = true;
         updateAdminUI(true);
     }
   }
 
-  // --- Tab 渲染與切換 ---
+  // --- Tabs & Role Switching ---
   function renderTabs() {
     const tabsContainer = document.getElementById("tabs");
     tabsContainer.innerHTML = Object.keys(ROLE_CONFIG).map(key => {
@@ -302,43 +307,51 @@
     activeRole = key;
     const config = ROLE_CONFIG[key];
     
-    // 更新 UI 狀態
+    // Update UI
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.getElementById(`tab-${key}`).classList.add("active");
     
-    // 更新 CSS 變數以改變主題色 (包含 Header)
+    // Update Theme Color
     document.documentElement.style.setProperty('--tab-color', config.color);
 
-    // 隱藏子導航，直到 Iframe 載入完畢並回傳分類
+    // Hide sub-nav until child loads
     subNavContainer.style.display = 'none';
     subNavContent.innerHTML = '';
 
-    // 載入通用子頁面
-    frame.src = `Child.html?role=${key}&t=${new Date().getTime()}`;
+    // Load Child Page
+    frame.src = `Chiikawa.html?role=${key}&t=${new Date().getTime()}`;
     frame.style.opacity = "0.3";
   }
 
-  // --- Iframe 溝通 (postMessage) ---
+  // --- Iframe Communication ---
+  
+  // (Issue 3 Fix) 當 iframe 載入完成後，確保子頁面獲得當前的 Admin 狀態
+  function onIframeLoad() {
+      if (isAdmin) {
+          sendAdminStateToChild();
+      }
+  }
+
   window.addEventListener('message', function(e) {
     if (!e.data) return;
 
-    // 1. 調整高度
+    // 1. Resize
     if (e.data.height) {
         frame.style.height = e.data.height + 'px';
         frame.style.opacity = "1";
     }
 
-    // 2. 接收子頁面回傳的分類列表 -> 渲染 Sticky Nav
+    // 2. Categories
     if (e.data.type === 'categories') {
         renderSubNav(e.data.data);
     }
 
-    // 3. 子頁面請求打開商品 Modal
+    // 3. Open Modal
     if (e.data.type === 'openModal') {
         openProductModal(e.data.item);
     }
 
-    // 4. 子頁面載入完成，通知子頁面當前的 Admin 狀態
+    // 4. Child Ready (Backup)
     if (e.data.type === 'ready') {
         sendAdminStateToChild();
     }
@@ -357,21 +370,19 @@
   }
 
   function sendAdminStateToChild() {
+    // 發送權限給子頁面
     frame.contentWindow.postMessage({ type: 'adminState', isAdmin: isAdmin }, '*');
   }
 
-  // --- 觸發子頁面動作 (儲存/取消) ---
   function triggerChildSave() {
-      // 發送訊息給子頁面，觸發其 handleSaveConfig()
       frame.contentWindow.postMessage({ type: 'triggerSave' }, '*');
   }
 
   function triggerChildCancel() {
-      // 發送訊息給子頁面，觸發其 handleCancelEdit()
       frame.contentWindow.postMessage({ type: 'triggerCancel' }, '*');
   }
 
-  // --- 商品 Modal 與 購物車邏輯 ---
+  // --- Product Modal & Cart ---
   function openProductModal(item) {
     currentItem = { ...item, roleKey: activeRole };
     document.getElementById("modalImg").src = currentItem.img;
@@ -466,9 +477,8 @@
     window.open(`https://wa.me/85291368535?text=${encodeURIComponent(text)}`, '_blank');
   }
 
-  // --- Admin 邏輯 (Index 層控制) ---
+  // --- Admin Logic ---
   function openLoginModal() { 
-      // 如果已經登入，點擊 Icon 不做任何事，或者可以顯示簡單的提示
       if(isAdmin) return;
       document.getElementById("loginModal").style.display = "flex";
   }
@@ -478,13 +488,12 @@
     const id = document.getElementById("adminId").value;
     const pwd = document.getElementById("adminPwd").value;
     
-    // --- 寫入驗證帳號密碼 ---
     if (id === "1050267" && pwd === "Penny01!") {
         isAdmin = true;
         sessionStorage.setItem("adminLogged", "true");
         updateAdminUI(true);
         closeLoginModal();
-        sendAdminStateToChild(); // 通知子頁面開啟編輯模式
+        sendAdminStateToChild(); 
         alert("管理員登入成功！");
     } else {
         alert("身份驗證失敗");
@@ -496,24 +505,24 @@
     isAdmin = false;
     sessionStorage.removeItem("adminLogged");
     
-    // 清空輸入框
     document.getElementById("adminId").value = "";
     document.getElementById("adminPwd").value = "";
     
     updateAdminUI(false);
-    sendAdminStateToChild(); // 通知子頁面關閉編輯模式
+    sendAdminStateToChild(); 
     location.reload();
   }
 
-  // 更新 Header UI 狀態
   function updateAdminUI(loggedIn) {
       const actions = document.getElementById("admin-actions");
       const loginIcon = document.getElementById("login-icon-wrapper");
       
       if (loggedIn) {
+          document.body.classList.add('admin-active'); // 用於隱藏購物車 (Issue 1)
           actions.style.display = "flex";
-          loginIcon.style.display = "none"; // 登入後隱藏鎖頭，顯示操作按鈕
+          loginIcon.style.display = "none"; 
       } else {
+          document.body.classList.remove('admin-active');
           actions.style.display = "none";
           loginIcon.style.display = "block";
       }
