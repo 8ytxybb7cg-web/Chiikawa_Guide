@@ -3,40 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  
   <title>Chiikawa 吉伊卡哇 圖鑑｜現貨代購</title>
-
-<meta name="description" content="Chiikawa ちいかわ 吉伊卡哇 圖鑑，提供正版周邊、公仔現貨及代購資訊。">
-
-<meta property="og:title" content="Chiikawa 吉伊卡哇 圖鑑｜現貨代購">
-<meta property="og:description" content="Chiikawa ちいかわ 吉伊卡哇 正版周邊、公仔現貨及代購資訊。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/">
-<meta property="og:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
-  <link rel="icon" href="./IMG_7282.png" type="image/png" />
   
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="description" content="Chiikawa ちいかわ 吉伊卡哇 圖鑑，提供正版周邊、公仔現貨及代購資訊。">
+  <meta property="og:title" content="Chiikawa 吉伊卡哇 圖鑑｜現貨代購">
+  <meta property="og:description" content="Chiikawa ちいかわ 吉伊卡哇 正版周邊、公仔現貨及代購資訊。">
+  <meta property="og:image" content="https://8ytxybb7cg-web.github.io/Chiikawa_Guide/IMG_7282.png">
+  <link rel="icon" href="./IMG_7282.png" type="image/png" />
 
   <style>
-    :root { --tab-color: #dac7b7; }
+    :root { 
+      --tab-color: #d77485; /* 初始顏色 */
+      --nav-bg: #fff;
+    } 
     
-    html, body {
-      margin: 0; padding: 0; width: 100%;
+    body {
+      margin: 0; padding: 0;
+      width: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f9f9f9; color: #333333; text-align: center;
-      /* 修正：移除了 overflow-x: hidden; 
-         原因：在 body/html 上設定 overflow 會導致子元素的 position: sticky 失效。
-      */
-      max-width: 100vw; /* 確保不超出螢幕寬度 */
+      background-color: #f9f9f9; color: #333; text-align: center;
+      max-width: 100vw;
+      padding-top: 50px;
     }
 
+    /* Top Header */
+    .top-header {
+      position: fixed;
+      top: 0; left: 0; width: 100%; z-index: 5000;
+      background: var(--tab-color); /* 跟隨角色變色 */
+      color: #fff;
+      height: 44px;
+      display: flex;
+      align-items: center; justify-content: space-between; 
+      padding: 0 16px;
+      box-sizing: border-box;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s;
+    }
+
+    .header-title {
+      font-weight: bold; font-size: 14px; letter-spacing: 1px;
+    }
+
+    .admin-controls {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .admin-icon { 
+      width: 24px; height: 24px; cursor: pointer; fill: #fff;
+      display: block;
+    }
+
+    /* 管理員按鈕樣式 */
+    .btn-save, .btn-logout, .btn-cancel { 
+      padding: 4px 12px;
+      border-radius: 12px;
+      border: 1px solid #fff; 
+      font-size: 12px; cursor: pointer; color: #fff; background: transparent;
+    }
+    .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
+    .btn-logout { border-color: rgba(255,255,255,0.6); }
+
+    /* Logo */
     .logo-container { text-align: center; margin-top: 25px; }
     .logo-container img { width: 120px; height: auto; }
-    h1 { margin: 10px 0; font-size: 18px; color: #A49393; letter-spacing: 1px; }
 
+    /* Role Tabs */
     .tabs { 
       display: flex;
       flex-wrap: wrap; justify-content: center;
@@ -47,91 +79,88 @@
       width: 55px; height: 55px; border-radius: 50%; overflow: hidden;
       border: 3px solid transparent; background: #eee; transition: border-color 0.2s;
     }
-    .tab.active .tab-circle { border-color: var(--tab-color); }
+    .tab.active .tab-circle { border-color: var(--tab-color); box-shadow: 0 0 8px var(--tab-color); }
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; white-space: nowrap; }
 
-    /* 導航列 Sticky 設定 */
+    /* Sticky Sub-Nav */
     .sticky-sub-nav {
-      position: -webkit-sticky; /* Safari 兼容 */
       position: sticky;
-      top: 0;
-      z-index: 1000; /* 確保層級夠高 */
+      top: 44px; /* 配合 Top Header 高度 */
+      z-index: 1000;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(5px);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      padding: 10px 0;
-      margin-bottom: 10px;
-      display: none; 
+      padding: 10px 0; margin-bottom: 10px; display: none; 
       white-space: nowrap;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none; 
+      overflow-x: auto; scrollbar-width: none;
     }
     .sticky-sub-nav::-webkit-scrollbar { display: none; }
-    
-    .sub-nav-content {
-      display: inline-flex;
-      padding: 0 15px;
-      gap: 10px;
-      margin: 0 auto;
-    }
-
+    .sub-nav-content { display: inline-flex; padding: 0 15px; gap: 10px; margin: 0 auto; }
     .sub-nav-item {
       font-size: 13px;
       color: #666;
-      padding: 5px 12px;
-      border-radius: 15px;
-      background: #f0f0f0;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid transparent;
+      padding: 5px 12px; border-radius: 15px;
+      background: #f0f0f0; cursor: pointer; transition: all 0.2s;
     }
-    
-    .sub-nav-item:active, .sub-nav-item:hover {
-      background: var(--tab-color);
-      color: #fff;
-    }
+    .sub-nav-item:active, .sub-nav-item:hover { background: var(--tab-color); color: #fff; }
 
+    /* Iframe */
     #main-content { width: 100%; position: relative; min-height: 80vh; }
-    #content-frame { width: 100%; border: none; margin-top: -10px; display: block; }
+    #content-frame { width: 100%; border: none; margin-top: -10px; display: block; min-height: 600px; transition: opacity 0.2s; }
 
+    /* Modals */
     .overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px;
+      background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
+      z-index: 99999; padding: 20px;
       box-sizing: border-box; backdrop-filter: blur(5px);
     }
-    .modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 90%; max-width: 320px;
-      text-align: center; position: relative; }
+    .modal-card { 
+      background: #fff; border-radius: 20px;
+      padding: 24px; width: 90%; max-width: 320px;
+      text-align: center; position: relative; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
     .modal-card img { width: 100%; max-height: 40vh; object-fit: contain; border-radius: 12px; }
     .modal-card h3 { margin: 15px 0 5px; font-size: 18px; color: #333; }
-    .modal-card .price { color: #d77485; font-size: 20px; font-weight: bold; margin: 10px 0; }
+    .modal-card .price { color: var(--tab-color); font-size: 20px; font-weight: bold; margin: 10px 0; }
+    
     .btn-group { display: flex; gap: 10px; flex-direction: column; margin-top: 15px; }
-    .btn-buy { background: #d77485; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
+    .btn-buy { background: var(--tab-color); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
     .btn-cart { background: #f3f3f3; color: #333; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; }
     .btn-close { color: #aaa; font-size: 14px; margin-top: 15px; cursor: pointer; background: none; border: none; text-decoration: underline; }
 
+    /* Cart Badge */
     #cart-badge {
-      position: fixed; bottom: 35px;
-      right: 20px; background: #d77485; color: white; width: 60px; height: 60px; 
+      position: fixed;
+      bottom: 35px; right: 20px; 
+      background: var(--tab-color); color: white; width: 60px; height: 60px; 
       border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 4px 15px rgba(215, 116, 133, 0.4); cursor: pointer; z-index: 9999;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 9999;
+      transition: background 0.3s;
     }
     #cart-count {
-      position: absolute; top: -2px; right: -2px; background: #ff3b30;
-      color: white;
+      position: absolute; top: -2px; right: -2px; background: #ff3b30; color: white;
       font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; 
       border-radius: 10px; border: 2px solid #fff; font-weight: bold;
     }
+
+    /* Cart List */
     .cart-list { max-height: 45vh; overflow-y: auto; text-align: left; margin: 15px 0; }
     .cart-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
     .cart-item img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; }
     .cart-item-info { flex: 1; }
     .cart-item-name { font-size: 14px; font-weight: 600; color: #444; }
-    .cart-item-price { font-size: 13px; color: #d77485; font-weight: 500; }
+    .cart-item-price { font-size: 13px; color: var(--tab-color); font-weight: 500; }
     .remove-item { color: #ddd; cursor: pointer; font-size: 20px; padding: 0 5px; }
 
+    /* Login Modal */
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+    /* Footer */
     .bottom-bar { padding: 20px 0; background-color: #dac7b7; color: #fff; margin-top: 25px; font-size: 11px; }
     .contact-icons { display: flex; justify-content: center; gap: 30px; margin-bottom: 12px; }
     .contact-icons a { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; }
@@ -141,9 +170,29 @@
 </head>
 <body>
 
+  <div class="top-header">
+    <div class="header-title">CHIIKAWA GUIDE</div>
+    
+    <div class="admin-controls">
+      <div id="admin-actions" style="display:none; gap: 8px;">
+        <button class="btn-logout" onclick="handleLogout()">登出</button>
+        <button class="btn-cancel" onclick="triggerChildCancel()">取消</button>
+        <button class="btn-save" onclick="triggerChildSave()">儲存</button>
+      </div>
+      
+      <div id="login-icon-wrapper" onclick="openLoginModal()">
+        <svg class="admin-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+           <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+    </div>
+  </div>
+
   <div class="logo-container">
     <img src="./IMG_7282.png" alt="Chiikawa Logo" />
   </div>
+  
   <div class="tabs" id="tabs"></div>
 
   <div id="sub-nav-container" class="sticky-sub-nav">
@@ -154,7 +203,7 @@
     <iframe id="content-frame" src="" scrolling="no"></iframe>
   </div>
 
-  <div id="parentOverlay" class="overlay" onclick="this.style.display='none'">
+  <div id="productOverlay" class="overlay" onclick="closeProductModal()">
     <div class="modal-card" onclick="event.stopPropagation()">
       <img id="modalImg" src="" alt="">
       <h3 id="modalName"></h3>
@@ -163,17 +212,27 @@
         <button class="btn-buy" onclick="quickBuy()">立即購買</button>
         <button class="btn-cart" onclick="addToCart()">加入購物車</button>
       </div>
-      <button class="btn-close" onclick="document.getElementById('parentOverlay').style.display='none'">暫時看看</button>
+      <button class="btn-close" onclick="closeProductModal()">暫時看看</button>
     </div>
   </div>
 
-  <div id="cartOverlay" class="overlay" onclick="this.style.display='none'">
+  <div id="cartOverlay" class="overlay" onclick="toggleCart()">
     <div class="modal-card" onclick="event.stopPropagation()">
       <h3 style="margin-top:0;">我的購物車</h3>
       <div id="cart-items" class="cart-list"></div>
       <div id="cart-total" style="font-weight:bold; margin-bottom:15px; text-align:right; font-size: 17px; color: #333;"></div>
       <button class="btn-buy" style="width:100%" onclick="sendWhatsAppOrder()">確認並傳送 WhatsApp 訂單</button>
-      <button class="btn-close" onclick="document.getElementById('cartOverlay').style.display='none'">繼續瀏覽</button>
+      <button class="btn-close" onclick="toggleCart()">繼續瀏覽</button>
+    </div>
+  </div>
+
+  <div id="loginModal" class="overlay" onclick="closeLoginModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <span style="position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer;" onclick="closeLoginModal()">&times;</span>
+        <h3 style="margin-top:0;">管理員登入</h3>
+        <input type="text" id="adminId" placeholder="管理員 ID">
+        <input type="password" id="adminPwd" placeholder="密碼">
+        <button class="login-btn" onclick="handleLogin()">驗證</button>
     </div>
   </div>
 
@@ -188,7 +247,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" class="icon-img" alt="WhatsApp"> 
         <span>WhatsApp</span>
       </a>
-      <a href="mailto:bowl.frets-7c@icloud.com">
+       <a href="mailto:bowl.frets-7c@icloud.com">
         <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" class="icon-img" alt="Email"> 
         <span>Email</span>
       </a>
@@ -197,140 +256,145 @@
   </div>
 
 <script>
-  const SUPABASE_URL = 'https://myrhatzdypiwwgmmfbuw.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_bnnah-2fsCaQnKZDoKNJQw_NuYQVvKi';
-  let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
-  const roleConfigMap = {
-    "吉伊": "visible_categories_chii", "小八": "visible_categories_hachi", "兔兔": "visible_categories",
-    "栗子": "visible_categories_kuri", "風獅": "visible_categories_shisa", "其他角色": "visible_categories_others"
+  // --- 核心角色設定資料 ---
+  const ROLE_CONFIG = {
+    "chii": { name: "吉伊", color: "#d77485", icon: "https://i.postimg.cc/vZDs4YNZ/icon.png" },
+    "hachi": { name: "小八", color: "#6293b8", icon: "https://i.postimg.cc/sDTzfQKL/icon.png" },
+    "usagi": { name: "兔兔", color: "#f9be3c", icon: "https://i.postimg.cc/xdzVPsYr/icon.png" },
+    "momo": { name: "小桃", color: "#838BC2", icon: "https://i.postimg.cc/9MP36rrJ/icon.png" },
+    "master": { name: "師傅", color: "#CCAFA5", icon: "https://i.postimg.cc/fTq4Q4Rn/icon.png" },
+    "kuri": { name: "栗子", color: "#94C973", icon: "https://i.postimg.cc/FzGMK8bS/icon.png" },
+    "shisa": { name: "風獅", color: "#FBAA60", icon: "https://i.postimg.cc/660Jz4sQ/icon.png" },
+    "furu": { name: "古本", color: "#eb9e97", icon: "https://i.postimg.cc/nh5t7yyY/icon.png" },
+    "others": { name: "其他", color: "#45818e", icon: "https://i.postimg.cc/63xJbd58/icon.png" }
   };
-  const roles = [
-    { name: "吉伊", color: "#d77485", img: "https://i.postimg.cc/vZDs4YNZ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Chiikawa.html" },
-    { name: "小八", color: "#6293b8", img: "https://i.postimg.cc/sDTzfQKL/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Hachiware.html" },
-    { name: "兔兔", color: "#f9be3c", img: "https://i.postimg.cc/xdzVPsYr/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Usagi.html" },
-    { name: "小桃", color: "#838BC2", img: "https://i.postimg.cc/9MP36rrJ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Momonga.html" },
-    { name: "師傅", color: "#CCAFA5", img: "https://i.postimg.cc/fTq4Q4Rn/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Master.html" },
-    { name: "栗子", color: "#94C973", img: "https://i.postimg.cc/FzGMK8bS/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Manju.html" },
-    { name: "風獅", color: "#FBAA60", img: "https://i.postimg.cc/660Jz4sQ/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Shisa.html" },
-    { name: "古本", color: "#eb9e97", img: "https://i.postimg.cc/nh5t7yyY/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Furuhonya.html" },
-    { name: "其他角色", color: "#45818e", img: "https://i.postimg.cc/63xJbd58/icon.png", url: "https://8ytxybb7cg-web.github.io/Chiikawa_Guide/Other.html" }
-  ];
+
+  // --- 全域變數 ---
   let cart = JSON.parse(localStorage.getItem('myCart')) || [];
   let currentItem = null;
-  let activeRoleName = "吉伊";
-
+  let activeRole = "chii";
+  let isAdmin = false; 
   const frame = document.getElementById("content-frame");
-  const overlay = document.getElementById("parentOverlay");
-  const cartOverlay = document.getElementById("cartOverlay");
   const subNavContainer = document.getElementById("sub-nav-container");
   const subNavContent = document.getElementById("sub-nav-content");
-  
-  frame.onload = function() {
-      try {
-          const doc = frame.contentDocument || frame.contentWindow.document;
-          if (doc) {
-              // 1. 防止子頁面彈出輸入框時放大 (注入 Viewport Meta)
-              let meta = doc.querySelector('meta[name="viewport"]');
-              if (!meta) {
-                  meta = doc.createElement('meta');
-                  meta.name = "viewport";
-                  doc.head.appendChild(meta);
-              }
-              // 強制設置不可縮放
-              meta.content = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
-              // 2. 注入原有 CSS (隱藏導航等)
-              const styleId = 'injected-parent-styles';
-              if (!doc.getElementById(styleId)) {
-                  const style = doc.createElement('style');
-                  style.id = styleId;
-                  style.textContent = `
-                      .nav-bar { display: none !important; }
-                      #card-container { padding-top: 54px !important; }
-                      .admin-panel { margin-top: 54px !important; }
-                      .category-section { scroll-margin-top: 60px !important; }
-                      /* 額外修復：確保 Input 焦點不會觸發頁面偏移 */
-                      input, select, textarea { font-size: 16px !important; } 
-                  `;
-                  doc.head.appendChild(style);
-                  
-                  setTimeout(() => {
-                      frame.contentWindow.dispatchEvent(new Event('resize'));
-                  }, 100);
-              }
-          }
-      } catch (e) { console.log("Iframe injection blocked/failed", e); }
-  };
 
-  function initTabs() {
-    const tabsContainer = document.getElementById("tabs");
-    roles.forEach((role, index) => {
-      const tab = document.createElement("div");
-      tab.className = "tab" + (index === 0 ? " active" : "");
-      tab.innerHTML = `<div class="tab-circle" style="--tab-color:${role.color}"><img src="${role.img}"></div><div class="tab-name">${role.name}</div>`;
-      tab.onclick = () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        activeRoleName = role.name;
-        document.documentElement.style.setProperty('--tab-color', role.color);
-        frame.src = role.url;
-  
-        fetchSubCategories(role.name);
-      };
-      tabsContainer.appendChild(tab);
-    });
-    frame.src = roles[0].url;
-    fetchSubCategories(roles[0].name);
+  // --- 初始化 ---
+  function init() {
+    renderTabs();
+    switchRole("chii"); 
     updateCartUI();
+    document.getElementById("current-year").textContent = new Date().getFullYear();
+    // 檢查 Session 是否有 Admin 狀態
+    if (sessionStorage.getItem("adminLogged") === "true") {
+        isAdmin = true;
+        updateAdminUI(true);
+    }
   }
 
-  async function fetchSubCategories(roleName) {
-    subNavContainer.style.display = 'none'; 
+  // --- Tab 渲染與切換 ---
+  function renderTabs() {
+    const tabsContainer = document.getElementById("tabs");
+    tabsContainer.innerHTML = Object.keys(ROLE_CONFIG).map(key => {
+      const role = ROLE_CONFIG[key];
+      return `
+        <div class="tab" id="tab-${key}" onclick="switchRole('${key}')">
+          <div class="tab-circle" style="--tab-color:${role.color}">
+            <img src="${role.icon}" loading="lazy">
+          </div>
+          <div class="tab-name">${role.name}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function switchRole(key) {
+    activeRole = key;
+    const config = ROLE_CONFIG[key];
+    // 更新 UI 狀態
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.getElementById(`tab-${key}`).classList.add("active");
+    // 更新 CSS 變數
+    document.documentElement.style.setProperty('--tab-color', config.color);
+    // 隱藏子導航
+    subNavContainer.style.display = 'none';
     subNavContent.innerHTML = '';
-    let categories = ["吊娃", "娃"]; 
-    const configKey = roleConfigMap[roleName];
-    if (sbClient && configKey) {
-        try {
-            const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', configKey).single();
-            if (config && config.config_value) categories = Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value);
-        } catch (e) { console.error(e); }
-    }
-    if (categories.length > 0) {
-        subNavContent.innerHTML = categories.map(cat => `<div class="sub-nav-item" onclick="scrollToCategory('${cat}')">${cat}</div>`).join("");
-        subNavContainer.style.display = 'block';
-    }
+    // 載入通用子頁面
+    frame.src = `Child.html?role=${key}&t=${new Date().getTime()}`;
+    frame.style.opacity = "0.3";
   }
 
-  function scrollToCategory(catName) {
-      try {
-          const doc = frame.contentDocument || frame.contentWindow.document;
-          const targetEl = doc.getElementById(`cat-${catName}`);
-          if (targetEl) {
-              const iframeRect = frame.getBoundingClientRect();
-              const elementRect = targetEl.getBoundingClientRect();
-              const absoluteTop = window.scrollY + iframeRect.top + elementRect.top - 60;
-              window.scrollTo({ top: absoluteTop, behavior: 'smooth' });
-          }
-      } catch (e) { console.error(e); }
-  }
-
+  // --- Iframe 溝通 (postMessage) ---
   window.addEventListener('message', function(e) {
-    if (e.data.height) frame.style.height = e.data.height + 'px';
+    if (!e.data) return;
+
+    if (e.data.height) {
+        frame.style.height = e.data.height + 'px';
+        frame.style.opacity = "1";
+    }
+
+    if (e.data.type === 'categories') {
+        renderSubNav(e.data.data);
+    }
+
     if (e.data.type === 'openModal') {
-      currentItem = { ...e.data.item, category: activeRoleName };
-      document.getElementById("modalImg").src = currentItem.img;
-      document.getElementById("modalName").textContent = currentItem.name;
-      document.getElementById("modalPrice").textContent = (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : 'HK$' + currentItem.price;
-      overlay.style.display = "flex";
+        openProductModal(e.data.item);
+    }
+
+    // FIX: 監聽 childReady 而不是 ready，確保切換角色時能重新賦予 Admin 權限
+    if (e.data.type === 'childReady') {
+        sendAdminStateToChild();
     }
   }, false);
 
+  function renderSubNav(categories) {
+    if (!categories || categories.length === 0) return;
+    subNavContent.innerHTML = categories.map(cat => 
+        `<div class="sub-nav-item" onclick="tellChildScroll('${cat}')">${cat}</div>`
+    ).join("");
+    subNavContainer.style.display = 'block';
+  }
+
+  function tellChildScroll(cat) {
+    frame.contentWindow.postMessage({ type: 'scrollTo', category: cat }, '*');
+  }
+
+  function sendAdminStateToChild() {
+    frame.contentWindow.postMessage({ type: 'adminState', isAdmin: isAdmin }, '*');
+  }
+
+  // --- 觸發子頁面動作 (儲存/取消) ---
+  function triggerChildSave() {
+      frame.contentWindow.postMessage({ type: 'triggerSave' }, '*');
+  }
+
+  function triggerChildCancel() {
+      frame.contentWindow.postMessage({ type: 'triggerCancel' }, '*');
+  }
+
+  // --- 商品 Modal 與 購物車邏輯 ---
+  function openProductModal(item) {
+    currentItem = { ...item, roleKey: activeRole };
+    document.getElementById("modalImg").src = currentItem.img;
+    document.getElementById("modalName").textContent = currentItem.name;
+    document.getElementById("modalPrice").textContent = 
+        (currentItem.status === '需預訂' || !currentItem.price) ? 'WhatsApp 查詢' : 'HK$' + currentItem.price;
+    document.getElementById("productOverlay").style.display = "flex";
+  }
+
+  function closeProductModal() {
+    document.getElementById("productOverlay").style.display = "none";
+  }
+
   function addToCart() {
-    if (currentItem.status === '需預訂') { alert("此商品需預訂，請按立即購買直接查詢。"); return; }
+    if (currentItem.status === '需預訂') {
+        alert("此商品需預訂，請按立即購買直接查詢。");
+        return;
+    }
     const exist = cart.find(i => i.name === currentItem.name);
-    if (exist) { exist.qty += 1; } else { cart.push({ ...currentItem, qty: 1 }); }
+    if (exist) { exist.qty += 1; } 
+    else { cart.push({ ...currentItem, qty: 1 }); }
     saveCart();
-    overlay.style.display = "none";
+    closeProductModal();
   }
 
   function quickBuy() {
@@ -339,34 +403,57 @@
     toggleCart();
   }
 
-  function saveCart() { localStorage.setItem('myCart', JSON.stringify(cart)); updateCartUI(); }
+  function saveCart() {
+    localStorage.setItem('myCart', JSON.stringify(cart));
+    updateCartUI();
+  }
 
   function updateCartUI() {
     const list = document.getElementById("cart-items");
-    const count = document.getElementById("cart-count");
+    const countEl = document.getElementById("cart-count");
     const totalEl = document.getElementById("cart-total");
     list.innerHTML = "";
     let total = 0, itemsCount = 0;
+    
     cart.forEach((item, idx) => {
       const p = parseFloat(item.price) || 0;
-      total += p * item.qty; itemsCount += item.qty;
+      total += p * item.qty;
+      itemsCount += item.qty;
+      
+      const roleName = ROLE_CONFIG[item.roleKey]?.name || "其他";
       const div = document.createElement("div");
       div.className = "cart-item";
-      div.innerHTML = `<img src="${item.img}"><div class="cart-item-info"><div class="cart-item-name">[${item.category}] ${item.name}</div><div class="cart-item-price">$${item.price} x ${item.qty}</div></div><div class="remove-item" onclick="removeItem(${idx})">&times;</div>`;
+      div.innerHTML = `
+        <img src="${item.img}">
+        <div class="cart-item-info">
+            <div class="cart-item-name">[${roleName}] ${item.name}</div>
+            <div class="cart-item-price">$${item.price} x ${item.qty}</div>
+        </div>
+        <div class="remove-item" onclick="removeItem(${idx})">&times;</div>
+      `;
       list.appendChild(div);
     });
-    count.textContent = itemsCount;
+    countEl.textContent = itemsCount;
     totalEl.textContent = "總金額：$" + total;
   }
 
-  function removeItem(idx) { cart.splice(idx, 1); saveCart(); }
-  function toggleCart() { cartOverlay.style.display = (cartOverlay.style.display === "flex") ? "none" : "flex"; }
+  function removeItem(idx) {
+    cart.splice(idx, 1);
+    saveCart();
+  }
+
+  function toggleCart() {
+    const el = document.getElementById("cartOverlay");
+    el.style.display = (el.style.display === "flex") ? "none" : "flex";
+  }
 
   function sendWhatsAppOrder(singleItem = null) {
     let text = "你好，我想訂購/查詢以下商品：\n\n";
     let total = 0;
     const itemsToOrder = singleItem ? [{...singleItem, qty: 1}] : cart;
+    
     if (itemsToOrder.length === 0) { alert("購物車目前是空的喔！"); return; }
+    
     itemsToOrder.forEach((item, idx) => {
       const p = parseFloat(item.price) || 0;
       const subtotal = p * item.qty;
@@ -376,12 +463,65 @@
     text += "------------------\n";
     if (total > 0) text += `預計總額：$${total}\n`;
     text += "\n請問目前還有貨嗎？";
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/85291368535?text=${encodedText}`, '_blank');
+    
+    window.open(`https://wa.me/85291368535?text=${encodeURIComponent(text)}`, '_blank');
   }
 
-  document.getElementById("current-year").textContent = new Date().getFullYear();
-  initTabs();
+  // --- Admin 邏輯 ---
+  function openLoginModal() { 
+      if(isAdmin) return;
+      document.getElementById("loginModal").style.display = "flex";
+  }
+  function closeLoginModal() { document.getElementById("loginModal").style.display = "none"; }
+  
+  function handleLogin() {
+    const id = document.getElementById("adminId").value;
+    const pwd = document.getElementById("adminPwd").value;
+    if (id === "1050267" && pwd === "Penny01!") {
+        isAdmin = true;
+        sessionStorage.setItem("adminLogged", "true");
+        updateAdminUI(true);
+        closeLoginModal();
+        sendAdminStateToChild(); 
+        alert("管理員登入成功！");
+    } else {
+        alert("身份驗證失敗");
+    }
+  }
+
+  function handleLogout() {
+    if(!confirm("確定要登出嗎？")) return;
+    isAdmin = false;
+    sessionStorage.removeItem("adminLogged");
+    
+    document.getElementById("adminId").value = "";
+    document.getElementById("adminPwd").value = "";
+    
+    updateAdminUI(false);
+    sendAdminStateToChild(); 
+    location.reload();
+  }
+
+  // 更新 Header UI 狀態
+  function updateAdminUI(loggedIn) {
+      const actions = document.getElementById("admin-actions");
+      const loginIcon = document.getElementById("login-icon-wrapper");
+      
+      // FIX: Admin 登入時隱藏購物車按鈕，登出後顯示
+      const cartBadge = document.getElementById("cart-badge");
+      
+      if (loggedIn) {
+          actions.style.display = "flex";
+          loginIcon.style.display = "none"; 
+          if(cartBadge) cartBadge.style.display = "none";
+      } else {
+          actions.style.display = "none";
+          loginIcon.style.display = "block";
+          if(cartBadge) cartBadge.style.display = "flex";
+      }
+  }
+
+  init();
 </script>
 </body>
 </html>
