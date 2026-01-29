@@ -7,9 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* 預設 CSS 變數，實際顏色會由 JavaScript 根據角色動態注入 
-       
-    */
+    /* 預設 CSS 變數 */
     :root { --tab-color: #d77485; }
 
     body {
@@ -19,9 +17,7 @@
       padding: 0; 
       color: #333; 
       text-align: center;
-      /* 確保底部有空間，避免被父層的購物車擋住 */
       padding-bottom: 80px;
-      /* 修正 iframe 內的捲動行為 */
       overflow-x: hidden;
     }
 
@@ -29,9 +25,13 @@
     .loading-container {
       margin-top: 100px;
       transition: opacity 0.3s;
+      /* 確保在最上層 */
+      position: relative; 
+      z-index: 10;
     }
     .loading-icon {
-      width: 20%; max-width: 100px; height: auto; margin-bottom: 10px;
+      width: 20%; max-width: 100px; height: auto;
+      margin-bottom: 10px;
       animation: bounce 0.8s infinite ease-in-out;
     }
     @keyframes bounce { 
@@ -41,18 +41,22 @@
 
     /* Admin 面板樣式 */
     .admin-panel {
-      display: none; /* 預設隱藏，由父層通知 Admin 狀態後顯示 */
+      display: none;
       background: #fff; padding: 15px; margin: 10px;
-      border: 2px dashed var(--tab-color); border-radius: 12px; text-align: left;
+      border: 2px dashed var(--tab-color);
+      border-radius: 12px; text-align: left;
     }
     .admin-controls {
-        display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between; align-items: center; margin-bottom: 10px;
     }
-    .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px; display: inline-flex; align-items: center; cursor: pointer; }
+    .category-checkbox { margin: 5px 15px 5px 0; font-size: 14px;
+      display: inline-flex; align-items: center; cursor: pointer; }
     
     /* 按鈕樣式 */
     .btn-save, .btn-cancel { 
-      padding: 5px 15px; border-radius: 15px; border: none; 
+      padding: 5px 15px;
+      border-radius: 15px; border: none; 
       font-size: 12px; cursor: pointer; color: #fff; font-weight: bold; 
     }
     .btn-save { background: var(--tab-color); opacity: 0.9; }
@@ -60,14 +64,17 @@
 
     /* 卡片容器與佈局 */
     #card-container { 
-        max-width: 1200px; margin: 0 auto; min-height: 50vh; padding: 10px; 
+        max-width: 1200px;
+        margin: 0 auto; min-height: 50vh; padding: 10px; 
     }
     .category-section { 
-        margin-top: 30px; text-align: left; 
-        scroll-margin-top: 70px; /* 配合父層 Sticky Nav 的高度 */
+        margin-top: 30px;
+        text-align: left; 
+        scroll-margin-top: 70px; 
     }
     .category-title { 
-      font-size: 18px; font-weight: bold; margin-bottom: 15px; 
+      font-size: 18px;
+      font-weight: bold; margin-bottom: 15px; 
       padding-left: 10px;
       border-left: 5px solid var(--tab-color); color: #444;
       display: flex; align-items: center; justify-content: space-between;
@@ -81,7 +88,8 @@
 
     /* 單一商品卡片 */
     .card {
-      width: 100%; max-width: 130px;
+      width: 100%;
+      max-width: 130px;
       border: 1px solid #eee;
       border-radius: 12px;
       background: #fff; position: relative; text-align: center; padding-bottom: 8px;
@@ -93,15 +101,19 @@
     .card img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 8px; box-sizing: border-box; }
     
     .card .name { 
-        margin: 4px 6px; font-size: 12px; font-weight: 600; line-height: 1.4;
-        min-height: 32px; display: flex; align-items: center; justify-content: center; 
+        margin: 4px 6px;
+        font-size: 12px; font-weight: 600; line-height: 1.4;
+        min-height: 32px; display: flex; align-items: center; justify-content: center;
     }
     .card .price { font-size: 13px; color: var(--tab-color); font-weight: bold; margin-bottom: 6px; }
     .status-badge { display: inline-block; border-radius: 20px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
 
     /* Admin 編輯元件 */
-    .admin-select { border: 1px solid #ccc; border-radius: 20px; padding: 2px 5px; font-size: 11px; margin-bottom: 5px; width: 90%; }
-    .admin-price-input { width: 80%; border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; }
+    .admin-select { border: 1px solid #ccc; border-radius: 20px;
+      padding: 2px 5px; font-size: 11px; margin-bottom: 5px; width: 90%; }
+    .admin-price-input { width: 80%;
+      border: 1px dashed #ccc; border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0;
+    }
     
     .bulk-wrapper { font-size: 12px; font-weight: normal; color: #666; display: flex; align-items: center; gap: 5px; }
     .bulk-select { padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; }
@@ -121,12 +133,13 @@
     <div id="category-toggles"></div>
   </div>
 
-  <div id="card-container">
-    <div id="loading-msg" class="loading-container">
-      <img id="loading-img" src="" alt="Loading" class="loading-icon" />
-      <div>資料讀取中...</div>
-    </div>
+  <div id="loading-msg" class="loading-container">
+    <img id="loading-img" src="" alt="Loading" class="loading-icon" />
+    <div>資料讀取中...</div>
   </div>
+
+  <div id="card-container">
+    </div>
 
 <script>
 // --- Config ---
@@ -139,7 +152,6 @@ const SHEET_NAME = "ちいかわ";
 let sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // --- 角色設定對照表 ---
-// 根據 Prompt 要求，定義每個角色在 Google Sheet 的關鍵字、Supabase 的前綴、Config Key、顏色與圖片
 const ROLE_CONFIGS = {
     "chii": { 
         name: "吉伊", sheetKey: "吉", sbPrefix: "吉伊", configKey: "visible_categories_chii", 
@@ -150,7 +162,7 @@ const ROLE_CONFIGS = {
         color: "#6293b8", loadImg: "https://i.postimg.cc/Ss5kqJ3L/icon002.png" 
     },
     "usagi": { 
-        name: "兔兔", sheetKey: "兔", sbPrefix: "兔兔", configKey: "visible_categories", // source 140
+        name: "兔兔", sheetKey: "兔", sbPrefix: "兔兔", configKey: "visible_categories", 
         color: "#f9be3c", loadImg: "https://i.postimg.cc/QdbBDJbp/icon003.png" 
     },
     "momo": { 
@@ -159,14 +171,15 @@ const ROLE_CONFIGS = {
     },
     "master": { 
         name: "師傅", sheetKey: "獺", sbPrefix: "師傅", configKey: "visible_categories_others", 
-        color: "#CCAFA5", loadImg: "https://i.postimg.cc/y8vNtY1j/icon005.png" 
+        color: "#CCAFA5", 
+        loadImg: "https://i.postimg.cc/y8vNtY1j/icon005.png" 
     },
     "kuri": { 
-        name: "栗子", sheetKey: "栗", sbPrefix: "栗子", configKey: "visible_categories_kuri", // source 140
+        name: "栗子", sheetKey: "栗", sbPrefix: "栗子", configKey: "visible_categories_kuri", 
         color: "#94C973", loadImg: "https://i.postimg.cc/mD0kjXLG/icon006.png" 
     },
     "shisa": { 
-        name: "風獅", sheetKey: "獅", sbPrefix: "風獅", configKey: "visible_categories_shisa", // source 140
+        name: "風獅", sheetKey: "獅", sbPrefix: "風獅", configKey: "visible_categories_shisa", 
         color: "#FBAA60", loadImg: "https://i.postimg.cc/Ghn9s5gF/icon007.png" 
     },
     "furu": { 
@@ -182,7 +195,7 @@ const ROLE_CONFIGS = {
 // --- 全域變數 ---
 let currentRole = "chii"; // 預設
 let currentConfig = ROLE_CONFIGS["chii"];
-let isAdmin = false; 
+let isAdmin = false;
 let globalItems = [], allCategories = [], visibleCategories = ["吊娃", "娃"];
 let supabaseOverrides = {}, pendingChanges = {};
 
@@ -208,7 +221,7 @@ function init() {
     window.parent.postMessage({ type: 'childReady' }, '*');
 }
 
-// --- 接收父層訊息 (Admin 狀態 / 滾動請求) ---
+// --- 接收父層訊息 (Admin 狀態 / 滾動請求 / 觸發按鈕) ---
 window.addEventListener('message', function(e) {
     if (!e.data) return;
 
@@ -219,13 +232,20 @@ window.addEventListener('message', function(e) {
         renderCards(); // 重新渲染以顯示/隱藏編輯框
     }
 
-    // 接收滾動請求 (點擊父層分類列時)
+    // 接收滾動請求
     if (e.data.type === 'scrollTo') {
         const el = document.getElementById(`cat-${e.data.category}`);
         if (el) {
-            // 計算捲動位置，扣除 header 高度
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    }
+
+    // 接收父層 Header 按鈕觸發
+    if (e.data.type === 'triggerSave') {
+        handleSaveConfig();
+    }
+    if (e.data.type === 'triggerCancel') {
+        location.reload();
     }
 });
 
@@ -245,11 +265,12 @@ async function loadData() {
             // 讀取分類顯示設定
             const { data: config } = await sbClient.from('chiikawa_config')
                 .select('config_value')
-                .eq('config_key', currentConfig.configKey) // 使用動態 Key
+                .eq('config_key', currentConfig.configKey) 
                 .single();
             
             if (config && config.config_value) {
-                visibleCategories = Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value);
+                visibleCategories = Array.isArray(config.config_value) ?
+                    config.config_value : JSON.parse(config.config_value);
             }
 
             // 讀取所有商品覆蓋資料
@@ -264,17 +285,15 @@ async function loadData() {
 
         // C. 資料篩選與合併 
         const tempCats = new Set();
-        
         globalItems = rows.map(row => {
-            const roleField = row.c[0]?.v || ""; // Col 0: 角色識別字 (吉, 八, 兔...)
+            const roleField = row.c[0]?.v || ""; // Col 0: 角色識別字
             const type = row.c[1]?.v || "其他";  // Col 1: 分類
             const itemName = row.c[3]?.v || "";  // Col 3: 商品名稱
             
-            // 篩選邏輯：如果 Sheet 的角色欄位不包含此頁面設定的 key，則跳過
+            // 篩選邏輯
             if (!itemName || !roleField.includes(currentConfig.sheetKey)) return null;
 
-            // 決定 Supabase 的 Key (前綴 + 名稱)
-            // 優先找 "吉伊小可愛"，如果沒有則找 "小可愛"
+            // 決定 Supabase 的 Key
             const fullKey = currentConfig.sbPrefix + itemName;
             const shortKey = itemName;
             
@@ -288,35 +307,37 @@ async function loadData() {
                 finalKey = shortKey;
                 sbData = supabaseOverrides[shortKey];
             } else {
-                // 如果都沒有，預設 key 使用 fullKey 以便未來儲存時加上前綴
                 finalKey = fullKey;
             }
 
             tempCats.add(type);
-
+            
             return {
-                dbKey: finalKey,         // 用於儲存的唯一 Key
-                name: itemName,          // 顯示名稱 (不含前綴)
+                dbKey: finalKey,
+                name: itemName,
                 type: type,
-                price: sbData?.price || "", // 若無覆蓋則為空
+                price: sbData?.price || "",
                 status: sbData?.status || "現貨",
-                img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png" // Col 11: 圖片
+                img: row.c[11]?.v || "https://i.postimg.cc/bv5xRs04/image.png"
             };
         }).filter(i => i !== null);
 
         allCategories = Array.from(tempCats);
 
         // D. 渲染介面
-        document.getElementById("loading-msg").style.display = 'none';
+        const loadingMsg = document.getElementById("loading-msg");
+        if(loadingMsg) loadingMsg.style.display = 'none';
+
         renderAdminToggles();
         renderCards();
 
-        // E. 將分類資料傳回父層，讓父層生成 Sticky Nav 
+        // E. 將分類資料傳回父層
         sendCategoriesToParent();
 
     } catch (e) {
         console.error(e);
-        document.querySelector("#loading-msg div").innerText = "載入失敗，請稍後重試";
+        const loadingDiv = document.querySelector("#loading-msg div");
+        if(loadingDiv) loadingDiv.innerText = "載入失敗，請稍後重試";
     }
 }
 
@@ -338,23 +359,21 @@ function updateVisibleList(cat, isChecked) {
     } else {
         visibleCategories = visibleCategories.filter(c => c !== cat);
     }
-    // 更新顯示但不儲存，直到按儲存按鈕
 }
 
 // --- 渲染商品卡片 ---
 function renderCards() {
     const container = document.getElementById("card-container");
-    container.innerHTML = "";
+    container.innerHTML = ""; // 清空容器，但現在不會誤刪 loading-msg 了
 
-    // 決定要顯示哪些分類 (Admin 顯示全部，使用者只顯示 visibleCategories)
+    // 決定要顯示哪些分類
     const catsToDisplay = isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c));
 
-    // 如果是用戶模式，每次渲染都更新父層 Nav，確保同步
+    // 如果是用戶模式，每次渲染都更新父層 Nav
     if(!isAdmin) sendCategoriesToParent(catsToDisplay);
 
     catsToDisplay.forEach(cat => {
         const items = globalItems.filter(i => i.type === cat);
-        // Admin 顯示所有商品，使用者隱藏 "(不顯示)" 的狀態
         const filteredItems = isAdmin ? items : items.filter(i => !i.status.includes("不顯示"));
 
         if (filteredItems.length === 0) return;
@@ -377,7 +396,7 @@ function renderCards() {
         section.id = `cat-${cat}`;
         section.className = "category-section";
         section.innerHTML = `<div class="category-title"><span>${cat}</span> ${bulkHTML}</div>`;
-
+        
         const grid = document.createElement("div");
         grid.className = "group-grid";
 
@@ -407,7 +426,6 @@ function renderCards() {
             // 點擊事件：通知父層打開 Modal 
             card.onclick = (e) => {
                 if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-                    // 將商品資料傳給父層，父層負責顯示 Modal 和處理購物車
                     window.parent.postMessage({ type: 'openModal', item: displayItem }, '*');
                 }
             };
@@ -418,7 +436,7 @@ function renderCards() {
         section.appendChild(grid);
         container.appendChild(section);
     });
-
+    
     // 渲染完成後通知父層調整高度 
     setTimeout(sendHeight, 100);
 }
@@ -434,7 +452,6 @@ function getStatusBg(s) {
 
 function renderAdminSelect(item) {
   const opts = ["現貨", "需預訂", "搭飛機中", "補貨（不顯示）", "已售（不顯示）"];
-  // onclick stopPropagation 防止觸發卡片點擊
   return `<select class="admin-select" onclick="event.stopPropagation()" onchange="stageChange('${item.dbKey}', 'status', this.value)">
     ${opts.map(opt => `<option value="${opt}" ${item.status === opt ? "selected" : ""}>${opt}</option>`).join("")}
   </select>`;
@@ -471,20 +488,21 @@ function handleBulkUpdate(cat, newStatus) {
 async function handleSaveConfig() {
   if (!confirm("確定要儲存分類顯示設定與商品修改嗎？")) return;
   
-  // 顯示 Loading 狀態 (簡單版)
+  // 這裡我們修改按鈕文字，雖然這按鈕在 iframe 內 (父層也有觸發)，但保留邏輯無妨
   const saveBtn = document.querySelector('.btn-save');
-  const originalText = saveBtn.innerText;
-  saveBtn.innerText = "儲存中...";
-  saveBtn.disabled = true;
+  const originalText = saveBtn ? saveBtn.innerText : "";
+  if(saveBtn) {
+      saveBtn.innerText = "儲存中...";
+      saveBtn.disabled = true;
+  }
 
   try {
-    // 1. 儲存分類設定 (寫入對應的 config key)
+    // 1. 儲存分類設定
     const { error: confErr } = await sbClient.from('chiikawa_config').upsert({ 
       config_key: currentConfig.configKey, 
       config_value: visibleCategories,
       updated_at: new Date().toISOString()
     }, { onConflict: 'config_key' });
-    
     if (confErr) throw confErr;
 
     // 2. 儲存商品修改
@@ -494,7 +512,6 @@ async function handleSaveConfig() {
       price: pendingChanges[k].price,
       updated_at: new Date().toISOString()
     }));
-
     if (updates.length > 0) {
       const { error: itemErr } = await sbClient.from('chiikawa_data').upsert(updates, { onConflict: 'item_name' });
       if (itemErr) throw itemErr;
@@ -502,26 +519,26 @@ async function handleSaveConfig() {
 
     alert("儲存成功！");
     pendingChanges = {}; 
-    await loadData(); // 重新載入以確認資料
+    await loadData(); // 重新載入，此時 loading-msg 已移出 container，不會報錯
 
   } catch (e) {  
     console.error(e);
     alert("儲存失敗：" + e.message);
   } finally {
-    saveBtn.innerText = originalText;
-    saveBtn.disabled = false;
+    if(saveBtn) {
+        saveBtn.innerText = originalText;
+        saveBtn.disabled = false;
+    }
   }
 }
 
 // --- 與父層通訊輔助 ---
 function sendCategoriesToParent(list = null) {
-    // 若未指定 list，則送出目前所有分類 (Admin) 或目前可見分類 (User)
     const data = list || (isAdmin ? allCategories : allCategories.filter(c => visibleCategories.includes(c)));
     window.parent.postMessage({ type: 'categories', data: data }, '*');
 }
 
 function sendHeight() {
-    // 加入一點緩衝高度
     window.parent.postMessage({ height: document.body.scrollHeight + 20 }, '*');
 }
 
