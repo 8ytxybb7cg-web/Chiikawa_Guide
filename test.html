@@ -12,14 +12,54 @@
   <link rel="icon" href="./IMG_7282.png" type="image/png" />
 
   <style>
-    :root { --tab-color: #d77485; } /* 初始顏色 */
+    :root { 
+      --tab-color: #d77485; /* 初始顏色 */
+      --nav-bg: #fff;
+    } 
     
     body {
       margin: 0; padding: 0; width: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9; color: #333; text-align: center;
       max-width: 100vw;
+      /* 增加頂部內距，避免內容被 Header 遮擋 */
+      padding-top: 50px; 
     }
+
+    /* --- 新增：頂部導航列 (移植自舊子頁) --- */
+    .top-header {
+      position: fixed;
+      top: 0; left: 0; width: 100%; z-index: 5000;
+      background: var(--tab-color); /* 跟隨角色變色 */
+      color: #fff; height: 44px;
+      display: flex;
+      align-items: center; justify-content: space-between; /* 左右分佈 */
+      padding: 0 16px; box-sizing: border-box;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s;
+    }
+
+    .header-title {
+      font-weight: bold; font-size: 14px; letter-spacing: 1px;
+    }
+
+    .admin-controls {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .admin-icon { 
+      width: 24px; height: 24px; cursor: pointer; fill: #fff; 
+      display: block;
+    }
+
+    /* 管理員按鈕樣式 */
+    .btn-save, .btn-logout, .btn-cancel { 
+      padding: 4px 12px; border-radius: 12px;
+      border: 1px solid #fff; 
+      font-size: 12px; cursor: pointer; color: #fff; background: transparent; 
+    }
+    .btn-save { background: rgba(255,255,255,0.3); font-weight: bold; }
+    .btn-logout { border-color: rgba(255,255,255,0.6); }
 
     /* Logo */
     .logo-container { text-align: center; margin-top: 25px; }
@@ -39,18 +79,20 @@
     .tab-circle img { width: 100%; height: 100%; object-fit: cover; }
     .tab-name { font-size: 10px; font-weight: bold; margin-top: 5px; color: #666; white-space: nowrap; }
 
-    /* Sticky Sub-Nav (由 Child 傳遞分類資料後渲染) */
+    /* Sticky Sub-Nav */
     .sticky-sub-nav {
-      position: sticky; top: 0; z-index: 1000;
+      position: sticky; top: 44px; /* 配合 Top Header 高度 */
+      z-index: 1000;
       background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       padding: 10px 0; margin-bottom: 10px; display: none; 
-      white-space: nowrap; overflow-x: auto; scrollbar-width: none; 
+      white-space: nowrap; overflow-x: auto; scrollbar-width: none;
     }
     .sticky-sub-nav::-webkit-scrollbar { display: none; }
     .sub-nav-content { display: inline-flex; padding: 0 15px; gap: 10px; margin: 0 auto; }
     .sub-nav-item {
-      font-size: 13px; color: #666; padding: 5px 12px; border-radius: 15px;
+      font-size: 13px; color: #666;
+      padding: 5px 12px; border-radius: 15px;
       background: #f0f0f0; cursor: pointer; transition: all 0.2s;
     }
     .sub-nav-item:active, .sub-nav-item:hover { background: var(--tab-color); color: #fff; }
@@ -59,21 +101,18 @@
     #main-content { width: 100%; position: relative; min-height: 80vh; }
     #content-frame { width: 100%; border: none; margin-top: -10px; display: block; min-height: 600px; transition: opacity 0.2s; }
 
-    /* Admin Login Button (右上角) */
-    .admin-login-trigger {
-        position: absolute; top: 10px; right: 10px; font-size: 10px; 
-        color: #eee; cursor: pointer; z-index: 2000; opacity: 0.5;
-    }
-
     /* Modals (Cart, Admin, Product Preview) */
     .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
-      z-index: 99999; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);
+      z-index: 99999; padding: 20px;
+      box-sizing: border-box; backdrop-filter: blur(5px);
     }
     .modal-card { 
-      background: #fff; border-radius: 20px; padding: 24px; width: 90%; max-width: 320px;
+      background: #fff; border-radius: 20px;
+      padding: 24px; width: 90%; max-width: 320px;
       text-align: center; position: relative; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
     .modal-card img { width: 100%; max-height: 40vh; object-fit: contain; border-radius: 12px; }
     .modal-card h3 { margin: 15px 0 5px; font-size: 18px; color: #333; }
@@ -107,9 +146,9 @@
     .cart-item-price { font-size: 13px; color: var(--tab-color); font-weight: 500; }
     .remove-item { color: #ddd; cursor: pointer; font-size: 20px; padding: 0 5px; }
 
-    /* Admin Styles */
+    /* Admin Modal Inputs */
     input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-    .login-btn { width: 100%; padding: 10px; background: #333; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .login-btn { width: 100%; padding: 10px; background: var(--tab-color); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
     /* Footer */
     .bottom-bar { padding: 20px 0; background-color: #dac7b7; color: #fff; margin-top: 25px; font-size: 11px; }
@@ -121,7 +160,24 @@
 </head>
 <body>
 
-  <div class="admin-login-trigger" onclick="openLoginModal()">π</div>
+  <div class="top-header">
+    <div class="header-title">CHIIKAWA GUIDE</div>
+    
+    <div class="admin-controls">
+      <div id="admin-actions" style="display:none; gap: 8px;">
+        <button class="btn-cancel" onclick="triggerChildCancel()">取消</button>
+        <button class="btn-save" onclick="triggerChildSave()">儲存</button>
+        <button class="btn-logout" onclick="handleLogout()">登出</button>
+      </div>
+      
+      <div id="login-icon-wrapper" onclick="openLoginModal()">
+        <svg class="admin-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+           <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+    </div>
+  </div>
 
   <div class="logo-container">
     <img src="./IMG_7282.png" alt="Chiikawa Logo" />
@@ -167,7 +223,6 @@
         <input type="text" id="adminId" placeholder="管理員 ID">
         <input type="password" id="adminPwd" placeholder="密碼">
         <button class="login-btn" onclick="handleLogin()">驗證</button>
-        <button class="btn-close" onclick="handleLogout()" id="logoutBtn" style="display:none; color:red;">登出</button>
     </div>
   </div>
 
@@ -182,7 +237,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" class="icon-img" alt="WhatsApp"> 
         <span>WhatsApp</span>
       </a>
-      <a href="mailto:bowl.frets-7c@icloud.com">
+       <a href="mailto:bowl.frets-7c@icloud.com">
         <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" class="icon-img" alt="Email"> 
         <span>Email</span>
       </a>
@@ -193,48 +248,21 @@
 <script>
   // --- 核心角色設定資料 (Source of Truth) ---
   const ROLE_CONFIG = {
-    "chii": { 
-      name: "吉伊", color: "#d77485", 
-      icon: "https://i.postimg.cc/vZDs4YNZ/icon.png" // Source code 141
-    },
-    "hachi": { 
-      name: "小八", color: "#6293b8", 
-      icon: "https://i.postimg.cc/sDTzfQKL/icon.png" // Source code 141
-    },
-    "usagi": { 
-      name: "兔兔", color: "#f9be3c", 
-      icon: "https://i.postimg.cc/xdzVPsYr/icon.png" 
-    },
-    "momo": { 
-      name: "小桃", color: "#838BC2", 
-      icon: "https://i.postimg.cc/9MP36rrJ/icon.png" 
-    },
-    "master": { 
-      name: "師傅", color: "#CCAFA5", 
-      icon: "https://i.postimg.cc/fTq4Q4Rn/icon.png" 
-    },
-    "kuri": { 
-      name: "栗子", color: "#94C973", 
-      icon: "https://i.postimg.cc/FzGMK8bS/icon.png" 
-    },
-    "shisa": { 
-      name: "風獅", color: "#FBAA60", 
-      icon: "https://i.postimg.cc/660Jz4sQ/icon.png" 
-    },
-    "furu": { 
-      name: "古本", color: "#eb9e97", 
-      icon: "https://i.postimg.cc/nh5t7yyY/icon.png" 
-    },
-    "others": { 
-      name: "其他", color: "#45818e", 
-      icon: "https://i.postimg.cc/63xJbd58/icon.png" 
-    }
+    "chii": { name: "吉伊", color: "#d77485", icon: "https://i.postimg.cc/vZDs4YNZ/icon.png" },
+    "hachi": { name: "小八", color: "#6293b8", icon: "https://i.postimg.cc/sDTzfQKL/icon.png" },
+    "usagi": { name: "兔兔", color: "#f9be3c", icon: "https://i.postimg.cc/xdzVPsYr/icon.png" },
+    "momo": { name: "小桃", color: "#838BC2", icon: "https://i.postimg.cc/9MP36rrJ/icon.png" },
+    "master": { name: "師傅", color: "#CCAFA5", icon: "https://i.postimg.cc/fTq4Q4Rn/icon.png" },
+    "kuri": { name: "栗子", color: "#94C973", icon: "https://i.postimg.cc/FzGMK8bS/icon.png" },
+    "shisa": { name: "風獅", color: "#FBAA60", icon: "https://i.postimg.cc/660Jz4sQ/icon.png" },
+    "furu": { name: "古本", color: "#eb9e97", icon: "https://i.postimg.cc/nh5t7yyY/icon.png" },
+    "others": { name: "其他", color: "#45818e", icon: "https://i.postimg.cc/63xJbd58/icon.png" }
   };
 
   // --- 全域變數 ---
   let cart = JSON.parse(localStorage.getItem('myCart')) || [];
-  let currentItem = null; // 當前 Modal 顯示的商品
-  let activeRole = "chii"; // 預設角色
+  let currentItem = null;
+  let activeRole = "chii"; 
   let isAdmin = false; 
   const frame = document.getElementById("content-frame");
   const subNavContainer = document.getElementById("sub-nav-container");
@@ -243,14 +271,14 @@
   // --- 初始化 ---
   function init() {
     renderTabs();
-    switchRole("chii"); // 預設載入吉伊
+    switchRole("chii"); 
     updateCartUI();
     document.getElementById("current-year").textContent = new Date().getFullYear();
     
     // 檢查 Session 是否有 Admin 狀態
     if (sessionStorage.getItem("adminLogged") === "true") {
         isAdmin = true;
-        document.getElementById("logoutBtn").style.display = "inline-block";
+        updateAdminUI(true);
     }
   }
 
@@ -278,17 +306,16 @@
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.getElementById(`tab-${key}`).classList.add("active");
     
-    // 更新 CSS 變數以改變主題色
+    // 更新 CSS 變數以改變主題色 (包含 Header)
     document.documentElement.style.setProperty('--tab-color', config.color);
-    
+
     // 隱藏子導航，直到 Iframe 載入完畢並回傳分類
     subNavContainer.style.display = 'none';
     subNavContent.innerHTML = '';
-    
-    // 載入通用子頁面，並傳遞角色參數
-    // 加入時間戳記避免快取
+
+    // 載入通用子頁面
     frame.src = `Child.html?role=${key}&t=${new Date().getTime()}`;
-    frame.style.opacity = "0.3"; // 切換時暫時變淡
+    frame.style.opacity = "0.3";
   }
 
   // --- Iframe 溝通 (postMessage) ---
@@ -311,7 +338,7 @@
         openProductModal(e.data.item);
     }
 
-    // 4. 子頁面載入完成，詢問是否為 Admin
+    // 4. 子頁面載入完成，通知子頁面當前的 Admin 狀態
     if (e.data.type === 'ready') {
         sendAdminStateToChild();
     }
@@ -333,9 +360,20 @@
     frame.contentWindow.postMessage({ type: 'adminState', isAdmin: isAdmin }, '*');
   }
 
+  // --- 觸發子頁面動作 (儲存/取消) ---
+  function triggerChildSave() {
+      // 發送訊息給子頁面，觸發其 handleSaveConfig()
+      frame.contentWindow.postMessage({ type: 'triggerSave' }, '*');
+  }
+
+  function triggerChildCancel() {
+      // 發送訊息給子頁面，觸發其 handleCancelEdit()
+      frame.contentWindow.postMessage({ type: 'triggerCancel' }, '*');
+  }
+
   // --- 商品 Modal 與 購物車邏輯 ---
   function openProductModal(item) {
-    currentItem = { ...item, roleKey: activeRole }; // 附加角色資訊
+    currentItem = { ...item, roleKey: activeRole };
     document.getElementById("modalImg").src = currentItem.img;
     document.getElementById("modalName").textContent = currentItem.name;
     document.getElementById("modalPrice").textContent = 
@@ -374,19 +412,16 @@
     const list = document.getElementById("cart-items");
     const countEl = document.getElementById("cart-count");
     const totalEl = document.getElementById("cart-total");
-    
     list.innerHTML = "";
     let total = 0, itemsCount = 0;
-    
     cart.forEach((item, idx) => {
       const p = parseFloat(item.price) || 0;
       total += p * item.qty;
       itemsCount += item.qty;
       
+      const roleName = ROLE_CONFIG[item.roleKey]?.name || "其他";
       const div = document.createElement("div");
       div.className = "cart-item";
-      // 使用 Role Config 找回該角色的名稱作為分類前綴
-      const roleName = ROLE_CONFIG[item.roleKey]?.name || "其他";
       div.innerHTML = `
         <img src="${item.img}">
         <div class="cart-item-info">
@@ -397,7 +432,6 @@
       `;
       list.appendChild(div);
     });
-
     countEl.textContent = itemsCount;
     totalEl.textContent = "總金額：$" + total;
   }
@@ -425,7 +459,6 @@
       total += subtotal;
       text += `【${idx + 1}】 ${item.name}\n數量：${item.qty}\n價格：${p === 0 ? '需預訂/查詢' : '$' + subtotal}\n\n`;
     });
-    
     text += "------------------\n";
     if (total > 0) text += `預計總額：$${total}\n`;
     text += "\n請問目前還有貨嗎？";
@@ -433,17 +466,23 @@
     window.open(`https://wa.me/85291368535?text=${encodeURIComponent(text)}`, '_blank');
   }
 
-  // --- Admin 邏輯 ---
-  function openLoginModal() { document.getElementById("loginModal").style.display = "flex"; }
+  // --- Admin 邏輯 (Index 層控制) ---
+  function openLoginModal() { 
+      // 如果已經登入，點擊 Icon 不做任何事，或者可以顯示簡單的提示
+      if(isAdmin) return;
+      document.getElementById("loginModal").style.display = "flex";
+  }
   function closeLoginModal() { document.getElementById("loginModal").style.display = "none"; }
   
   function handleLogin() {
     const id = document.getElementById("adminId").value;
     const pwd = document.getElementById("adminPwd").value;
+    
+    // --- 寫入驗證帳號密碼 ---
     if (id === "1050267" && pwd === "Penny01!") {
         isAdmin = true;
         sessionStorage.setItem("adminLogged", "true");
-        document.getElementById("logoutBtn").style.display = "inline-block";
+        updateAdminUI(true);
         closeLoginModal();
         sendAdminStateToChild(); // 通知子頁面開啟編輯模式
         alert("管理員登入成功！");
@@ -453,14 +492,31 @@
   }
 
   function handleLogout() {
+    if(!confirm("確定要登出嗎？")) return;
     isAdmin = false;
     sessionStorage.removeItem("adminLogged");
-    document.getElementById("logoutBtn").style.display = "none";
+    
+    // 清空輸入框
     document.getElementById("adminId").value = "";
     document.getElementById("adminPwd").value = "";
-    closeLoginModal();
+    
+    updateAdminUI(false);
     sendAdminStateToChild(); // 通知子頁面關閉編輯模式
     location.reload();
+  }
+
+  // 更新 Header UI 狀態
+  function updateAdminUI(loggedIn) {
+      const actions = document.getElementById("admin-actions");
+      const loginIcon = document.getElementById("login-icon-wrapper");
+      
+      if (loggedIn) {
+          actions.style.display = "flex";
+          loginIcon.style.display = "none"; // 登入後隱藏鎖頭，顯示操作按鈕
+      } else {
+          actions.style.display = "none";
+          loginIcon.style.display = "block";
+      }
   }
 
   init();
