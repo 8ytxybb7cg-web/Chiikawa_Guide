@@ -149,31 +149,65 @@ function toggleAdminUI() {
     if (isAdmin) renderAdminToggles();
 }
 
+/**
+ * 解決 Supabase 1000 筆限制的遞迴抓取函式
+ */
+async function fetchAllSupabaseData(tableName) {
+    let allData = [];
+    let from = 0;
+    let step = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+        const { data, error } = await sbClient
+            .from(tableName)
+            .select('*')
+            .range(from, from + step - 1);
+        
+        if (error) {
+            console.error("Supabase fetch error:", error);
+            break;
+        }
+
+        if (data && data.length > 0) {
+            allData = allData.concat(data);
+            from += step;
+            if (data.length < step) hasMore = false;
+        } else {
+            hasMore = false;
+        }
+    }
+    return allData;
+}
+
 async function loadData() {
     try {
         supabaseOverrides = {};
         if (sbClient) {
+            // 抓取 Config
             const { data: config } = await sbClient.from('chiikawa_config').select('config_value').eq('config_key', currentConfig.configKey).single();
             if (config?.config_value) visibleCategories = Array.isArray(config.config_value) ? config.config_value : JSON.parse(config.config_value);
-            const { data: items } = await sbClient.from('chiikawa_data').select('*');
-            items?.forEach(row => { supabaseOverrides[row.item_name] = row; });
+            
+            // 修正點：使用 fetchAllSupabaseData 解決 1000 筆限制
+            const items = await fetchAllSupabaseData('chiikawa_data');
+            items.forEach(row => { supabaseOverrides[row.item_name] = row; });
         }
 
         const sheetRes = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx:out:json&sheet=${encodeURIComponent(currentConfig.sheetName)}`).then(r => r.text());
         const json = JSON.parse(sheetRes.substr(47).slice(0, -2));
         
-        // 修改點：跳過首行標題
         const rows = (json.table.rows || []).slice(1);
 
         const tempCats = new Set();
         globalItems = rows.map(row => {
-            // 修改點：Column A 分類 (index 0) / Column D 圖片 (index 3) / Column H 名稱 (index 7)
             const type = row.c[0]?.v || "其他";  
             const itemName = row.c[7]?.v || "";  
             const imgUrl = row.c[3]?.v || "https://i.postimg.cc/bv5xRs04/image.png";
             
             if (!itemName) return null;
             const fullKey = currentConfig.sbPrefix + itemName;
+            
+            // 這裡現在能確保對應到 1000 筆之後的資料
             let sbData = supabaseOverrides[fullKey] || null;
             tempCats.add(type);
             
