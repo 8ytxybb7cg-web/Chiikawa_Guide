@@ -1,2 +1,2 @@
 # Chiikawa_Guide
-Chiikawa圖鑑
+Chiikawa 吉伊卡哇 圖鑑｜現貨代購
